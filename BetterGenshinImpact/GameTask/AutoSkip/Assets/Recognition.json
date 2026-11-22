@@ -29,6 +29,20 @@
       "use3Channels": true,
       "draw": true
     },
+    "ControllerMenuButton": {
+      "type": "TemplateMatch",
+      "template": "controller_menu_button.png",
+      "roi": "rect(0, ch - 160 * s, 700 * s, 160 * s)",
+      "use3Channels": true,
+      "draw": true
+    },
+    "ControllerViewButton": {
+      "type": "TemplateMatch",
+      "template": "controller_view_button.png",
+      "roi": "rect(0, ch - 160 * s, 700 * s, 160 * s)",
+      "use3Channels": true,
+      "draw": true
+    },
     "PlayingText": {
       "type": "OcrMatch",
       "roi": "rect(100 * s, 35 * s, 85 * s, 35 * s)",

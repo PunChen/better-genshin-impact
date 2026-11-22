@@ -339,22 +339,22 @@ public static partial class Bv
     /// <returns></returns>
     public static bool IsInTalkUi(ImageRegion captureRa)
     {
-        // 手柄模式下对话界面的按钮图标与键鼠不同；需要游戏内与软件内同时切到手柄才生效。
-        // 手柄图标未命中时回退识别键鼠图标，避免个别版本/分辨率下按钮图标差异导致对话完全识别不到。
+        // 手柄模式下：View（两个重叠方框）与 Menu（三横杠）两个按钮同时出现才算对话界面。
+        // 这两个对象在 Recognition.json 中设置了 draw=true，命中时会由遮罩窗口画红框。
         if (GamepadMode.Enabled)
         {
-            using var controllerRa = captureRa.Find(RecognitionAssets.Get("AutoSkip", "ControllerDisabledUiButton", captureRa.Width, captureRa.Height));
-            var controllerHit = controllerRa.IsExist();
+            using var menuRa = captureRa.Find(RecognitionAssets.Get("AutoSkip", "ControllerMenuButton", captureRa.Width, captureRa.Height));
+            var menuHit = menuRa.IsExist();
 
-            using var keyboardRa = captureRa.Find(RecognitionAssets.Get("AutoSkip", "DisabledUiButton", captureRa.Width, captureRa.Height));
-            var keyboardHit = keyboardRa.IsExist();
+            using var viewRa = captureRa.Find(RecognitionAssets.Get("AutoSkip", "ControllerViewButton", captureRa.Width, captureRa.Height));
+            var viewHit = viewRa.IsExist();
 
-            var detected = controllerHit || keyboardHit;
+            var detected = menuHit && viewHit;
             if (_lastTalkUiDetected != detected)
             {
                 _lastTalkUiDetected = detected;
-                Logger.LogDebug("对话界面识别：手柄图标={ControllerHit}，键鼠图标={KeyboardHit}，结果={Detected}",
-                    controllerHit, keyboardHit, detected);
+                Logger.LogDebug("对话界面识别：Menu三横杠={MenuHit}，View双方框={ViewHit}，结果={Detected}",
+                    menuHit, viewHit, detected);
             }
 
             return detected;
