@@ -161,6 +161,14 @@ public partial class AutoPickTrigger : ITaskTrigger
         _whitelistModeFinalPickList = whitelistModeFinalPickList;
         _whitelistModeDoNotPickList = whitelistModeDoNotPickList;
         _whitelistFuzzyMatcher = whitelistFuzzyMatcher;
+
+        _logger.LogInformation(
+            "自动拾取名单已加载：模式={Mode}，白名单 {WhiteCount} 条，白名单排除 {DoNotPickCount} 条，黑名单 {BlackCount} 条，模糊白名单规则 {FuzzyCount} 条",
+            config.Mode,
+            whitelistModeFinalPickList.Count,
+            whitelistModeDoNotPickList.Count,
+            blackList.Count,
+            whitelistFuzzyMatcher.RuleCount);
     }
 
     /// <summary>
@@ -247,8 +255,18 @@ public partial class AutoPickTrigger : ITaskTrigger
             var txt = Global.ReadAllTextIfExist(textFilePath);
             if (!string.IsNullOrEmpty(txt))
             {
-                // 明确指定使用 char[] 重载版本
-                return new HashSet<string>(txt.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+                // 每行一条记录：去掉首尾空白与空行，避免“看起来配置了但匹配不上”
+                var set = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var rawLine in txt.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var line = rawLine.Trim();
+                    if (line.Length > 0)
+                    {
+                        set.Add(line);
+                    }
+                }
+
+                return set;
             }
         }
         catch (Exception e)
@@ -267,8 +285,11 @@ public partial class AutoPickTrigger : ITaskTrigger
             var txt = Global.ReadAllTextIfExist(textFilePath);
             if (!string.IsNullOrEmpty(txt))
             {
-                // 明确指定使用 char[] 重载版本
-                return [..txt.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)];
+                // 每行一条记录：去掉首尾空白与空行
+                return [..txt
+                    .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                    .Select(line => line.Trim())
+                    .Where(line => line.Length > 0)];
             }
         }
         catch (Exception e)

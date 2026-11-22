@@ -43,6 +43,11 @@ public sealed class AutoPickFuzzyMatcher
     public static AutoPickFuzzyMatcher Empty { get; } = new([]);
 
     /// <summary>
+    /// 当前匹配器包含的规则条数（用于日志）
+    /// </summary>
+    public int RuleCount => _rulesByHash.Values.Sum(rules => rules.Length);
+
+    /// <summary>
     /// 按匹配模式的序数哈希分组，用 span 比较同哈希的候选，不分配字符串
     /// </summary>
     private readonly FrozenDictionary<int, AutoPickFuzzyRule[]> _rulesByHash;
