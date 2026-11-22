@@ -330,8 +330,8 @@ public partial class HomePageViewModel : ViewModel
 
                 TaskDispatcherEnabled = false;
                 _mouseKeyMonitor.Unsubscribe();
-                // 释放可能仍处于按下状态的手柄按键
-                GamepadInput.ReleaseAll();
+                // 释放虚拟手柄：断开设备并释放句柄，避免停止任务后虚拟手柄残留
+                GamepadInput.Disconnect();
                 TaskContext.Instance().IsInitialized = false;
             }
         }

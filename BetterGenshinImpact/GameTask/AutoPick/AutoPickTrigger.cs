@@ -87,6 +87,11 @@ public partial class AutoPickTrigger : ITaskTrigger
         if (config.WhiteListEnabled)
         {
             _whiteList = ReadText(@"User\pick_white_lists.txt");
+            _logger.LogInformation("自动拾取白名单已启用，加载 {Count} 条", _whiteList.Count);
+            if (_whiteList.Count == 0)
+            {
+                _logger.LogWarning("自动拾取白名单已启用但内容为空，请前往“自动拾取-白名单-前往设置”配置，否则白名单不会生效");
+            }
         }
     }
 
@@ -116,8 +121,20 @@ public partial class AutoPickTrigger : ITaskTrigger
             var txt = Global.ReadAllTextIfExist(textFilePath);
             if (!string.IsNullOrEmpty(txt))
             {
-                // 明确指定使用 char[] 重载版本
-                return new HashSet<string>(txt.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+                // 每行一条记录：去掉首尾空白与空行，避免“看起来配置了但匹配不上”
+                var set = new HashSet<string>(StringComparer.Ordinal);
+                foreach (var rawLine in txt.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    var line = rawLine.Trim();
+                    if (line.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    set.Add(line);
+                }
+
+                return set;
             }
         }
         catch (Exception e)
@@ -136,8 +153,11 @@ public partial class AutoPickTrigger : ITaskTrigger
             var txt = Global.ReadAllTextIfExist(textFilePath);
             if (!string.IsNullOrEmpty(txt))
             {
-                // 明确指定使用 char[] 重载版本
-                return [..txt.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)];
+                // 每行一条记录：去掉首尾空白与空行
+                return [..txt
+                    .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                    .Select(line => line.Trim())
+                    .Where(line => line.Length > 0)];
             }
         }
         catch (Exception e)

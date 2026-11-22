@@ -243,7 +243,10 @@ public partial class App : Application
         base.OnExit(e);
 
         ConsoleHelper.WriteLine("BetterGI 应用程序正在关闭...");
-        
+
+        // 释放虚拟手柄，确保退出后不残留虚拟设备和设备句柄
+        Core.Simulator.Gamepad.GamepadInput.Dispose();
+
         TempManager.CleanUp();
 
         await _host.StopAsync();

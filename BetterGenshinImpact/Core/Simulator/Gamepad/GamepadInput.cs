@@ -22,6 +22,12 @@ public static class GamepadInput
     private static GamepadActionDispatcher? _dispatcher;
     private static bool _connectFailureLogged;
     private static bool _connectFailed;
+
+    /// <summary>
+    /// 任务停止后挂起手柄：避免停止瞬间残余线程再次自动连接，直到下次开始任务或手动测试
+    /// </summary>
+    private static bool _suspended;
+
     private static ILogger? _logger;
 
     /// <summary>
@@ -63,6 +69,12 @@ public static class GamepadInput
         {
             lock (SyncRoot)
             {
+                // 任务已停止：不再自动连接，避免停止后虚拟手柄又被残余线程拉起
+                if (_suspended)
+                {
+                    return false;
+                }
+
                 if (!EnsureConnected())
                 {
                     return false;
@@ -94,6 +106,7 @@ public static class GamepadInput
             lock (SyncRoot)
             {
                 // 手动测试时允许重试连接
+                _suspended = false;
                 _connectFailed = false;
                 if (!EnsureConnected())
                 {
@@ -118,39 +131,18 @@ public static class GamepadInput
     {
         lock (SyncRoot)
         {
-            // 用户主动触发时允许重试
+            // 开始任务/手动触发时允许重连
+            _suspended = false;
             _connectFailed = false;
             return EnsureConnected();
         }
     }
 
     /// <summary>
-    /// 释放所有按键并断开虚拟手柄
+    /// 释放所有按键并彻底断开虚拟手柄（任务停止时调用）。
+    /// 会释放 ViGEm 客户端与设备句柄，虚拟手柄从系统中消失；下次使用时会重新连接。
     /// </summary>
     public static void Disconnect()
-    {
-        lock (SyncRoot)
-        {
-            ReleaseAllCore();
-            _transport?.Disconnect();
-        }
-    }
-
-    /// <summary>
-    /// 释放所有按键与摇杆（任务取消、异常、程序退出时调用）
-    /// </summary>
-    public static void ReleaseAll()
-    {
-        lock (SyncRoot)
-        {
-            ReleaseAllCore();
-        }
-    }
-
-    /// <summary>
-    /// 释放虚拟手柄资源（程序退出时调用）
-    /// </summary>
-    public static void Dispose()
     {
         lock (SyncRoot)
         {
@@ -168,7 +160,28 @@ public static class GamepadInput
             _dispatcher = null;
             _connectFailed = false;
             _connectFailureLogged = false;
+            // 挂起，直到下次显式连接（开始任务或测试按键）
+            _suspended = true;
         }
+    }
+
+    /// <summary>
+    /// 释放所有按键与摇杆（任务异常、临时中止时调用，不断开设备）
+    /// </summary>
+    public static void ReleaseAll()
+    {
+        lock (SyncRoot)
+        {
+            ReleaseAllCore();
+        }
+    }
+
+    /// <summary>
+    /// 释放虚拟手柄资源（程序退出时调用，与 <see cref="Disconnect"/> 等价且可重复调用）
+    /// </summary>
+    public static void Dispose()
+    {
+        Disconnect();
     }
 
     private static bool EnsureConnected()
