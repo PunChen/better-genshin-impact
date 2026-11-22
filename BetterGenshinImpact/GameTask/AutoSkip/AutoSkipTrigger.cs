@@ -222,6 +222,16 @@ public partial class AutoSkipTrigger : ITaskTrigger
     private DateTime _lastAutoAdvanceTime = DateTime.MinValue;
 
     /// <summary>
+    /// 手柄模式下当前是否已经处于“识别到选项”的状态，用于避免重复日志
+    /// </summary>
+    private bool _controllerOptionActive;
+
+    /// <summary>
+    /// 手柄模式下上一次按确认键选择选项的时间
+    /// </summary>
+    private DateTime _lastControllerOptionPressTime = DateTime.MinValue;
+
+    /// <summary>
     /// 文本稳定多久后才视为这段话已经播放完（毫秒）
     /// </summary>
     private const int DialogueStableDelayMs = 1000;
@@ -352,16 +362,45 @@ public partial class AutoSkipTrigger : ITaskTrigger
                 using var choiceRa = content.CaptureRectArea.Find(
                     RecognitionAssets.Get("AutoSkip", "ControllerChoiceButton", content.CaptureRectArea));
                 hasControllerOption = choiceRa.IsExist();
+                _logger.LogDebug("自动剧情：手柄对话选项图标识别结果={HasOption}", hasControllerOption);
+
+                if (!hasControllerOption)
+                {
+                    // 手柄图标未命中时，用键鼠的气泡选项图标辅助判断（仅用于判断，不做鼠标点击）
+                    using var optionRa = content.CaptureRectArea.Find(
+                        RecognitionAssets.Get("AutoSkip", "OptionIcon", content.CaptureRectArea));
+                    if (optionRa.IsExist())
+                    {
+                        hasControllerOption = true;
+                        _logger.LogDebug("自动剧情：手柄选项图标未命中，但检测到键鼠对话选项气泡，按存在选项处理");
+                    }
+                }
+
                 if (hasControllerOption)
                 {
-                    if (_config.BeforeClickConfirmDelay > 0)
+                    var now = DateTime.Now;
+                    if (!_controllerOptionActive
+                        || (now - _lastControllerOptionPressTime).TotalMilliseconds >= 800)
                     {
-                        // 在触发点击动作之前延迟时间
-                        Thread.Sleep(_config.BeforeClickConfirmDelay);
-                    }
+                        if (_config.BeforeClickConfirmDelay > 0)
+                        {
+                            // 在触发点击动作之前延迟时间
+                            Thread.Sleep(_config.BeforeClickConfirmDelay);
+                        }
 
-                    // 手柄模式下按确认键即可选中第一个对话选项
-                    InputHub.Background.SimulateAction(GIActions.Confirm);
+                        // 手柄模式下按确认键即可选中第一个对话选项
+                        InputHub.Background.SimulateAction(GIActions.Confirm);
+                        _lastControllerOptionPressTime = now;
+                        if (!_controllerOptionActive)
+                        {
+                            _controllerOptionActive = true;
+                            _logger.LogInformation("自动剧情：识别到对话选项，按确认键选择第一个选项");
+                        }
+                    }
+                }
+                else
+                {
+                    _controllerOptionActive = false;
                 }
             }
 
@@ -781,6 +820,7 @@ public partial class AutoSkipTrigger : ITaskTrigger
 
         if (isInChat)
         {
+            _logger.LogDebug("自动剧情：键鼠模式下识别到对话选项（气泡或交互键）");
             if (!PrepareBeforeChooseOption())
             {
                 return true;
@@ -847,6 +887,7 @@ public partial class AutoSkipTrigger : ITaskTrigger
 
         // 气泡识别
         var chatOptionResultList = region.FindMulti(GetRecognitionObject("OptionIcon", region));
+        _logger.LogDebug("自动剧情：键鼠对话选项气泡数量={Count}", chatOptionResultList.Count);
         if (chatOptionResultList.Count > 0)
         {
             // 第一个元素就是最下面的
@@ -891,6 +932,8 @@ public partial class AutoSkipTrigger : ITaskTrigger
 
             if (rs.Count > 0)
             {
+                _logger.LogDebug("自动剧情：对话选项 OCR 候选 {Count} 条：{Texts}",
+                    rs.Count, string.Join(" | ", rs.Select(r => r.Text)));
                 // 自定义优先选项匹配
                 if (_config.CustomPriorityOptionsEnabled && !string.IsNullOrEmpty(_config.CustomPriorityOptions))  
                 {  
