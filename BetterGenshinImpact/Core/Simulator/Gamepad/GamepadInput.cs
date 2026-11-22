@@ -25,6 +25,11 @@ public static class GamepadInput
     private static ILogger? _logger;
 
     /// <summary>
+    /// 手柄模式是否已启用（仅表示配置开关，不代表已连接）
+    /// </summary>
+    public static bool IsEnabled => ConfigService.Config?.GamepadConfig.Enabled == true;
+
+    /// <summary>
     /// 虚拟手柄是否已连接
     /// </summary>
     public static bool IsConnected

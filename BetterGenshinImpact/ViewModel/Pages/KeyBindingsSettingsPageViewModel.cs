@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Model;
 using BetterGenshinImpact.Service.Interface;
 using BetterGenshinImpact.ViewModel;
@@ -64,6 +64,15 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         // 获取本模块的配置文件
         _config = configService.Get().KeyBindingsConfig;
         _gamepadConfig = configService.Get().GamepadConfig;
+
+        // 开关变化时立即刷新状态提示
+        _gamepadConfig.PropertyChanged += (_, e) =>
+        {
+            if (e.PropertyName == nameof(GamepadConfig.Enabled))
+            {
+                UpdateGamepadStatus();
+            }
+        };
 
         BuildKeyBindingsList();
         BuildGamepadBindingList();
@@ -199,7 +208,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
 
         GamepadStatus = GamepadInput.IsConnected
             ? "虚拟手柄已连接"
-            : "虚拟手柄未连接，首次按键时自动连接";
+            : "虚拟手柄未连接：首次按键时自动连接；若未安装 ViGEmBus 驱动则会自动回退键鼠";
     }
 
 

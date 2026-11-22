@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Core.Monitor;
 using BetterGenshinImpact.Core.Recognition.ONNX;
 using BetterGenshinImpact.Core.Script;
@@ -263,6 +263,18 @@ public partial class HomePageViewModel : ViewModel
             if (!TaskDispatcherEnabled)
             {
                 _hWnd = hWnd;
+
+                // 任务启动时连接一次虚拟手柄，便于在日志中确认当前是否为手柄模式
+                if (Config.GamepadConfig.Enabled)
+                {
+                    var connected = GamepadInput.TryConnect();
+                    _logger.LogInformation("手柄模式已启用，虚拟手柄{Status}", connected ? "已连接" : "连接失败（将自动回退键鼠，请检查 ViGEmBus 驱动）");
+                }
+                else
+                {
+                    _logger.LogInformation("当前为键鼠模式，手柄模式未启用");
+                }
+
                 _taskDispatcher.Start(hWnd, GetCaptureMode(), Config.TriggerInterval);
                 _taskDispatcher.UiTaskStopTickEvent -= OnUiTaskStopTick;
                 _taskDispatcher.UiTaskStartTickEvent -= OnUiTaskStartTick;
