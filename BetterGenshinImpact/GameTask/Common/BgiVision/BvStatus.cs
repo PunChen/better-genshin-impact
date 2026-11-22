@@ -331,18 +331,12 @@ public static partial class Bv
     /// <returns></returns>
     public static bool IsInTalkUi(ImageRegion captureRa)
     {
-        // 手柄模式下对话界面的按钮图标与键鼠不同，必须按当前输入模式选择模板
+        // 手柄模式下对话界面的按钮图标与键鼠不同。
+        // 手柄模式需要在游戏内切换到手柄控制，并在本软件中同时开启，两者一致时才使用手柄图标
         if (GamepadInput.IsEnabled)
         {
             using var controllerRa = captureRa.Find(AutoSkipAssets.Instance.ControllerDisabledUiButtonRo);
-            if (controllerRa.IsExist())
-            {
-                return true;
-            }
-
-            // 游戏可能仍处于键鼠提示状态（例如刚打开手柄模式还没按过手柄），回退识别键鼠图标
-            using var fallbackRa = captureRa.Find(AutoSkipAssets.Instance.DisabledUiButtonRo);
-            return fallbackRa.IsExist();
+            return controllerRa.IsExist();
         }
 
         using var ra = captureRa.Find(AutoSkipAssets.Instance.DisabledUiButtonRo);

@@ -704,7 +704,7 @@
   "键盘 / 鼠标": "Keyboard / Mouse",
   "手柄": "Gamepad",
   "启用手柄模式（虚拟 Xbox360 手柄）": "Enable gamepad mode (virtual Xbox 360 controller)",
-  "手柄模式依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会自动回退到键盘/鼠标。手柄注入属于系统级输入，不依赖窗口焦点，后台模式下同样会注入（能否被游戏接收取决于游戏本身）。修改后请重新开始任务以生效。": "Gamepad mode requires the ViGEmBus driver. When enabled, game actions use the gamepad first and fall back to keyboard/mouse when unbound. Gamepad input is system-level and does not depend on window focus, so it is also injected in background mode (whether the game accepts it depends on the game). Restart the task after changing this setting.",
+  "手柄模式需要游戏内也切换到手柄控制，并在本软件中同时开启才会生效。依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会自动回退到键盘/鼠标。手柄注入属于系统级输入，不依赖窗口焦点，后台模式下同样会注入（能否被游戏接收取决于游戏本身）。修改后请重新开始任务以生效。": "Gamepad mode only takes effect when the game itself is switched to controller control and this option is enabled here at the same time. It requires the ViGEmBus driver. When enabled, game actions use the gamepad first and fall back to keyboard/mouse when unbound. Gamepad input is system-level and does not depend on window focus, so it is also injected in background mode (whether the game accepts it depends on the game). Restart the task after changing this setting.",
   "测试确认键": "Test confirm button",
   "恢复默认": "Restore defaults",
   "动作": "Action",

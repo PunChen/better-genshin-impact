@@ -148,7 +148,7 @@
                                          IsChecked="{Binding GamepadConfig.Enabled, Mode=TwoWay}" />
                         <ui:TextBlock Margin="0,6,0,10"
                                       Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
-                                      Text="手柄模式依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会自动回退到键盘/鼠标。手柄注入属于系统级输入，不依赖窗口焦点，后台模式下同样会注入（能否被游戏接收取决于游戏本身）。修改后请重新开始任务以生效。"
+                                      Text="手柄模式需要游戏内也切换到手柄控制，并在本软件中同时开启才会生效。依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会自动回退到键盘/鼠标。手柄注入属于系统级输入，不依赖窗口焦点，后台模式下同样会注入（能否被游戏接收取决于游戏本身）。修改后请重新开始任务以生效。"
                                       TextWrapping="Wrap" />
                     </StackPanel>
 

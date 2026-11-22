@@ -171,13 +171,10 @@ public partial class AutoPickTrigger : ITaskTrigger
 
         var speedTimer = new SpeedTimer();
 
-        // 手柄模式下拾取提示的图标不同（X），按当前输入模式选择模板。
-        // 若手柄模式下没有识别到手柄图标（游戏可能仍处于键鼠提示状态），回退到键鼠图标，避免完全失效
+        // 手柄模式下拾取提示的图标不同（X）。
+        // 手柄模式需要在游戏内切换到手柄控制、并在本软件中同时开启，两者一致时才使用手柄图标
         var controllerMode = GamepadInput.IsEnabled;
-        using var controllerRa = controllerMode ? content.CaptureRectArea.Find(_autoPickAssets.ControllerPickRo) : null;
-        using var keyboardRa = (!controllerMode || controllerRa!.IsEmpty()) ? content.CaptureRectArea.Find(_pickRo) : null;
-        var useController = controllerMode && !controllerRa!.IsEmpty();
-        var foundRectArea = useController ? controllerRa! : keyboardRa!;
+        using var foundRectArea = content.CaptureRectArea.Find(controllerMode ? _autoPickAssets.ControllerPickRo : _pickRo);
 
         if (foundRectArea.IsEmpty())
         {
@@ -197,7 +194,7 @@ public partial class AutoPickTrigger : ITaskTrigger
         if (_externalConfig is { ForceInteraction: true })
         {
             LogPick(content, "直接拾取");
-            PressPick(useController);
+            PressPick(controllerMode);
             return;
         }
 
@@ -216,7 +213,7 @@ public partial class AutoPickTrigger : ITaskTrigger
         var pickX = foundRectArea.X;
         var pickY = foundRectArea.Y;
         var pickHeight = foundRectArea.Height;
-        if (useController)
+        if (controllerMode)
         {
             pickX = (int)(foundRectArea.X + foundRectArea.Width / 2d - 20 * scale);
             pickY = (int)(foundRectArea.Y + foundRectArea.Height / 2d - 20 * scale);
@@ -225,7 +222,7 @@ public partial class AutoPickTrigger : ITaskTrigger
 
         // 识别到拾取键，开始识别物品图标
         var isExcludeIcon = false;
-        var chatIconRo = useController ? _autoPickAssets.ControllerChatIconRo : _autoPickAssets.ChatIconRo;
+        var chatIconRo = controllerMode ? _autoPickAssets.ControllerChatIconRo : _autoPickAssets.ChatIconRo;
         chatIconRo.RegionOfInterest = new Rect(
             pickX + (int)(config.ItemIconLeftOffset * scale), pickY,
             (int)((config.ItemTextLeftOffset - config.ItemIconLeftOffset) * scale), pickHeight);
@@ -257,7 +254,7 @@ public partial class AutoPickTrigger : ITaskTrigger
         if (!config.WhiteListEnabled && !config.BlackListEnabled && !isExcludeIcon)
         {
             // 没有黑白名单直接拾取
-            PressPick(useController);
+            PressPick(controllerMode);
             LogPick(content, "黑名单未启用，直接拾取");
         }
 
@@ -355,7 +352,7 @@ public partial class AutoPickTrigger : ITaskTrigger
             if (config.WhiteListEnabled && _whiteList.Contains(text))
             {
                 LogPick(content, text);
-                PressPick(useController);
+                PressPick(controllerMode);
                 return;
             }
 
@@ -386,18 +383,18 @@ public partial class AutoPickTrigger : ITaskTrigger
             speedTimer.Record("黑名单判断");
 
             LogPick(content, text);
-            PressPick(useController);
+            PressPick(controllerMode);
         }
 
         speedTimer.DebugPrint();
     }
 
     /// <summary>
-    /// 按实际识别到的界面模式拾取：手柄界面按手柄键，键鼠界面按配置的拾取键
+    /// 按当前输入模式拾取：手柄模式按手柄键，键鼠模式按配置的拾取键
     /// </summary>
-    private void PressPick(bool useController)
+    private void PressPick(bool controllerMode)
     {
-        if (useController)
+        if (controllerMode)
         {
             Simulation.SendInput.SimulateAction(GIActions.PickUpOrInteract);
         }
