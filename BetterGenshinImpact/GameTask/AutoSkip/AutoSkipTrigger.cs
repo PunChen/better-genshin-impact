@@ -206,6 +206,31 @@ public partial class AutoSkipTrigger : ITaskTrigger
     /// </summary>
     private bool _wasPlaying;
 
+    /// <summary>
+    /// 快速跳过关闭时，用于判断对话文本是否已经稳定（不再变化）
+    /// </summary>
+    private Mat? _dialogueTextMat;
+
+    /// <summary>
+    /// 对话文本开始稳定的时间
+    /// </summary>
+    private DateTime _dialogueStableSince = DateTime.MinValue;
+
+    /// <summary>
+    /// 上一次自动推进对话的时间
+    /// </summary>
+    private DateTime _lastAutoAdvanceTime = DateTime.MinValue;
+
+    /// <summary>
+    /// 文本稳定多久后才视为这段话已经播放完（毫秒）
+    /// </summary>
+    private const int DialogueStableDelayMs = 1000;
+
+    /// <summary>
+    /// 自动推进对话的最小间隔（毫秒）
+    /// </summary>
+    private const int AutoAdvanceMinIntervalMs = 700;
+
     private DateTime _prevExecute = DateTime.MinValue;
     private DateTime _prevHangoutExecute = DateTime.MinValue;
 
@@ -240,6 +265,7 @@ public partial class AutoSkipTrigger : ITaskTrigger
         if (isPlaying && !_wasPlaying)
         {
             _wasPlaying = true;
+            _lastAutoAdvanceTime = DateTime.Now;
             _logger.LogInformation("自动剧情：检测到对话界面（{Mode}）", GamepadMode.Enabled ? "手柄模式" : "键鼠模式");
         }
         else if (!isPlaying && _wasPlaying)
@@ -341,6 +367,7 @@ public partial class AutoSkipTrigger : ITaskTrigger
 
             if (_config.QuicklySkipConversationsEnabled && !hasControllerOption)
             {
+                ResetDialogueStability();
                 if (_config.BeforeClickConfirmDelay > 0)
                 {
                     // 在触发点击动作之前延迟时间
@@ -355,6 +382,11 @@ public partial class AutoSkipTrigger : ITaskTrigger
                     // 键鼠模式下 Confirm 默认就是空格；手柄模式下是确认键（B）
                     InputHub.Background.SimulateAction(GIActions.Confirm);
                 }
+            }
+            else if (!hasControllerOption)
+            {
+                // 未开启快速跳过：等对话文本不再变化（近似语音播放完）后再点击确认/继续
+                TryAdvanceDialogueWhenStable(content);
             }
 
             // 对话选项选择
@@ -388,8 +420,103 @@ public partial class AutoSkipTrigger : ITaskTrigger
         }
         else
         {
+            ResetDialogueStability();
             ClickBlackGameScreen(content);
         }
+    }
+
+    /// <summary>
+    /// 未开启“快速跳过对话”时使用：等待对话文本不再变化（近似这段语音已经播放完），再点击确认/继续。
+    /// 通过对比对话框区域前后帧的差异判断文本是否仍在变化。
+    /// </summary>
+    private void TryAdvanceDialogueWhenStable(CaptureContent content)
+    {
+        try
+        {
+            var capture = content.CaptureRectArea.CacheGreyMat;
+            var width = capture.Width;
+            var height = capture.Height;
+
+            // 原神对话文字大致在画面下方中间区域（避开左右两侧的人物立绘）
+            var rect = new Rect(
+                (int)(width * 0.25),
+                (int)(height * 0.75),
+                (int)(width * 0.50),
+                (int)(height * 0.15));
+            if (rect.Width <= 0 || rect.Height <= 0 || rect.Right > width || rect.Bottom > height)
+            {
+                return;
+            }
+
+            using var roi = new Mat(capture, rect);
+            using var small = new Mat();
+            Cv2.Resize(roi, small, new OpenCvSharp.Size(48, 12), 0, 0, InterpolationFlags.Area);
+
+            var changed = true;
+            if (_dialogueTextMat is not null && _dialogueTextMat.Size() == small.Size())
+            {
+                using var diff = new Mat();
+                Cv2.Absdiff(small, _dialogueTextMat, diff);
+                changed = Cv2.Mean(diff).Val0 > 2.0;
+            }
+
+            _dialogueTextMat?.Dispose();
+            _dialogueTextMat = small.Clone();
+
+            if (changed)
+            {
+                _dialogueStableSince = DateTime.Now;
+                return;
+            }
+
+            if (_dialogueStableSince == DateTime.MinValue)
+            {
+                _dialogueStableSince = DateTime.Now;
+                return;
+            }
+
+            // 兜底：对话框区域一直在变化（立绘动画等）时，也避免永远不推进
+            if ((DateTime.Now - _lastAutoAdvanceTime).TotalSeconds >= 10)
+            {
+                AdvanceDialogue("对话长时间未推进");
+                return;
+            }
+
+            if ((DateTime.Now - _dialogueStableSince).TotalMilliseconds < DialogueStableDelayMs)
+            {
+                return;
+            }
+
+            if ((DateTime.Now - _lastAutoAdvanceTime).TotalMilliseconds < AutoAdvanceMinIntervalMs)
+            {
+                return;
+            }
+
+            _dialogueStableSince = DateTime.Now;
+            AdvanceDialogue("对话文本已稳定");
+        }
+        catch (Exception e)
+        {
+            _logger.LogDebug(e, "自动剧情：等待对话结束时发生异常");
+            ResetDialogueStability();
+        }
+    }
+
+    /// <summary>
+    /// 推进一句对话（键鼠=空格，手柄=确认键）
+    /// </summary>
+    private void AdvanceDialogue(string reason)
+    {
+        _lastAutoAdvanceTime = DateTime.Now;
+        _logger.LogDebug("自动剧情：{Reason}，自动推进", reason);
+        InputHub.Background.SimulateAction(GIActions.Confirm);
+    }
+
+    private void ResetDialogueStability()
+    {
+        _dialogueTextMat?.Dispose();
+        _dialogueTextMat = null;
+        _dialogueStableSince = DateTime.MinValue;
     }
 
     private void TryBringToFrontAfterBackgroundDialog()
