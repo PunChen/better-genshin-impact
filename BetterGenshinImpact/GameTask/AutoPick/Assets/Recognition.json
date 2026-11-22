@@ -6,6 +6,18 @@
       "roi": "rect(1090 * s, 330 * s, 60 * s, 420 * s)",
       "draw": false
     },
+    "ControllerPick": {
+      "type": "TemplateMatch",
+      "template": "controller_pick_button.png",
+      "roi": "rect(1090 * s, 330 * s, 60 * s, 420 * s)",
+      "use3Channels": true,
+      "draw": false
+    },
+    "ControllerChatIcon": {
+      "type": "TemplateMatch",
+      "template": "controller_chat_icon.png",
+      "draw": false
+    },
     "SettingsIcon": {
       "type": "TemplateMatch",
       "template": "icon_settings.png",

@@ -16,6 +16,19 @@
       "roi": "rect(0, 0, cw / 3, ch / 8)",
       "draw": true
     },
+    "ControllerDisabledUiButton": {
+      "type": "TemplateMatch",
+      "template": "controller_talk_disable_ui_button.png",
+      "roi": "rect(0, 0, cw / 3, ch / 8)",
+      "use3Channels": true,
+      "draw": true
+    },
+    "ControllerChoiceButton": {
+      "type": "TemplateMatch",
+      "template": "controller_talk_choice.png",
+      "use3Channels": true,
+      "draw": true
+    },
     "PlayingText": {
       "type": "OcrMatch",
       "roi": "rect(100 * s, 35 * s, 85 * s, 35 * s)",

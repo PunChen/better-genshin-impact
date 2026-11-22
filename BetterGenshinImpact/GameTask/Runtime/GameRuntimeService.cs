@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Input.Backends.Win32;
 using BetterGenshinImpact.Core.Script;
 using BetterGenshinImpact.GameTask.Runtime.WebPage;
@@ -248,11 +249,17 @@ public sealed class GameRuntimeService
     private void Bind(GameRuntime runtime)
     {
         var inputAttached = false;
+        IInputBackend? unusedInput = null;
         try
         {
             TaskContext.Instance().Bind(runtime);
-            InputHub.Attach(runtime.Input);
+            InputHub.Attach(SelectInputBackend(runtime, out unusedInput));
             inputAttached = true;
+
+            // 切换到其它后端时，运行时自带的输入后端不再附加，由这里负责释放
+            unusedInput?.Dispose();
+            unusedInput = null;
+
             _dispatcher.Start(runtime, _configService.Get().TriggerInterval);
         }
         catch
@@ -265,7 +272,7 @@ public sealed class GameRuntimeService
             }
             else
             {
-                runtime.Input.Dispose();
+                (unusedInput ?? runtime.Input).Dispose();
             }
 
             TaskContext.Instance().Bind(null);
@@ -276,6 +283,22 @@ public sealed class GameRuntimeService
         Current = runtime;
         _logger.LogDebug("游戏运行环境已绑定：{Kind}，窗口句柄 {Handle}", runtime.Kind, runtime.Window.Handle);
         Started?.Invoke(this, EventArgs.Empty);
+    }
+
+    /// <summary>
+    /// 选择本次任务使用的输入后端：手柄模式且为本机窗口时使用虚拟手柄，其余情况沿用运行时自带的键鼠后端
+    /// </summary>
+    private IInputBackend SelectInputBackend(GameRuntime runtime, out IInputBackend? unusedInput)
+    {
+        unusedInput = null;
+
+        if (_configService.Get().GamepadConfig.Enabled && runtime.Kind == GameRuntimeKind.Win32Window)
+        {
+            unusedInput = runtime.Input;
+            return new GamepadInputBackend();
+        }
+
+        return runtime.Input;
     }
 
     private void SetStarting(bool value)

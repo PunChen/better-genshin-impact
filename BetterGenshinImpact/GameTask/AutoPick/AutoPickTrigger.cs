@@ -1,4 +1,6 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Simulator.Extensions;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OCR;
@@ -294,7 +296,12 @@ public partial class AutoPickTrigger : ITaskTrigger
     public void OnCapture(CaptureContent content)
     {
         _autoPickAssets = AutoPickAssets.Get(content.CaptureRectArea, TaskContext.Instance().Config.AutoPickConfig.PickKey);
-        _pickRo = _autoPickAssets.PickRo;
+
+        // 手柄模式下拾取提示是 X 图标，与键鼠的 F 图标不同
+        var gamepadMode = GamepadMode.Enabled;
+        _pickRo = gamepadMode
+            ? RecognitionAssets.Get("AutoPick", "ControllerPick", content.CaptureRectArea)
+            : _autoPickAssets.PickRo;
 
         var speedTimer = new SpeedTimer();
 
@@ -318,7 +325,7 @@ public partial class AutoPickTrigger : ITaskTrigger
         if (_externalConfig is { ForceInteraction: true })
         {
             LogPick(content, "直接拾取");
-            InputHub.Foreground.Keyboard.KeyPress(_autoPickAssets.PickVk);
+            PressPick();
             return;
         }
 
@@ -333,12 +340,25 @@ public partial class AutoPickTrigger : ITaskTrigger
             return;
         }
 
-        // 识别到拾取键，开始识别物品图标
+        // 识别到拾取键，开始识别物品图标。
+        // 手柄拾取图标较小，按图标中心扩展出与键鼠模式等价的高度
+        var pickX = foundRectArea.X;
+        var pickY = foundRectArea.Y;
+        var pickHeight = foundRectArea.Height;
+        if (gamepadMode)
+        {
+            pickX = (int)(foundRectArea.X + foundRectArea.Width / 2d - 20 * scale);
+            pickY = (int)(foundRectArea.Y + foundRectArea.Height / 2d - 20 * scale);
+            pickHeight = (int)(40 * scale);
+        }
+
         var isExcludeIcon = false;
         var iconRoi = new Rect(
-            foundRectArea.X + (int)(config.ItemIconLeftOffset * scale), foundRectArea.Y,
-            (int)((config.ItemTextLeftOffset - config.ItemIconLeftOffset) * scale), foundRectArea.Height);
-        var chatIconRo = RecognitionAssets.Get("AutoSkip", "ChatIcon", content.CaptureRectArea).Clone();
+            pickX + (int)(config.ItemIconLeftOffset * scale), pickY,
+            (int)((config.ItemTextLeftOffset - config.ItemIconLeftOffset) * scale), pickHeight);
+        var chatIconRo = gamepadMode
+            ? RecognitionAssets.Get("AutoPick", "ControllerChatIcon", content.CaptureRectArea).Clone()
+            : RecognitionAssets.Get("AutoSkip", "ChatIcon", content.CaptureRectArea).Clone();
         chatIconRo.RegionOfInterest = iconRoi;
         using var chatIconRa = content.CaptureRectArea.Find(chatIconRo);
         speedTimer.Record("识别聊天图标");
@@ -388,8 +408,8 @@ public partial class AutoPickTrigger : ITaskTrigger
 
         // 这类文字识别比较特殊，都是针对某个场景的文字识别，所以暂时未抽象到识别对象中
         // 计算出文字区域
-        var textRect = new Rect(foundRectArea.X + (int)(config.ItemTextLeftOffset * scale), foundRectArea.Y,
-            (int)((config.ItemTextRightOffset - config.ItemTextLeftOffset) * scale), foundRectArea.Height);
+        var textRect = new Rect(pickX + (int)(config.ItemTextLeftOffset * scale), pickY,
+            (int)((config.ItemTextRightOffset - config.ItemTextLeftOffset) * scale), pickHeight);
         if (textRect.X + textRect.Width > content.CaptureRectArea.CacheGreyMat.Width
             || textRect.Y + textRect.Height > content.CaptureRectArea.CacheGreyMat.Height)
         {
@@ -471,14 +491,14 @@ public partial class AutoPickTrigger : ITaskTrigger
                 if (_whitelistModeFinalPickList.Contains(text))
                 {
                     LogPick(content, text);
-                    InputHub.Foreground.Keyboard.KeyPress(_autoPickAssets.PickVk);
+                    PressPick();
                 }
                 else if (_whitelistFuzzyMatcher.TryMatch(text, out var fuzzyRule)
                          && !_whitelistModeDoNotPickList.Contains(text))
                 {
                     // 精确未命中时才尝试模糊匹配；OCR 原文命中不拾取列表时以用户排除为准
                     LogFuzzyPick(content, fuzzyRule, text);
-                    InputHub.Foreground.Keyboard.KeyPress(_autoPickAssets.PickVk);
+                    PressPick();
                 }
 
                 return;
@@ -487,7 +507,7 @@ public partial class AutoPickTrigger : ITaskTrigger
             if (config.BlacklistModePickEnabled && _whiteList.Contains(text))
             {
                 LogPick(content, text);
-                InputHub.Foreground.Keyboard.KeyPress(_autoPickAssets.PickVk);
+                PressPick();
                 return;
             }
 
@@ -515,10 +535,25 @@ public partial class AutoPickTrigger : ITaskTrigger
             speedTimer.Record("黑名单判断");
 
             LogPick(content, text);
-            InputHub.Foreground.Keyboard.KeyPress(_autoPickAssets.PickVk);
+            PressPick();
         }
 
         speedTimer.DebugPrint();
+    }
+
+    /// <summary>
+    /// 按当前输入模式拾取：手柄模式走动作层按键，键鼠模式按配置的拾取键
+    /// </summary>
+    private void PressPick()
+    {
+        if (GamepadMode.Enabled)
+        {
+            InputHub.Foreground.SimulateAction(GIActions.PickUpOrInteract);
+        }
+        else
+        {
+            InputHub.Foreground.Keyboard.KeyPress(_autoPickAssets.PickVk);
+        }
     }
 
     private bool DoNotPick(string text)

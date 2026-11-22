@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -106,6 +106,21 @@ public enum GIActions
     /// 拾取/交互（自动拾取由AutoPick模块管理）
     /// </summary>
     PickUpOrInteract,
+
+    /// <summary>
+    /// 确认（对话继续/菜单确认）
+    /// </summary>
+    Confirm,
+
+    /// <summary>
+    /// 取消/返回
+    /// </summary>
+    Cancel,
+
+    /// <summary>
+    /// 跳过/推进对话
+    /// </summary>
+    SkipDialog,
 
     /// <summary>
     /// 快捷使用小道具

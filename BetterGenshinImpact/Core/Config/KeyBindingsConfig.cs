@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System;
 using System.Windows.Forms;
 using System.Windows.Input;
@@ -105,6 +105,24 @@ public partial class KeyBindingsConfig:ObservableObject
     /// </summary>
     [ObservableProperty]
     private KeyId _pickUpOrInteract = KeyId.F;
+
+    /// <summary>
+    /// 确认（对话继续/菜单确认）
+    /// </summary>
+    [ObservableProperty]
+    private KeyId _confirm = KeyId.Space;
+
+    /// <summary>
+    /// 取消/返回
+    /// </summary>
+    [ObservableProperty]
+    private KeyId _cancel = KeyId.Escape;
+
+    /// <summary>
+    /// 跳过/推进对话
+    /// </summary>
+    [ObservableProperty]
+    private KeyId _skipDialog = KeyId.Space;
 
     /// <summary>
     /// 快捷使用小道具

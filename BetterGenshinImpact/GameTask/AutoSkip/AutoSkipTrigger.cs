@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OCR;
@@ -299,7 +300,29 @@ public partial class AutoSkipTrigger : ITaskTrigger
         if (isPlaying)
         {
             _prevPlayingTime = DateTime.Now;
-            if (_config.QuicklySkipConversationsEnabled)
+
+            // 手柄模式下对话界面的图标不同：先确认是否出现了需要选择的对话选项
+            var gamepadMode = GamepadMode.Enabled;
+            var hasControllerOption = false;
+            if (gamepadMode)
+            {
+                using var choiceRa = content.CaptureRectArea.Find(
+                    RecognitionAssets.Get("AutoSkip", "ControllerChoiceButton", content.CaptureRectArea));
+                hasControllerOption = choiceRa.IsExist();
+                if (hasControllerOption)
+                {
+                    if (_config.BeforeClickConfirmDelay > 0)
+                    {
+                        // 在触发点击动作之前延迟时间
+                        Thread.Sleep(_config.BeforeClickConfirmDelay);
+                    }
+
+                    // 手柄模式下按确认键即可选中第一个对话选项
+                    InputHub.Background.SimulateAction(GIActions.Confirm);
+                }
+            }
+
+            if (_config.QuicklySkipConversationsEnabled && !hasControllerOption)
             {
                 if (_config.BeforeClickConfirmDelay > 0)
                 {
@@ -318,7 +341,12 @@ public partial class AutoSkipTrigger : ITaskTrigger
 
             // 对话选项选择
             bool hasOption;
-            if (UseBackgroundOperation || IsUseInteractionKey)
+            if (gamepadMode)
+            {
+                // 手柄模式已经通过确认键选择，无需再用鼠标点击选项
+                hasOption = hasControllerOption;
+            }
+            else if (UseBackgroundOperation || IsUseInteractionKey)
             {
                 hasOption = ChatOptionChooseUseKey(content.CaptureRectArea);
             }

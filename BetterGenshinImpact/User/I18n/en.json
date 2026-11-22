@@ -1457,5 +1457,12 @@
   "（此处未覆盖的配置可在 独立任务-自动秘境 中配置）": "(Settings not covered here can be configured in Independent Tasks - Auto Domain)",
   "（测试）播放内存中的路径": "(Test) Play In-Memory Path",
   "（测试）测试": "(Test) Test",
-  "（测试）测试2": "(Test) Test 2"
+  "（测试）测试2": "(Test) Test 2",
+  "键盘 / 鼠标": "Keyboard / Mouse",
+  "手柄": "Gamepad",
+  "启用手柄模式（虚拟 Xbox360 手柄）": "Enable gamepad mode (virtual Xbox 360 controller)",
+  "手柄模式需要游戏内也切换到手柄控制，并在本软件中同时开启才会生效。依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会被忽略。修改后请重新开始任务以生效。": "Gamepad mode only works when the game itself is switched to controller control and this option is enabled here. It requires the ViGEmBus driver. When enabled, game actions use the gamepad first and unbound actions are ignored. Restart the task after changing this setting.",
+  "测试确认键": "Test confirm button",
+  "恢复默认": "Restore defaults",
+  "手柄按键": "Gamepad button"
 }

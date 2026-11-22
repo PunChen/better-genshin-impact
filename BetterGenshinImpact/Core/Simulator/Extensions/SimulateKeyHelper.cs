@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.GameTask;
 using System;
 using System.Collections.Generic;
@@ -40,6 +40,9 @@ public static class SimulateKeyHelper
             GIActions.Jump => KeyConfig.Jump,
             GIActions.Drop => KeyConfig.Drop,
             GIActions.PickUpOrInteract => KeyConfig.PickUpOrInteract,
+            GIActions.Confirm => KeyConfig.Confirm,
+            GIActions.Cancel => KeyConfig.Cancel,
+            GIActions.SkipDialog => KeyConfig.SkipDialog,
             GIActions.QuickUseGadget => KeyConfig.QuickUseGadget,
             GIActions.InteractionInSomeMode => KeyConfig.InteractionInSomeMode,
             GIActions.QuestNavigation => KeyConfig.QuestNavigation,
