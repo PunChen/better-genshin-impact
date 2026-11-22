@@ -406,6 +406,7 @@ public partial class AutoPickTrigger : ITaskTrigger
             // 白名单模式下，安全图标排除优先于拾取列表。
             if (isExcludeIcon)
             {
+                _logger.LogDebug("自动拾取：检测到交互提示，但图标被判定为排除类型（聊天气泡/设置图标），跳过");
                 return;
             }
         }
@@ -509,13 +510,18 @@ public partial class AutoPickTrigger : ITaskTrigger
 
             if (config.Mode == AutoPickMode.Whitelist)
             {
-                if (_whitelistModeFinalPickList.Contains(text))
+                var exactHit = _whitelistModeFinalPickList.Contains(text);
+                AutoPickFuzzyRule? fuzzyRule = null;
+                var fuzzyHit = !exactHit && _whitelistFuzzyMatcher.TryMatch(text, out fuzzyRule);
+                _logger.LogDebug(
+                    "自动拾取：OCR文本=\"{Text}\"，图标排除={Exclude}，白名单精确命中={Exact}，模糊命中={Fuzzy}",
+                    text, isExcludeIcon, exactHit, fuzzyHit);
+                if (exactHit)
                 {
                     LogPick(content, text);
                     PressPick();
                 }
-                else if (_whitelistFuzzyMatcher.TryMatch(text, out var fuzzyRule)
-                         && !_whitelistModeDoNotPickList.Contains(text))
+                else if (fuzzyHit && fuzzyRule is not null && !_whitelistModeDoNotPickList.Contains(text))
                 {
                     // 精确未命中时才尝试模糊匹配；OCR 原文命中不拾取列表时以用户排除为准
                     LogFuzzyPick(content, fuzzyRule, text);
