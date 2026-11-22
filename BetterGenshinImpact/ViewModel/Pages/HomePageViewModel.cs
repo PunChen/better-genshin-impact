@@ -145,6 +145,10 @@ public partial class HomePageViewModel : ViewModel, IDisposable
         _childSessionService = childSessionService;
         _bannerImageService = bannerImageService;
         Config = configService.Get();
+
+        // 启动时输出当前输入模式，便于排查手柄/键鼠相关问题
+        _logger.LogInformation("当前输入模式配置：{Mode}",
+            Config.GamepadConfig.Enabled ? "手柄模式（需游戏内同时切到手柄控制）" : "键鼠模式");
         // 本地原神的安装目录与网页版无关，网页版实例不去读注册表，也不写共享配置
         if (!InstanceBootstrap.Current.Context.IsWebView)
         {

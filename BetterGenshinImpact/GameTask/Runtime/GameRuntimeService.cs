@@ -253,7 +253,11 @@ public sealed class GameRuntimeService
         try
         {
             TaskContext.Instance().Bind(runtime);
-            InputHub.Attach(SelectInputBackend(runtime, out unusedInput));
+
+            var backend = SelectInputBackend(runtime, out unusedInput);
+            LogInputMode(backend);
+
+            InputHub.Attach(backend);
             inputAttached = true;
 
             // 切换到其它后端时，运行时自带的输入后端不再附加，由这里负责释放
@@ -299,6 +303,29 @@ public sealed class GameRuntimeService
         }
 
         return runtime.Input;
+    }
+
+    /// <summary>
+    /// 任务启动时输出本次使用的输入模式，便于确认手柄/键鼠是否按预期生效
+    /// </summary>
+    private void LogInputMode(IInputBackend backend)
+    {
+        if (backend is GamepadInputBackend gamepad)
+        {
+            if (gamepad.TryConnect())
+            {
+                _logger.LogInformation("当前运行模式：手柄模式（虚拟 Xbox360 手柄已连接）");
+            }
+            else
+            {
+                _logger.LogWarning("当前运行模式：手柄模式，但虚拟手柄连接失败：{Error}",
+                    gamepad.LastError ?? "请检查 ViGEmBus 驱动是否安装");
+            }
+
+            return;
+        }
+
+        _logger.LogInformation("当前运行模式：键鼠模式");
     }
 
     private void SetStarting(bool value)

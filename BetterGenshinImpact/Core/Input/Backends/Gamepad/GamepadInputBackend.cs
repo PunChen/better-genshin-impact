@@ -29,6 +29,16 @@ public sealed class GamepadInputBackend : IInputBackend
     public void Dispose() => _channel.Dispose();
 
     /// <summary>
+    /// 提前连接虚拟手柄，便于任务启动时在日志中暴露驱动问题
+    /// </summary>
+    public bool TryConnect() => _channel.TryConnect();
+
+    /// <summary>
+    /// 最近一次连接/操作失败的原因
+    /// </summary>
+    public string? LastError => _channel.LastError;
+
+    /// <summary>
     /// 设置页“测试按键”使用：临时连接虚拟手柄按一次后立即释放
     /// </summary>
     public static bool TestButton(GamepadButton button, int durationMs, out string? error)
@@ -366,6 +376,16 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
     #endregion
 
     #region 连接与反查
+
+    /// <summary>
+    /// 提前建立连接（任务启动时调用）
+    /// </summary>
+    public bool TryConnect() => EnsureTransport();
+
+    /// <summary>
+    /// 最近一次连接失败的原因
+    /// </summary>
+    public string? LastError => _transport?.LastError;
 
     private bool EnsureTransport()
     {
