@@ -53,16 +53,7 @@
             </Setter>
         </Style>
 
-        <!-- 手柄按键下拉框：显式设置前景/背景/边框，保证深色主题下文字清晰 -->
-        <Style x:Key="GamepadComboBoxStyle" TargetType="ComboBox">
-            <Setter Property="Height" Value="32" />
-            <Setter Property="MinWidth" Value="180" />
-            <Setter Property="Padding" Value="8,4" />
-            <Setter Property="HorizontalAlignment" Value="Left" />
-            <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
-            <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
-            <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
-        </Style>
+        <!-- 手柄按键下拉框不单独定义 Style，直接复用页面其它下拉框的主题样式，避免显式 Style 覆盖主题导致文字/背景对比度异常 -->
     </UserControl.Resources>
 
     <Grid Margin="{StaticResource PagePadding}">
@@ -222,9 +213,13 @@
                                                                Text="{Binding ActionName}"
                                                                TextWrapping="Wrap" />
                                                     <ComboBox Grid.Column="1"
+                                                              Height="32"
+                                                              MinWidth="180"
+                                                              Padding="8,4"
+                                                              HorizontalAlignment="Left"
+                                                              VerticalContentAlignment="Center"
                                                               ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                              SelectedItem="{Binding ButtonValue, Mode=TwoWay}"
-                                                              Style="{StaticResource GamepadComboBoxStyle}" />
+                                                              SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
                                                 </Grid>
                                             </Border>
                                             <DataTemplate.Triggers>
