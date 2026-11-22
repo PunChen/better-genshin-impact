@@ -18,8 +18,57 @@
              Foreground="{DynamicResource TextFillColorPrimaryBrush}"
              mc:Ignorable="d">
 
+    <UserControl.Resources>
+        <!-- 自定义 Tab 头：解决深色主题下默认 TabItem 文字与高亮对比度不足的问题 -->
+            <Style x:Key="PageTabItemStyle" TargetType="TabItem">
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorSecondaryBrush}" />
+                <Setter Property="FontSize" Value="14" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="TabItem">
+                            <Border x:Name="TabBorder"
+                                    Margin="0,0,4,0"
+                                    Padding="16,8"
+                                    Background="Transparent"
+                                    BorderBrush="Transparent"
+                                    BorderThickness="0,0,0,2"
+                                    CornerRadius="4,4,0,0">
+                                <ContentPresenter HorizontalAlignment="Center"
+                                                  VerticalAlignment="Center"
+                                                  ContentSource="Header"
+                                                  TextElement.Foreground="{TemplateBinding Foreground}" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="TabBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                </Trigger>
+                                <Trigger Property="IsSelected" Value="True">
+                                    <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                                    <Setter TargetName="TabBorder" Property="BorderBrush" Value="{DynamicResource AccentFillColorDefaultBrush}" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Style>
+
+            <!-- 手柄按键下拉框：显式设置前景/背景/边框，保证深色主题下文字清晰 -->
+            <Style x:Key="GamepadComboBoxStyle" TargetType="ComboBox">
+                <Setter Property="Height" Value="32" />
+                <Setter Property="MinWidth" Value="180" />
+                <Setter Property="Padding" Value="8,4" />
+                <Setter Property="HorizontalAlignment" Value="Left" />
+                <Setter Property="Foreground" Value="{DynamicResource TextFillColorPrimaryBrush}" />
+                <Setter Property="Background" Value="{DynamicResource ControlFillColorDefaultBrush}" />
+                <Setter Property="BorderBrush" Value="{DynamicResource ControlStrokeColorDefaultBrush}" />
+            </Style>
+    </UserControl.Resources>
+
     <Grid Margin="42,16,42,12">
-        <TabControl>
+
+        <TabControl Background="Transparent"
+                    BorderThickness="0"
+                    ItemContainerStyle="{StaticResource PageTabItemStyle}">
             <TabItem Header="键盘 / 鼠标">
                 <Grid Margin="0,8,0,0">
                     <Grid.RowDefinitions>
@@ -98,7 +147,7 @@
                         <ui:ToggleSwitch Content="启用手柄模式（虚拟 Xbox360 手柄）"
                                          IsChecked="{Binding GamepadConfig.Enabled, Mode=TwoWay}" />
                         <ui:TextBlock Margin="0,6,0,10"
-                                      Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                                      Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                       Text="手柄模式依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会自动回退到键盘/鼠标。手柄注入属于系统级输入，不依赖窗口焦点，后台模式下同样会注入（能否被游戏接收取决于游戏本身）。修改后请重新开始任务以生效。"
                                       TextWrapping="Wrap" />
                     </StackPanel>
@@ -111,35 +160,73 @@
                                    Margin="8,0,0,0" />
                         <ui:TextBlock Margin="12,0,0,0"
                                       VerticalAlignment="Center"
-                                      Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                                      Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
                                       Text="{Binding GamepadStatus}"
                                       TextWrapping="Wrap" />
                     </StackPanel>
 
                     <ui:Border Grid.Row="2"
+                               Padding="8"
                                Background="{DynamicResource CardBackground}"
                                BorderBrush="{DynamicResource CardBorderBrush}"
                                BorderThickness="1"
                                CornerRadius="{DynamicResource ControlCornerRadius}">
-                        <ListView ItemsSource="{Binding GamepadBindingModels}"
-                                  Background="Transparent"
-                                  BorderThickness="0">
-                            <ListView.View>
-                                <GridView>
-                                    <GridViewColumn Width="420" Header="动作" DisplayMemberBinding="{Binding ActionName}" />
-                                    <GridViewColumn Width="180" Header="手柄按键">
-                                        <GridViewColumn.CellTemplate>
-                                            <DataTemplate>
-                                                <ComboBox MinWidth="140"
-                                                          Margin="0,2"
-                                                          ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                          SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
-                                            </DataTemplate>
-                                        </GridViewColumn.CellTemplate>
-                                    </GridViewColumn>
-                                </GridView>
-                            </ListView.View>
-                        </ListView>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+
+                            <Grid Grid.Row="0" Margin="8,4,8,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="220" />
+                                </Grid.ColumnDefinitions>
+                                <ui:TextBlock Grid.Column="0"
+                                              FontTypography="BodyStrong"
+                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                              Text="动作" />
+                                <ui:TextBlock Grid.Column="1"
+                                              FontTypography="BodyStrong"
+                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                              Text="手柄按键" />
+                            </Grid>
+
+                            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                                <ItemsControl ItemsSource="{Binding GamepadBindingModels}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border x:Name="RowBorder"
+                                                    Margin="0,1"
+                                                    Padding="8,6"
+                                                    Background="Transparent"
+                                                    CornerRadius="4">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="220" />
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0"
+                                                               VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                               Text="{Binding ActionName}"
+                                                               TextWrapping="Wrap" />
+                                                    <ComboBox Grid.Column="1"
+                                                              ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                              SelectedItem="{Binding ButtonValue, Mode=TwoWay}"
+                                                              Style="{StaticResource GamepadComboBoxStyle}" />
+                                                </Grid>
+                                            </Border>
+                                            <DataTemplate.Triggers>
+                                                <Trigger SourceName="RowBorder" Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                                </Trigger>
+                                            </DataTemplate.Triggers>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Grid>
                     </ui:Border>
                 </Grid>
             </TabItem>

@@ -38,6 +38,16 @@ public class AutoSkipAssets : BaseAssets<AutoSkipAssets>
     public RecognitionObject HangoutUnselectedRo;
     public RecognitionObject HangoutSkipRo;
 
+    /// <summary>
+    /// 手柄模式下的“隐藏对话UI”按钮
+    /// </summary>
+    public RecognitionObject ControllerDisabledUiButtonRo;
+
+    /// <summary>
+    /// 手柄模式下的对话选项图标
+    /// </summary>
+    public RecognitionObject ControllerChoiceButtonRo;
+
     private AutoSkipAssets()
     {
         StopAutoButtonRo = new RecognitionObject
@@ -64,6 +74,27 @@ public class AutoSkipAssets : BaseAssets<AutoSkipAssets>
             TemplateImageMat = GameTaskManager.LoadAssetImage("AutoSkip", "disabled_ui.png"),
             RegionOfInterest = new Rect(0, 0, CaptureRect.Width / 3, CaptureRect.Height / 8),
             DrawOnWindow = true
+        }.InitTemplate();
+
+        // 手柄模式下“隐藏对话UI”按钮的图标与键鼠模式不同
+        ControllerDisabledUiButtonRo = new RecognitionObject
+        {
+            Name = "ControllerDisabledUiButton",
+            RecognitionType = RecognitionTypes.TemplateMatch,
+            TemplateImageMat = GameTaskManager.LoadAssetImage("AutoSkip", "controller_talk_disable_ui_button.png"),
+            RegionOfInterest = new Rect(0, 0, CaptureRect.Width / 3, CaptureRect.Height / 8),
+            DrawOnWindow = true,
+            Use3Channels = true
+        }.InitTemplate();
+
+        // 手柄模式下的对话选项图标，用于确认现在出现了需要选择的对话选项
+        ControllerChoiceButtonRo = new RecognitionObject
+        {
+            Name = "ControllerChoiceButton",
+            RecognitionType = RecognitionTypes.TemplateMatch,
+            TemplateImageMat = GameTaskManager.LoadAssetImage("AutoSkip", "controller_talk_choice.png"),
+            DrawOnWindow = true,
+            Use3Channels = true
         }.InitTemplate();
 
         PlayingTextRo = new RecognitionObject

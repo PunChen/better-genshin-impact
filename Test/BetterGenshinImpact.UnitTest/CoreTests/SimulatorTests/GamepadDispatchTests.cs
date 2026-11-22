@@ -26,6 +26,26 @@ public class GamepadDispatchTests
     }
 
     [Fact]
+    public void DefaultBindings_MatchGenshinControllerLayout()
+    {
+        // 与原神“设置-按键-战斗界面/系统界面”的默认手柄按键保持一致
+        var config = new GamepadConfig();
+
+        Assert.Equal(GamepadButton.A, config.NormalAttack);
+        Assert.Equal(GamepadButton.RightTrigger, config.ElementalSkill);
+        Assert.Equal(GamepadButton.Y, config.ElementalBurst);
+        Assert.Equal(GamepadButton.RightShoulder, config.Sprint);
+        Assert.Equal(GamepadButton.B, config.Jump);
+        Assert.Equal(GamepadButton.X, config.PickUpOrInteract);
+
+        Assert.Equal(GamepadButton.B, config.Confirm);
+        Assert.Equal(GamepadButton.A, config.Cancel);
+
+        // 对话推进与确认是同一个键（B）
+        Assert.Equal(GamepadButton.B, config.SkipDialog);
+    }
+
+    [Fact]
     public void DisabledMode_FallsBackToKeyboard()
     {
         var config = new GamepadConfig { Enabled = false };

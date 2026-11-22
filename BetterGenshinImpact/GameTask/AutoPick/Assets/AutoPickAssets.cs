@@ -18,6 +18,16 @@ public class AutoPickAssets : BaseAssets<AutoPickAssets>
     public RecognitionObject SettingsIconRo;
     public RecognitionObject LRo;
 
+    /// <summary>
+    /// 手柄模式下的拾取/交互图标
+    /// </summary>
+    public RecognitionObject ControllerPickRo;
+
+    /// <summary>
+    /// 手柄模式下的聊天气泡图标（拾取提示可能是 NPC 对话）
+    /// </summary>
+    public RecognitionObject ControllerChatIconRo;
+
 
     public User32.VK PickVk = User32.VK.VK_F;
     public RecognitionObject PickRo;
@@ -67,6 +77,31 @@ public class AutoPickAssets : BaseAssets<AutoPickAssets>
 
 
         PickRo = FRo;
+
+        // 手柄模式的拾取键图标（X），与键鼠的 F 图标不同
+        ControllerPickRo = new RecognitionObject
+        {
+            Name = "ControllerPickRo",
+            RecognitionType = RecognitionTypes.TemplateMatch,
+            TemplateImageMat = GameTaskManager.LoadAssetImage("AutoPick", "controller_pick_button.png"),
+            RegionOfInterest = new Rect((int)(1090 * AssetScale),
+                (int)(330 * AssetScale),
+                (int)(60 * AssetScale),
+                (int)(420 * AssetScale)),
+            DrawOnWindow = false,
+            Use3Channels = true
+        }.InitTemplate();
+
+        // 手柄模式下拾取提示旁的聊天气泡图标
+        ControllerChatIconRo = new RecognitionObject
+        {
+            Name = "ControllerChatIconRo",
+            RecognitionType = RecognitionTypes.TemplateMatch,
+            TemplateImageMat = GameTaskManager.LoadAssetImage("AutoSkip", "controller_chat_icon.png"),
+            DrawOnWindow = false,
+            DrawOnWindowPen = new Pen(Color.Chocolate, 2)
+        }.InitTemplate();
+
         var keyName = TaskContext.Instance().Config.AutoPickConfig.PickKey;
         if (!string.IsNullOrEmpty(keyName))
         {

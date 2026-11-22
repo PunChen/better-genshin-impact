@@ -4,6 +4,7 @@ using BetterGenshinImpact.Core.Recognition.OCR;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
 using BetterGenshinImpact.Core.Simulator;
 using BetterGenshinImpact.Core.Simulator.Extensions;
+using BetterGenshinImpact.Core.Simulator.Gamepad;
 using BetterGenshinImpact.GameTask.AutoSkip.Assets;
 using BetterGenshinImpact.GameTask.AutoSkip.Model;
 using BetterGenshinImpact.GameTask.Common;
@@ -206,26 +207,54 @@ public partial class AutoSkipTrigger : ITaskTrigger
         if (isPlaying)
         {
             _prevPlayingTime = DateTime.Now;
-            if (TaskContext.Instance().Config.AutoSkipConfig.QuicklySkipConversationsEnabled)
+
+            // 手柄模式下对话界面的图标不同：先确认是否出现了需要选择的对话选项
+            var controllerMode = GamepadInput.IsEnabled;
+            var hasControllerOption = false;
+            if (controllerMode)
+            {
+                using var choiceRa = content.CaptureRectArea.Find(_autoSkipAssets.ControllerChoiceButtonRo);
+                hasControllerOption = choiceRa.IsExist();
+                if (hasControllerOption)
+                {
+                    if (_config.BeforeClickConfirmDelay > 0)
+                    {
+                        // 在触发点击动作之前延迟时间
+                        Thread.Sleep(_config.BeforeClickConfirmDelay);
+                    }
+
+                    // 手柄模式下按确认键即可选中第一个对话选项
+                    _postMessageSimulator?.SimulateActionBackground(GIActions.Confirm);
+                }
+            }
+
+            if (TaskContext.Instance().Config.AutoSkipConfig.QuicklySkipConversationsEnabled && !hasControllerOption)
             {
                 if (_config.BeforeClickConfirmDelay > 0)
                 {
                     // 在触发点击动作之前延迟时间
                     Thread.Sleep(_config.BeforeClickConfirmDelay);
                 }
+
                 if (IsUseInteractionKey)
                 {
-                    _postMessageSimulator? .SimulateActionBackground(GIActions.PickUpOrInteract); // 注意这里不是交互键 NOTE By Ayu0K: 这里确实是交互键
+                    _postMessageSimulator?.SimulateActionBackground(GIActions.PickUpOrInteract); // 注意这里不是交互键 NOTE By Ayu0K: 这里确实是交互键
                 }
                 else
                 {
-                    _postMessageSimulator?.KeyPressBackground(User32.VK.VK_SPACE);
+                    // 键鼠模式发送空格，手柄模式按确认键，由底层根据当前模式自动选择
+                    _postMessageSimulator?.SimulateActionBackground(GIActions.SkipDialog);
                 }
             }
 
             // 对话选项选择
             bool hasOption;
-            if (UseBackgroundOperation || IsUseInteractionKey)
+            if (controllerMode)
+            {
+                // 手柄模式已经通过确认键选择，无需再用鼠标点击选项
+                hasOption = hasControllerOption;
+            }
+            else if (UseBackgroundOperation || IsUseInteractionKey)
             {
                 hasOption = ChatOptionChooseUseKey(content.CaptureRectArea);
             }

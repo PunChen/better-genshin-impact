@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Recognition;
+using BetterGenshinImpact.Core.Simulator.Gamepad;
 using BetterGenshinImpact.GameTask.AutoFight.Assets;
 using BetterGenshinImpact.GameTask.AutoSkip.Assets;
 using BetterGenshinImpact.GameTask.Common.Element.Assets;
@@ -330,6 +331,20 @@ public static partial class Bv
     /// <returns></returns>
     public static bool IsInTalkUi(ImageRegion captureRa)
     {
+        // 手柄模式下对话界面的按钮图标与键鼠不同，必须按当前输入模式选择模板
+        if (GamepadInput.IsEnabled)
+        {
+            using var controllerRa = captureRa.Find(AutoSkipAssets.Instance.ControllerDisabledUiButtonRo);
+            if (controllerRa.IsExist())
+            {
+                return true;
+            }
+
+            // 游戏可能仍处于键鼠提示状态（例如刚打开手柄模式还没按过手柄），回退识别键鼠图标
+            using var fallbackRa = captureRa.Find(AutoSkipAssets.Instance.DisabledUiButtonRo);
+            return fallbackRa.IsExist();
+        }
+
         using var ra = captureRa.Find(AutoSkipAssets.Instance.DisabledUiButtonRo);
         return ra.IsExist();
     }

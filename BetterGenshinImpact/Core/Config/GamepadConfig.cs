@@ -36,13 +36,13 @@ public partial class GamepadConfig : ObservableObject
     /// 确认（对话继续/菜单确认），可设置为 X/A/B/Y 中任意一个
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _confirm = GamepadButton.A;
+    private GamepadButton _confirm = GamepadButton.B;
 
     /// <summary>
     /// 取消/返回
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _cancel = GamepadButton.B;
+    private GamepadButton _cancel = GamepadButton.A;
 
     /// <summary>
     /// 跳过/推进对话
@@ -64,13 +64,13 @@ public partial class GamepadConfig : ObservableObject
     /// 普通攻击
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _normalAttack = GamepadButton.X;
+    private GamepadButton _normalAttack = GamepadButton.A;
 
     /// <summary>
     /// 元素战技
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _elementalSkill = GamepadButton.RightShoulder;
+    private GamepadButton _elementalSkill = GamepadButton.RightTrigger;
 
     /// <summary>
     /// 元素爆发
@@ -82,13 +82,13 @@ public partial class GamepadConfig : ObservableObject
     /// 跳跃
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _jump = GamepadButton.A;
+    private GamepadButton _jump = GamepadButton.B;
 
     /// <summary>
     /// 冲刺
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _sprint = GamepadButton.RightTrigger;
+    private GamepadButton _sprint = GamepadButton.RightShoulder;
 
     /// <summary>
     /// 切换瞄准模式
@@ -100,13 +100,13 @@ public partial class GamepadConfig : ObservableObject
     /// 切换走/跑
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _switchToWalkOrRun = GamepadButton.LeftThumb;
+    private GamepadButton _switchToWalkOrRun = GamepadButton.None;
 
     /// <summary>
     /// 快捷使用小道具
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _quickUseGadget = GamepadButton.Up;
+    private GamepadButton _quickUseGadget = GamepadButton.None;
 
     #endregion
 
