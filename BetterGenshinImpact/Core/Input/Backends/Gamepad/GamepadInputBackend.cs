@@ -88,8 +88,9 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
     /// </summary>
     private static readonly GIActions[] ReverseMappableActions =
     [
-        GIActions.SkipDialog,
+        // Space 同时可能是跳跃和推进对话，优先按“确认/推进对话”处理
         GIActions.Confirm,
+        GIActions.SkipDialog,
         GIActions.Cancel,
         GIActions.PickUpOrInteract,
         GIActions.NormalAttack,

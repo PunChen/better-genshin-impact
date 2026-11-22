@@ -201,6 +201,11 @@ public partial class AutoSkipTrigger : ITaskTrigger
     /// </summary>
     private DateTime _prevPlayingTime = DateTime.MinValue;
 
+    /// <summary>
+    /// 上一帧是否处于对话界面，仅用于切换日志
+    /// </summary>
+    private bool _wasPlaying;
+
     private DateTime _prevExecute = DateTime.MinValue;
     private DateTime _prevHangoutExecute = DateTime.MinValue;
 
@@ -230,6 +235,18 @@ public partial class AutoSkipTrigger : ITaskTrigger
 
         var isPlaying = content.CurrentGameUiCategory == GameUiCategory.Talk
                         || Bv.IsInTalkUi(content.CaptureRectArea); // 播放中
+
+        // 只在进入/离开对话界面时打一条日志，便于确认手柄模式下是否识别到了对话
+        if (isPlaying && !_wasPlaying)
+        {
+            _wasPlaying = true;
+            _logger.LogInformation("自动剧情：检测到对话界面（{Mode}）", GamepadMode.Enabled ? "手柄模式" : "键鼠模式");
+        }
+        else if (!isPlaying && _wasPlaying)
+        {
+            _wasPlaying = false;
+            _logger.LogDebug("自动剧情：对话界面已消失");
+        }
 
         if (IsChooseOptionWaiting())
         {
@@ -335,7 +352,8 @@ public partial class AutoSkipTrigger : ITaskTrigger
                 }
                 else
                 {
-                    InputHub.Background.Keyboard.KeyPress(User32.VK.VK_SPACE);
+                    // 键鼠模式下 Confirm 默认就是空格；手柄模式下是确认键（B）
+                    InputHub.Background.SimulateAction(GIActions.Confirm);
                 }
             }
 
