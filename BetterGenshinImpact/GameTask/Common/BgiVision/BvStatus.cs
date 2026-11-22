@@ -28,6 +28,14 @@ public enum GameUiCategory
 
 public static partial class Bv
 {
+    /// <summary>
+    /// 仅用于日志分类，静态类不能直接作为泛型参数
+    /// </summary>
+    private sealed class BvLogCategory
+    {
+    }
+
+    private static readonly ILogger Logger = App.GetLogger<BvLogCategory>();
     public static GameUiCategory WhichGameUi()
     {
         using var region = TaskControl.CaptureToRectArea();
@@ -331,16 +339,35 @@ public static partial class Bv
     /// <returns></returns>
     public static bool IsInTalkUi(ImageRegion captureRa)
     {
-        // 手柄模式下对话界面的按钮图标与键鼠不同；需要游戏内与软件内同时切到手柄才生效
+        // 手柄模式下对话界面的按钮图标与键鼠不同；需要游戏内与软件内同时切到手柄才生效。
+        // 手柄图标未命中时回退识别键鼠图标，避免个别版本/分辨率下按钮图标差异导致对话完全识别不到。
         if (GamepadMode.Enabled)
         {
             using var controllerRa = captureRa.Find(RecognitionAssets.Get("AutoSkip", "ControllerDisabledUiButton", captureRa.Width, captureRa.Height));
-            return controllerRa.IsExist();
+            var controllerHit = controllerRa.IsExist();
+
+            using var keyboardRa = captureRa.Find(RecognitionAssets.Get("AutoSkip", "DisabledUiButton", captureRa.Width, captureRa.Height));
+            var keyboardHit = keyboardRa.IsExist();
+
+            var detected = controllerHit || keyboardHit;
+            if (_lastTalkUiDetected != detected)
+            {
+                _lastTalkUiDetected = detected;
+                Logger.LogDebug("对话界面识别：手柄图标={ControllerHit}，键鼠图标={KeyboardHit}，结果={Detected}",
+                    controllerHit, keyboardHit, detected);
+            }
+
+            return detected;
         }
 
         using var ra = captureRa.Find(RecognitionAssets.Get("AutoSkip", "DisabledUiButton", captureRa.Width, captureRa.Height));
         return ra.IsExist();
     }
+
+    /// <summary>
+    /// 上一次对话界面识别结果，仅用于避免重复日志
+    /// </summary>
+    private static bool? _lastTalkUiDetected;
 
     /// <summary>
     /// 等到对话界面加载完成
