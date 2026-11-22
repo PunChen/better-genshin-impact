@@ -108,6 +108,21 @@ public enum GIActions
     PickUpOrInteract,
 
     /// <summary>
+    /// 确认（对话继续/菜单确认）
+    /// </summary>
+    Confirm,
+
+    /// <summary>
+    /// 取消/返回
+    /// </summary>
+    Cancel,
+
+    /// <summary>
+    /// 跳过/推进对话
+    /// </summary>
+    SkipDialog,
+
+    /// <summary>
     /// 快捷使用小道具
     /// </summary>
     QuickUseGadget,

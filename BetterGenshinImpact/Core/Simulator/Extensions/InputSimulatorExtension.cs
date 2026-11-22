@@ -21,6 +21,12 @@ public static class InputSimulatorExtension
     /// <param name="type">按键类型</param>
     public static void SimulateAction(this InputSimulator self, GIActions action, KeyType type = KeyType.KeyPress)
     {
+        // 手柄模式优先：已接管则不再走键鼠；未启用/未绑定/驱动不可用时自动回退
+        if (Gamepad.GamepadInput.TrySimulate(action, type))
+        {
+            return;
+        }
+
         var key = action.ToActionKey();
         switch (type)
         {

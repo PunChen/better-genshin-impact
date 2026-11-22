@@ -28,6 +28,9 @@ public class Simulation
                 SendInput.Keyboard.KeyUp(key);
             }
         }
+
+        // 同时释放手柄按键与摇杆
+        Gamepad.GamepadInput.ReleaseAll();
     }
 
     public static bool IsKeyDown(User32.VK key)

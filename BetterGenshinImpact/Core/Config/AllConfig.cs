@@ -233,6 +233,11 @@ public partial class AllConfig : ObservableObject
     public KeyBindingsConfig KeyBindingsConfig { get; set; } = new();
 
     /// <summary>
+    /// 手柄（虚拟 Xbox360 手柄）配置
+    /// </summary>
+    public GamepadConfig GamepadConfig { get; set; } = new();
+
+    /// <summary>
     /// 其他配置
     /// </summary>
     public OtherConfig OtherConfig { get; set; } = new();
@@ -265,6 +270,7 @@ public partial class AllConfig : ObservableObject
         NotificationConfig.PropertyChanged += OnAnyPropertyChanged;
         NotificationConfig.PropertyChanged += OnNotificationPropertyChanged;
         KeyBindingsConfig.PropertyChanged += OnAnyPropertyChanged;
+        GamepadConfig.PropertyChanged += OnAnyPropertyChanged;
         AutoPickConfig.PropertyChanged += OnAnyPropertyChanged;
         AutoSkipConfig.PropertyChanged += OnAnyPropertyChanged;
         AutoFishingConfig.PropertyChanged += OnAnyPropertyChanged;

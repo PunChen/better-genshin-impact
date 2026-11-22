@@ -2,6 +2,7 @@
 using BetterGenshinImpact.Core.Monitor;
 using BetterGenshinImpact.Core.Recognition.ONNX;
 using BetterGenshinImpact.Core.Script;
+using BetterGenshinImpact.Core.Simulator.Gamepad;
 using BetterGenshinImpact.GameTask;
 using BetterGenshinImpact.GameTask.AutoFishing;
 using BetterGenshinImpact.Genshin.Paths;
@@ -317,6 +318,8 @@ public partial class HomePageViewModel : ViewModel
 
                 TaskDispatcherEnabled = false;
                 _mouseKeyMonitor.Unsubscribe();
+                // 释放可能仍处于按下状态的手柄按键
+                GamepadInput.ReleaseAll();
                 TaskContext.Instance().IsInitialized = false;
             }
         }

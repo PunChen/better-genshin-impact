@@ -1,3 +1,4 @@
+using BetterGenshinImpact.Core.Simulator.Gamepad;
 using BetterGenshinImpact.Helpers.DpiAwareness;
 using BetterGenshinImpact.ViewModel;
 using Microsoft.Extensions.Logging;
@@ -44,6 +45,8 @@ public partial class MainWindow : FluentWindow, INavigationWindow
     protected override void OnClosed(EventArgs e)
     {
         _logger.LogDebug("主窗体退出");
+        // 释放虚拟手柄，避免残留按键或虚拟设备
+        GamepadInput.Dispose();
         base.OnClosed(e);
         App.GetService<NotifyIconViewModel>()?.Exit();
     }

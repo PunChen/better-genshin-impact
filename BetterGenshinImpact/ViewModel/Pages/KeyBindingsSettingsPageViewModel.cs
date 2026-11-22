@@ -10,7 +10,10 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Text;
 using BetterGenshinImpact.Core.Simulator.Extensions;
+using BetterGenshinImpact.Core.Simulator.Gamepad;
 using BetterGenshinImpact.GameTask;
+using Fischless.WindowsInput.Gamepad;
+using System.Reflection;
 using Wpf.Ui.Controls;
 using BetterGenshinImpact.Genshin.Settings;
 using CommunityToolkit.Mvvm.Input;
@@ -27,8 +30,32 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     /// </summary>
     private readonly KeyBindingsConfig _config;
 
+    /// <summary>
+    /// 手柄配置文件
+    /// </summary>
+    private readonly GamepadConfig _gamepadConfig;
+
+    /// <summary>
+    /// 手柄按键绑定配置（供界面直接绑定）
+    /// </summary>
+    public GamepadConfig GamepadConfig => _gamepadConfig;
+
+    /// <summary>
+    /// 手柄按键可选项
+    /// </summary>
+    public IReadOnlyList<GamepadButton> GamepadButtons { get; } = Enum.GetValues<GamepadButton>();
+
     [ObservableProperty]
     private ObservableCollection<KeyBindingSettingModel> _keyBindingSettingModels = [];
+
+    [ObservableProperty]
+    private ObservableCollection<GamepadBindingSettingModel> _gamepadBindingModels = [];
+
+    /// <summary>
+    /// 手柄状态提示文本
+    /// </summary>
+    [ObservableProperty]
+    private string _gamepadStatus = string.Empty;
 
     public KeyBindingsSettingsPageViewModel(IConfigService configService, ILogger<KeyBindingsSettingsPageViewModel> logger)
     {
@@ -36,8 +63,10 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
 
         // 获取本模块的配置文件
         _config = configService.Get().KeyBindingsConfig;
+        _gamepadConfig = configService.Get().GamepadConfig;
 
         BuildKeyBindingsList();
+        BuildGamepadBindingList();
 
         var list = GetAllNonDirectoryKeyBinding(KeyBindingSettingModels);
         foreach (var keyConfig in list)
@@ -60,6 +89,117 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
                 }
             };
         }
+
+        foreach (var gamepadModel in GamepadBindingModels)
+        {
+            gamepadModel.PropertyChanged += (sender, e) =>
+            {
+                if (sender is GamepadBindingSettingModel model && e.PropertyName == nameof(model.ButtonValue))
+                {
+                    var pi = _gamepadConfig.GetType().GetProperty(model.ConfigPropertyName,
+                        BindingFlags.Public | BindingFlags.Instance);
+                    if (pi != null && pi.CanWrite)
+                    {
+                        pi.SetValue(_gamepadConfig, model.ButtonValue, null);
+                    }
+                }
+            };
+        }
+    }
+
+    /// <summary>
+    /// 构造手柄按键绑定列表
+    /// </summary>
+    private void BuildGamepadBindingList()
+    {
+        GamepadBindingModels =
+        [
+            new("确认（对话继续/菜单确认）", nameof(_gamepadConfig.Confirm), _gamepadConfig.Confirm),
+            new("取消/返回", nameof(_gamepadConfig.Cancel), _gamepadConfig.Cancel),
+            new("跳过/推进对话", nameof(_gamepadConfig.SkipDialog), _gamepadConfig.SkipDialog),
+            new("拾取/交互", nameof(_gamepadConfig.PickUpOrInteract), _gamepadConfig.PickUpOrInteract),
+            new("普通攻击", nameof(_gamepadConfig.NormalAttack), _gamepadConfig.NormalAttack),
+            new("元素战技", nameof(_gamepadConfig.ElementalSkill), _gamepadConfig.ElementalSkill),
+            new("元素爆发", nameof(_gamepadConfig.ElementalBurst), _gamepadConfig.ElementalBurst),
+            new("跳跃", nameof(_gamepadConfig.Jump), _gamepadConfig.Jump),
+            new("冲刺", nameof(_gamepadConfig.Sprint), _gamepadConfig.Sprint),
+            new("切换瞄准模式", nameof(_gamepadConfig.SwitchAimingMode), _gamepadConfig.SwitchAimingMode),
+            new("切换走/跑", nameof(_gamepadConfig.SwitchToWalkOrRun), _gamepadConfig.SwitchToWalkOrRun),
+            new("快捷使用小道具", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
+            new("打开地图", nameof(_gamepadConfig.OpenMap), _gamepadConfig.OpenMap),
+            new("打开背包", nameof(_gamepadConfig.OpenInventory), _gamepadConfig.OpenInventory),
+            new("打开派蒙菜单", nameof(_gamepadConfig.OpenPaimonMenu), _gamepadConfig.OpenPaimonMenu),
+            new("打开任务菜单", nameof(_gamepadConfig.OpenQuestMenu), _gamepadConfig.OpenQuestMenu),
+        ];
+    }
+
+    /// <summary>
+    /// 测试确认键，便于确认虚拟手柄可用
+    /// </summary>
+    [RelayCommand]
+    private void TestGamepadConfirm()
+    {
+        var button = _gamepadConfig.Confirm;
+        if (!_gamepadConfig.Enabled)
+        {
+            GamepadStatus = "请先启用手柄模式";
+            return;
+        }
+
+        if (GamepadInput.Press(button))
+        {
+            GamepadStatus = $"已发送按键：{button}";
+        }
+        else
+        {
+            GamepadStatus = $"发送失败：{GamepadInput.LastError ?? "虚拟手柄未连接，请确认已安装 ViGEmBus 驱动"}";
+        }
+    }
+
+    /// <summary>
+    /// 恢复默认手柄按键
+    /// </summary>
+    [RelayCommand]
+    private void ResetGamepadBindings()
+    {
+        var defaults = new GamepadConfig();
+        foreach (var pi in typeof(GamepadConfig).GetProperties(BindingFlags.Public | BindingFlags.Instance))
+        {
+            if (pi.PropertyType == typeof(GamepadButton) && pi.CanWrite)
+            {
+                pi.SetValue(_gamepadConfig, pi.GetValue(defaults));
+            }
+        }
+
+        foreach (var model in GamepadBindingModels)
+        {
+            var pi = typeof(GamepadConfig).GetProperty(model.ConfigPropertyName, BindingFlags.Public | BindingFlags.Instance);
+            if (pi?.GetValue(_gamepadConfig) is GamepadButton button)
+            {
+                model.ButtonValue = button;
+            }
+        }
+
+        GamepadStatus = "已恢复默认按键";
+    }
+
+    /// <inheritdoc />
+    public override void OnNavigatedTo()
+    {
+        UpdateGamepadStatus();
+    }
+
+    private void UpdateGamepadStatus()
+    {
+        if (!_gamepadConfig.Enabled)
+        {
+            GamepadStatus = "手柄模式未启用";
+            return;
+        }
+
+        GamepadStatus = GamepadInput.IsConnected
+            ? "虚拟手柄已连接"
+            : "虚拟手柄未连接，首次按键时自动连接";
     }
 
 
@@ -183,6 +323,21 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
                     "拾取/交互（自动拾取由AutoPick模块管理）",
                     nameof(_config.PickUpOrInteract),
                     _config.PickUpOrInteract
+                ));
+        actionDirectory.Children.Add(new KeyBindingSettingModel(
+                    "确认（对话继续/菜单确认）",
+                    nameof(_config.Confirm),
+                    _config.Confirm
+                ));
+        actionDirectory.Children.Add(new KeyBindingSettingModel(
+                    "取消/返回",
+                    nameof(_config.Cancel),
+                    _config.Cancel
+                ));
+        actionDirectory.Children.Add(new KeyBindingSettingModel(
+                    "跳过/推进对话",
+                    nameof(_config.SkipDialog),
+                    _config.SkipDialog
                 ));
         actionDirectory.Children.Add(new KeyBindingSettingModel(
                     "快捷使用小道具",

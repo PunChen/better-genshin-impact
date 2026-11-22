@@ -19,66 +19,130 @@
              mc:Ignorable="d">
 
     <Grid Margin="42,16,42,12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-        <ui:TextBlock Grid.Row="0"
-                      Margin="0,0,0,8"
-                      FontTypography="BodyStrong"
-                      Text="按键绑定设置" />
-        <ui:TextBlock Grid.Row="1"
-                      Margin="0,0,0,8"
-                      Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
-                      Text="此处的按键设置默认对除自动拾取、钓鱼、音游、伐木外的内置功能有效，在设置中打开“启用全局按键映射”开关可对JS脚本、战斗脚本和地图追踪内包含的简易策略脚本生效。请手动设置拾取按键、星之归还按键、隐藏主界面按键。"
-                      TextWrapping="Wrap" />
+        <TabControl>
+            <TabItem Header="键盘 / 鼠标">
+                <Grid Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <ui:TextBlock Grid.Row="0"
+                                  Margin="0,0,0,8"
+                                  FontTypography="BodyStrong"
+                                  Text="按键绑定设置" />
+                    <ui:TextBlock Grid.Row="1"
+                                  Margin="0,0,0,8"
+                                  Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                                  Text="此处的按键设置默认对除自动拾取、钓鱼、音游、伐木外的内置功能有效，在设置中打开“启用全局按键映射”开关可对JS脚本、战斗脚本和地图追踪内包含的简易策略脚本生效。请手动设置拾取按键、星之归还按键、隐藏主界面按键。"
+                                  TextWrapping="Wrap" />
 
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
-            <ui:Button Command="{Binding FetchFromRegistryCommand}"
-                       Content="从注册表读取"
-                       Icon="{ui:SymbolIcon Notepad32}" />
-        </StackPanel>
+                    <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,0,0,8">
+                        <ui:Button Command="{Binding FetchFromRegistryCommand}"
+                                   Content="从注册表读取"
+                                   Icon="{ui:SymbolIcon Notepad32}" />
+                    </StackPanel>
 
-        <ui:Border Grid.Row="3"
-                   Background="{DynamicResource CardBackground}"
-                   BorderBrush="{DynamicResource CardBorderBrush}"
-                   BorderThickness="1"
-                   CornerRadius="{DynamicResource ControlCornerRadius}">
-            <Grid Margin="4">
-                <ui:Grid ColumnDefinitions="*,135" Visibility="Hidden">
-                    <Grid x:Name="TreeColumnStar" Grid.Column="0" />
-                </ui:Grid>
-                <ui:TreeListView BorderThickness="0" ItemsSource="{Binding KeyBindingSettingModels}">
-                    <ui:TreeListView.Columns>
-                        <GridViewColumnCollection>
-                            <ui:GridViewColumn Width="{Binding ActualWidth, ElementName=TreeColumnStar}" Header="动作">
-                                <ui:GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <ui:TreeRowExpander Content="{Binding ActionName}" />
-                                    </DataTemplate>
-                                </ui:GridViewColumn.CellTemplate>
-                            </ui:GridViewColumn>
-                            <ui:GridViewColumn Width="120" Header="按键绑定">
-                                <ui:GridViewColumn.CellTemplate>
-                                    <DataTemplate>
-                                        <kb:KeyBindingTextBox Padding="16,6,16,6"
-                                                              VerticalAlignment="Center"
-                                                              KeyBinding="{Binding KeyValue}"
-                                                              Style="{StaticResource DefaultTextBoxStyle}"
-                                                              TextAlignment="Center"
-                                                              Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityRevertConverter}, Mode=OneWay}" />
-                                    </DataTemplate>
-                                </ui:GridViewColumn.CellTemplate>
-                            </ui:GridViewColumn>
-                        </GridViewColumnCollection>
-                    </ui:TreeListView.Columns>
-                    <ui:TreeListView.ItemTemplate>
-                        <HierarchicalDataTemplate ItemsSource="{Binding Children}" />
-                    </ui:TreeListView.ItemTemplate>
-                </ui:TreeListView>
-            </Grid>
-        </ui:Border>
+                    <ui:Border Grid.Row="3"
+                               Background="{DynamicResource CardBackground}"
+                               BorderBrush="{DynamicResource CardBorderBrush}"
+                               BorderThickness="1"
+                               CornerRadius="{DynamicResource ControlCornerRadius}">
+                        <Grid Margin="4">
+                            <ui:Grid ColumnDefinitions="*,135" Visibility="Hidden">
+                                <Grid x:Name="TreeColumnStar" Grid.Column="0" />
+                            </ui:Grid>
+                            <ui:TreeListView BorderThickness="0" ItemsSource="{Binding KeyBindingSettingModels}">
+                                <ui:TreeListView.Columns>
+                                    <GridViewColumnCollection>
+                                        <ui:GridViewColumn Width="{Binding ActualWidth, ElementName=TreeColumnStar}" Header="动作">
+                                            <ui:GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <ui:TreeRowExpander Content="{Binding ActionName}" />
+                                                </DataTemplate>
+                                            </ui:GridViewColumn.CellTemplate>
+                                        </ui:GridViewColumn>
+                                        <ui:GridViewColumn Width="120" Header="按键绑定">
+                                            <ui:GridViewColumn.CellTemplate>
+                                                <DataTemplate>
+                                                    <kb:KeyBindingTextBox Padding="16,6,16,6"
+                                                                          VerticalAlignment="Center"
+                                                                          KeyBinding="{Binding KeyValue}"
+                                                                          Style="{StaticResource DefaultTextBoxStyle}"
+                                                                          TextAlignment="Center"
+                                                                          Visibility="{Binding IsDirectory, Converter={StaticResource BooleanToVisibilityRevertConverter}, Mode=OneWay}" />
+                                                </DataTemplate>
+                                            </ui:GridViewColumn.CellTemplate>
+                                        </ui:GridViewColumn>
+                                    </GridViewColumnCollection>
+                                </ui:TreeListView.Columns>
+                                <ui:TreeListView.ItemTemplate>
+                                    <HierarchicalDataTemplate ItemsSource="{Binding Children}" />
+                                </ui:TreeListView.ItemTemplate>
+                            </ui:TreeListView>
+                        </Grid>
+                    </ui:Border>
+                </Grid>
+            </TabItem>
+
+            <TabItem Header="手柄">
+                <Grid Margin="0,8,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0">
+                        <ui:ToggleSwitch Content="启用手柄模式（虚拟 Xbox360 手柄）"
+                                         IsChecked="{Binding GamepadConfig.Enabled, Mode=TwoWay}" />
+                        <ui:TextBlock Margin="0,6,0,10"
+                                      Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                                      Text="手柄模式依赖 ViGEmBus 驱动。开启后游戏操作优先使用手柄按键，未绑定的动作会自动回退到键盘/鼠标。手柄注入属于系统级输入，不依赖窗口焦点，后台模式下同样会注入（能否被游戏接收取决于游戏本身）。修改后请重新开始任务以生效。"
+                                      TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+                        <ui:Button Command="{Binding TestGamepadConfirmCommand}"
+                                   Content="测试确认键" />
+                        <ui:Button Command="{Binding ResetGamepadBindingsCommand}"
+                                   Content="恢复默认"
+                                   Margin="8,0,0,0" />
+                        <ui:TextBlock Margin="12,0,0,0"
+                                      VerticalAlignment="Center"
+                                      Foreground="{ui:ThemeResource TextFillColorTertiaryBrush}"
+                                      Text="{Binding GamepadStatus}"
+                                      TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <ui:Border Grid.Row="2"
+                               Background="{DynamicResource CardBackground}"
+                               BorderBrush="{DynamicResource CardBorderBrush}"
+                               BorderThickness="1"
+                               CornerRadius="{DynamicResource ControlCornerRadius}">
+                        <ListView ItemsSource="{Binding GamepadBindingModels}"
+                                  Background="Transparent"
+                                  BorderThickness="0">
+                            <ListView.View>
+                                <GridView>
+                                    <GridViewColumn Width="420" Header="动作" DisplayMemberBinding="{Binding ActionName}" />
+                                    <GridViewColumn Width="180" Header="手柄按键">
+                                        <GridViewColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <ComboBox MinWidth="140"
+                                                          Margin="0,2"
+                                                          ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                          SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
+                                            </DataTemplate>
+                                        </GridViewColumn.CellTemplate>
+                                    </GridViewColumn>
+                                </GridView>
+                            </ListView.View>
+                        </ListView>
+                    </ui:Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
     </Grid>
 </UserControl>

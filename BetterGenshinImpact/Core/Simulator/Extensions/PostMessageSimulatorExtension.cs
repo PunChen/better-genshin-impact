@@ -20,6 +20,12 @@ public static class PostMessageSimulatorExtension
     /// <param name="type">按键类型</param>
     public static PostMessageSimulator SimulateAction(this PostMessageSimulator self, GIActions action, KeyType type = KeyType.KeyPress)
     {
+        // 手柄注入不依赖窗口消息，后台模式下同样可用
+        if (Gamepad.GamepadInput.TrySimulate(action, type))
+        {
+            return self;
+        }
+
         var key = action.ToActionKey();
         switch (type)
         {
@@ -122,6 +128,12 @@ public static class PostMessageSimulatorExtension
     /// <param name="type">按键类型</param>
     public static PostMessageSimulator SimulateActionBackground(this PostMessageSimulator self, GIActions action, KeyType type = KeyType.KeyPress)
     {
+        // 手柄注入不依赖窗口消息，后台模式下同样可用
+        if (Gamepad.GamepadInput.TrySimulate(action, type))
+        {
+            return self;
+        }
+
         var key = action.ToActionKey();
         switch (type)
         {
