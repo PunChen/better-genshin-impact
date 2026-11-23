@@ -39,6 +39,16 @@ public sealed class GamepadInputBackend : IInputBackend
     public string? LastError => _channel.LastError;
 
     /// <summary>
+    /// 设置右摇杆并保持指定时间后归零（x/y 归一化到 -1..1）
+    /// </summary>
+    public void SetRightStick(double x, double y, int durationMs) => _channel.SetRightStick(x, y, durationMs);
+
+    /// <summary>
+    /// 向右（正角度）/向左（负角度）转动视角指定角度
+    /// </summary>
+    public void TurnByAngle(double degrees) => _channel.TurnByAngle(degrees);
+
+    /// <summary>
     /// 设置页“测试按键”使用：临时连接虚拟手柄按一次后立即释放
     /// </summary>
     public static bool TestButton(GamepadButton button, int durationMs, out string? error)
@@ -86,11 +96,6 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
     /// 按下后保持时间（毫秒），可通过配置修改
     /// </summary>
     private const int DefaultPressDurationMs = 60;
-
-    /// <summary>
-    /// 右摇杆脉冲保持时间，模拟一次鼠标移动
-    /// </summary>
-    private const int RightStickPulseMs = 30;
 
     /// <summary>
     /// 需要参与“键盘按键反查动作”的动作清单。
@@ -243,29 +248,95 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
 
     protected override void OnMouseButton(InputMouseButton button, bool down)
     {
+        // 鼠标中键 → 视角回正（默认右摇杆按下 R3）
+        if (button == InputMouseButton.Middle)
+        {
+            var config = Config;
+            if (config is { Enabled: true } && config.CameraRecenter != GamepadButton.None && EnsureTransport())
+            {
+                lock (_sync)
+                {
+                    _transport!.SetButton(config.CameraRecenter, down);
+
+                    // 鼠标中键通常只有一次 down/up，按下后保持一小段时间保证游戏能识别
+                    if (down)
+                    {
+                        Thread.Sleep(Math.Max(1, config.PressDurationMs));
+                        _transport.SetButton(config.CameraRecenter, false);
+                    }
+                }
+
+                return;
+            }
+        }
+
         // 手柄模式下无法做绝对坐标点击，避免误映射成攻击
         WarnUnsupported($"鼠标按键 {button}");
     }
 
     protected override void OnMoveBy(int dx, int dy)
     {
-        if (!EnsureTransport())
+        var config = Config;
+        if (config is null || !config.Enabled || !EnsureTransport())
         {
-            WarnUnsupported("鼠标移动（虚拟手柄不可用）");
+            WarnUnsupported("鼠标移动（手柄模式未启用或虚拟手柄不可用）");
             return;
         }
 
-        // 用右摇杆脉冲近似一次鼠标移动，dx/dy 越大摇杆偏移越大
-        var x = (short)Math.Clamp(dx * 256, short.MinValue, short.MaxValue);
-        var y = (short)Math.Clamp(dy * 256, short.MinValue, short.MaxValue);
+        // 鼠标右移 = 视角右转（右摇杆 X 正），鼠标下移 = 视角下看（右摇杆 Y 负）
+        var sensitivity = Math.Max(1, config.RightStickSensitivity);
+        var x = (short)Math.Clamp(dx * sensitivity, short.MinValue, short.MaxValue);
+        var y = (short)Math.Clamp(-dy * sensitivity, short.MinValue, short.MaxValue);
 
+        SetRightStickRaw(x, y, Math.Max(1, config.RightStickPulseMs));
+    }
+
+    /// <summary>
+    /// 设置右摇杆并保持一段时间后归零（x/y 归一化到 -1..1）
+    /// </summary>
+    public void SetRightStick(double x, double y, int durationMs)
+    {
+        var nx = (short)Math.Clamp(x * short.MaxValue, short.MinValue, short.MaxValue);
+        var ny = (short)Math.Clamp(y * short.MaxValue, short.MinValue, short.MaxValue);
+        SetRightStickRaw(nx, ny, durationMs);
+    }
+
+    /// <summary>
+    /// 向右（正角度）/向左（负角度）转动视角指定角度，按 <see cref="GamepadConfig.TurnMillisecondsPerDegree"/> 标定
+    /// </summary>
+    public void TurnByAngle(double degrees)
+    {
+        var config = Config;
+        var msPerDegree = config?.TurnMillisecondsPerDegree ?? 6.0;
+        if (msPerDegree <= 0)
+        {
+            msPerDegree = 6.0;
+        }
+
+        var duration = (int)Math.Clamp(Math.Abs(degrees) * msPerDegree, 30, 3000);
+        var direction = Math.Sign(degrees);
+        if (direction == 0)
+        {
+            return;
+        }
+
+        SetRightStick(direction, 0, duration);
+    }
+
+    private void SetRightStickRaw(short x, short y, int durationMs)
+    {
         lock (_sync)
         {
-            _transport!.SetAxis(GamepadAxis.RightThumbX, x);
+            if (_transport is null)
+            {
+                return;
+            }
+
+            _transport.SetAxis(GamepadAxis.RightThumbX, x);
             _transport.SetAxis(GamepadAxis.RightThumbY, y);
         }
 
-        Thread.Sleep(RightStickPulseMs);
+        Thread.Sleep(Math.Max(1, durationMs));
 
         lock (_sync)
         {

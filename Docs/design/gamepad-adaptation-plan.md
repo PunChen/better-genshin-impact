@@ -12,8 +12,9 @@
 
 | 输入 API | 手柄模式下的行为 | 代码位置 |
 |---|---|---|
-| `Click`/`ClickTo`/`GameRegionClick`/`GameRegion1080PPosClick`/`LeftButton`/`RightButton`/`MiddleButton`/`VerticalScroll`/`MoveMouseTo`(绝对) | 限频 warn 后**静默丢弃** | `GamepadInputBackend.cs:244-285`、`InputChannelBase.cs:252-263` |
-| `MoveMouseBy` | 转为右摇杆 **30ms 脉冲**（幅度 clamp 后基本只剩方向） | `GamepadInputBackend.cs:250-275` |
+| `Click`/`ClickTo`/`GameRegionClick`/`GameRegion1080PPosClick`/`LeftButton`/`RightButton`/`VerticalScroll`/`MoveMouseTo`(绝对) | 限频 warn 后**静默丢弃** | `GamepadInputBackend.cs` `OnMouseButton`/`OnMoveTo`/`OnScroll` |
+| `MiddleButton` | 映射为 `CameraRecenter`（默认右摇杆按下 R3），用于视角回正 | `GamepadInputBackend.cs` `OnMouseButton` |
+| `MoveMouseBy` | 按配置灵敏度换算为右摇杆脉冲（默认 30ms，幅度按 `RightStickSensitivity` 缩放） | `GamepadInputBackend.cs` `OnMoveBy` |
 | 键盘 VK | 经 `TryMapKey` 反查 `ReverseMappableActions` → `GIActions` → 手柄按键；未覆盖键丢弃 | `GamepadInputBackend.cs:100-134、437-456` |
 | `SimulateAction(GIActions)` | 经 `GamepadActionMap.TryGetButton` 映射；未映射动作 warn 丢弃 | `GamepadActionMap.cs` |
 
@@ -23,14 +24,15 @@
 
 ### 1.1 三个横切缺口
 
-1. **缺口①**：`GIActions.OpenTheEventsMenu`、`QuestNavigation` 等未进 `GamepadActionMap`，手柄模式直接丢弃。
-2. **缺口②**：鼠标中键（视角回正）无手柄映射；游戏手柄布局中 **R3（右摇杆按下）= 视角回正**。
+1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；仍缺 `OpenWishScreen`、`OpenCoOpScreen`、`OpenNotificationDetails`、`CheckTutorialDetails`、`HideUI`、`OpenFriendsScreen` 等低频界面动作。
+2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 R3）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
 
 ### 1.2 已确认的默认绑定问题
 
 - `QuickUseGadget`、`SwitchMember1-5` 等默认 `GamepadButton.None` → AutoEat/AutoWood/AutoCombo 等模块**默认配置下直接失效**。
-- `KeyPress(VK_ESCAPE)` 反查为 `Cancel=A`，但手柄菜单中 A 通常是"确认选择"，**语义错位**需逐点实测。
+- `KeyPress(VK_ESCAPE)` 反查为 `Cancel=A`。按游戏内“系统界面”设置，**B=确认、A=取消/返回**，因此 ESC→A 语义正确，无需改成 B；需要逐菜单实测的是“某些菜单里 A 同时承担确认/取消”的上下文差异。
+- 真正同键多义的是 **A = 取消/返回 + 普通攻击 + 跳跃**，对话/战斗/菜单三种上下文下含义不同，需要在模块层按语义调用 `GIActions` 而不是裸按 VK。
 
 ---
 
@@ -38,15 +40,26 @@
 
 | # | 基建项 | 内容 | 受益模块 |
 |---|---|---|---|
-| B1 | **ESC 语义修复** | `GamepadChannel` 对 `VK_ESCAPE` 特判为可配置"返回键"（默认 B），不再依赖键鼠反查；解决 Cancel=A 语义错位 | 全部按 ESC 的模块（约 15 处） |
-| B2 | **中键→R3 映射** | `OnMouseButton(Middle)` → 右摇杆按下（手柄视角回正） | AutoDomain/AutoFight/AutoLeyLine/索敌等约 10 处 |
-| B3 | **右摇杆比例控制原语** | `SetRightStick(x, y, durationMs)` + `TurnByAngle(angle)`，替代 30ms 脉冲；支撑精确转身/瞄准/低头追踪 | 相机类全部模块 |
-| B4 | **映射与默认绑定补齐** | 补 `OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 映射；`QuickUseGadget` 补默认绑定+配置页引导 | AutoEat/AutoWood/幽境危战/纪行/莉奈娅 |
-| B5 | **两个公共控制器** | ① `GamepadFocusNavigator`：截图→识别焦点高亮→十字键/摇杆步进→复核→A 确认；② `GamepadMapCursor`：大地图光标视觉伺服闭环（复用 Common/Map 匹配结果做反馈） | 几乎所有 L 级模块 |
+| B1 | **ESC/返回语义核对** | 游戏内系统键位为 **B=确认、A=取消/返回**，ESC 反查 `Cancel=A` 本身正确；B1 只做逐菜单实测与 `Cancel` 可配置化核对，**不把 ESC 改成 B** | 全部按 ESC 的模块（约 15 处） |
+| B2 | **中键→R3 映射** | 新增 `CameraRecenter` 配置（默认 `RightThumb`），`OnMouseButton(Middle)` 按下/抬起映射到该键 | AutoDomain/AutoFight/AutoLeyLine/索敌等约 10 处 |
+| B3 | **右摇杆比例控制原语** | `GamepadInputBackend.SetRightStick(x, y, durationMs)` + `TurnByAngle(degrees)`；`OnMoveBy` 改为按 `RightStickSensitivity` 比例换算，不再固定 ×256 饱和 | 相机类全部模块 |
+| B4 | **映射与默认绑定补齐** | 补 `OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 的配置字段与映射；`QuickUseGadget`/`SwitchMember1-5` **不擅自给默认键**（不同玩家布局差异大），改为未绑定时的启动告警与配置页引导 | AutoEat/AutoWood/幽境危战/纪行/莉奈娅 |
+| B5 | **两个公共控制器（研究项，非基建）** | ① `GamepadFocusNavigator`：截图→识别焦点高亮→十字键/摇杆步进→复核→A 确认；② `GamepadMapCursor`：大地图光标视觉伺服闭环。两者依赖稳定的焦点/光标视觉特征，需先做可行性验证，未验证前不进入批次 1 | 几乎所有 L 级模块 |
 | B6 | **诊断与兜底** | `WarnUnsupported` 增加丢弃计数/严格模式；模块能力声明（Full/Partial/None）+ UI 提示；B服登录等原生 Win32 弹窗保留绕过 InputHub 的真实鼠标旁路 | 适配期排障 + 登录流程 |
 
 **模板资源**：需统一采集一批手柄 UI 模板（大地图、Paimon 菜单、冒险之证、纪行、邮件、队伍配置、合成台、洞天百宝、对话 A/B/X/Y 角标、确认/取消按钮、钓鱼/烹饪提示），按批次 1 先行。
 （注意：仓库禁止新增 `BetterGenshinImpact\Assets` 目录，模板需走外部资源包流程。）
+
+### 2.1 基建实现进度（2026-11-24）
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| B1 ESC 语义 | ✅ 已核对 | 游戏内 B=确认、A=取消/返回；ESC→A 正确，不改键，仅保留 `Cancel` 可配置 |
+| B2 中键→R3 | ✅ 已实现 | 新增 `GamepadConfig.CameraRecenter`（默认 `RightThumb`），`OnMouseButton(Middle)` 按下并保持 `PressDurationMs` |
+| B3 右摇杆原语 | ✅ 已实现 | 新增 `GamepadInputBackend.SetRightStick(x,y,ms)`、`TurnByAngle(deg)`；`OnMoveBy` 按 `RightStickSensitivity` 比例换算，Y 轴取反修正；新增 `RightStickPulseMs`/`TurnMillisecondsPerDegree` |
+| B4 映射补齐 | ✅ 部分 | 新增纪行/活动/任务追踪/元素视野字段与映射；`QuickUseGadget`、`SwitchMember1-5` 仍默认未绑定，启动时告警提示 |
+| B5 焦点/地图控制器 | ⏳ 研究项 | 需先验证焦点高亮/地图光标视觉特征，不进入批次 1 |
+| B6 诊断 | ⏳ 部分 | 已有 `WarnUnsupported` 限频告警；丢弃计数/严格模式待做 |
 
 ---
 
@@ -309,9 +322,9 @@ FarmingPlan（纯数据/统计）、MapMask（仅遮罩绘制）、SkillCd（仅
 
 1. **ESC→A 语义错位**（B1）：菜单中按 A 是"确认"而非"返回"，逐点实测各弹窗
 2. **手柄 UI 模板兼容性**：连手柄后 PC 布局模板（`BtnWhiteConfirm` 等）是否还能匹配
-3. **TpTask 的 F 传送确认**在手柄大地图中与 A 的等效性
-4. **F 多选项交互**的手柄切换方式（ChooseFOptionTask 前置）
-5. **Confirm=B / NormalAttack=A 同键多义**在对话与战斗上下文的实际表现
+3. **TpTask 的 F 传送确认**在手柄大地图中与交互键（默认 X）的等效性
+4. **F/X 多选项交互**的手柄切换方式（ChooseFOptionTask 前置）
+5. **A 同时是取消、普通攻击、跳跃**（默认配置）在对话/战斗/菜单上下文的实际表现；B 为确认
 6. **钓鱼/烹饪/音游**手柄布局的实际按键提示
 7. **`MoveMouseBy` 大距离转身**（如 0,7000）的右摇杆换算标定
 

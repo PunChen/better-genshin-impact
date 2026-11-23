@@ -96,6 +96,18 @@ public static class GamepadActionMap
             case GIActions.OpenPartySetupScreen:
                 button = config.OpenPartySetupScreen;
                 return true;
+            case GIActions.OpenBattlePassScreen:
+                button = config.OpenBattlePassScreen;
+                return true;
+            case GIActions.OpenTheEventsMenu:
+                button = config.OpenTheEventsMenu;
+                return true;
+            case GIActions.QuestNavigation:
+                button = config.QuestNavigation;
+                return true;
+            case GIActions.ElementalSight:
+                button = config.ElementalSight;
+                return true;
             default:
                 button = GamepadButton.None;
                 return false;

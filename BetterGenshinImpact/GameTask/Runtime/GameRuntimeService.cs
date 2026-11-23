@@ -6,6 +6,7 @@ using BetterGenshinImpact.GameTask.Runtime.WebPage;
 using BetterGenshinImpact.Service.Instance;
 using BetterGenshinImpact.Service.Interface;
 using BetterGenshinImpact.View.Windows;
+using Fischless.WindowsInput.Gamepad;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -315,6 +316,7 @@ public sealed class GameRuntimeService
             if (gamepad.TryConnect())
             {
                 _logger.LogInformation("当前运行模式：手柄模式（虚拟 Xbox360 手柄已连接）");
+                LogUnboundGamepadActions();
             }
             else
             {
@@ -326,6 +328,36 @@ public sealed class GameRuntimeService
         }
 
         _logger.LogInformation("当前运行模式：键鼠模式");
+    }
+
+    /// <summary>
+    /// 手柄模式下提示未绑定的常用动作，避免 AutoEat/AutoWood/AutoCombo 等模块静默失效
+    /// </summary>
+    private void LogUnboundGamepadActions()
+    {
+        var config = _configService.Get().GamepadConfig;
+        var unbound = new List<string>();
+
+        void Check(GamepadButton button, string name)
+        {
+            if (button == GamepadButton.None)
+            {
+                unbound.Add(name);
+            }
+        }
+
+        Check(config.QuickUseGadget, "快捷使用小道具");
+        Check(config.SwitchMember1, "切换小队角色1");
+        Check(config.SwitchMember2, "切换小队角色2");
+        Check(config.SwitchMember3, "切换小队角色3");
+        Check(config.SwitchMember4, "切换小队角色4");
+        Check(config.SwitchMember5, "切换小队角色5");
+
+        if (unbound.Count > 0)
+        {
+            _logger.LogWarning("手柄模式以下动作未绑定，相关功能将不可用：{Actions}。请到“按键绑定设置 → 手柄”中配置",
+                string.Join("、", unbound));
+        }
     }
 
     private void SetStarting(bool value)

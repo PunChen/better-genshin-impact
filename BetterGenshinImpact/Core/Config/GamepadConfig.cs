@@ -30,6 +30,24 @@ public partial class GamepadConfig : ObservableObject
     [ObservableProperty]
     private bool _releaseAllOnStop = true;
 
+    /// <summary>
+    /// 右摇杆灵敏度：鼠标移动 1 像素对应的摇杆偏移量，越大转视角越快
+    /// </summary>
+    [ObservableProperty]
+    private int _rightStickSensitivity = 64;
+
+    /// <summary>
+    /// 右摇杆脉冲保持时间（毫秒），用于把一次鼠标移动换算成一次短暂的摇杆偏移
+    /// </summary>
+    [ObservableProperty]
+    private int _rightStickPulseMs = 30;
+
+    /// <summary>
+    /// 摇杆转动 1 度需要的保持时间（毫秒），用于 TurnByAngle 标定
+    /// </summary>
+    [ObservableProperty]
+    private double _turnMillisecondsPerDegree = 6.0;
+
     #region 对话与菜单
 
     /// <summary>
@@ -150,6 +168,12 @@ public partial class GamepadConfig : ObservableObject
     [ObservableProperty]
     private GamepadButton _quickUseGadget = GamepadButton.None;
 
+    /// <summary>
+    /// 视角回正（对应鼠标中键/R3）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _cameraRecenter = GamepadButton.RightThumb;
+
     #endregion
 
     #region 界面
@@ -195,6 +219,30 @@ public partial class GamepadConfig : ObservableObject
     /// </summary>
     [ObservableProperty]
     private GamepadButton _openPartySetupScreen = GamepadButton.None;
+
+    /// <summary>
+    /// 打开纪行界面
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openBattlePassScreen = GamepadButton.None;
+
+    /// <summary>
+    /// 打开活动面板
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openTheEventsMenu = GamepadButton.None;
+
+    /// <summary>
+    /// 开启任务追踪
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _questNavigation = GamepadButton.None;
+
+    /// <summary>
+    /// 长按打开元素视野
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _elementalSight = GamepadButton.None;
 
     #endregion
 }

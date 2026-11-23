@@ -55,7 +55,7 @@ public class GamepadMappingTests
     {
         var config = new GamepadConfig();
 
-        Assert.False(GamepadActionMap.TryGetButton(GIActions.OpenTheEventsMenu, config, out _));
+        Assert.False(GamepadActionMap.TryGetButton(GIActions.OpenWishScreen, config, out _));
     }
 
     [Fact]
@@ -169,5 +169,40 @@ public class GamepadMappingTests
         stick.Reset();
 
         Assert.Equal((0, 0), stick.GetAxisValues());
+    }
+
+    [Fact]
+    public void CameraRecenter_DefaultsToRightThumb()
+    {
+        var config = new GamepadConfig();
+
+        Assert.Equal(GamepadButton.RightThumb, config.CameraRecenter);
+        Assert.True(config.RightStickSensitivity > 0);
+        Assert.True(config.RightStickPulseMs > 0);
+        Assert.True(config.TurnMillisecondsPerDegree > 0);
+    }
+
+    [Fact]
+    public void MenuActions_AreMappedToConfig()
+    {
+        var config = new GamepadConfig
+        {
+            OpenBattlePassScreen = GamepadButton.Back,
+            OpenTheEventsMenu = GamepadButton.Guide,
+            QuestNavigation = GamepadButton.LeftShoulder,
+            ElementalSight = GamepadButton.RightThumb,
+        };
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.OpenBattlePassScreen, config, out var battlePass));
+        Assert.Equal(GamepadButton.Back, battlePass);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.OpenTheEventsMenu, config, out var events));
+        Assert.Equal(GamepadButton.Guide, events);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.QuestNavigation, config, out var quest));
+        Assert.Equal(GamepadButton.LeftShoulder, quest);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.ElementalSight, config, out var sight));
+        Assert.Equal(GamepadButton.RightThumb, sight);
     }
 }
