@@ -136,6 +136,10 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         GIActions.OpenPartySetupScreen,
         GIActions.OpenPaimonMenu,
         GIActions.OpenQuestMenu,
+        GIActions.OpenBattlePassScreen,
+        GIActions.OpenTheEventsMenu,
+        GIActions.QuestNavigation,
+        GIActions.ElementalSight,
     ];
 
     private readonly object _sync = new();

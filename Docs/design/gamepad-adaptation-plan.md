@@ -1,4 +1,4 @@
-# 手柄模式鼠标依赖适配方案
+﻿# 手柄模式鼠标依赖适配方案
 
 > 基于 `feat/xbox-game-input-main` 分支对全部 43 个功能模块的只读代码审计（2026-11）。
 > 目标：让所有依赖鼠标点击 UI 的功能在手柄模式下可用。
@@ -335,3 +335,45 @@ FarmingPlan（纯数据/统计）、MapMask（仅遮罩绘制）、SkillCd（仅
 > **批次 1（基建+小改）→ 批次 2（一条龙链路）→ 批次 3（大地图攻坚）→ 批次 4/5（长尾）**
 >
 > 批次 1+2 完成后，"每日一条龙 + 副本领奖"即可在纯手柄模式跑通，覆盖绝大多数日常使用场景；批次 3 是解锁自动寻路传送的关键一战。
+
+---
+
+## 8. 键鼠绕过底层切换的现状审计（2026-11-24）
+
+> 结论：只要调用走 `InputHub`/`SimulateAction`，底层切换是统一的；问题集中在“绕过 InputHub 的直连”和“InputHub 已收到但手柄后端无法表达的绝对坐标操作”。
+
+### 8.1 完全绕过 InputHub（真正的底层缺口）
+
+| 位置 | 说明 | 建议 |
+|---|---|---|
+| `Service/Instance/MessageHandlers/RelativeMouseMessageHandler.cs:91` | 子会话鼠标增量直接 `Simulation.SendInput.Mouse.MoveMouseBy` | 手柄模式下应改为右摇杆或明确禁用子会话鼠标 |
+| `Core/Simulator/MouseEventSimulator.cs` | 直接 `user32.mouse_event` 绝对移动/按键；目前仅 `Simulation.MouseEvent` 属性暴露、业务未调用 | 保持弃用，禁止新增调用 |
+| `Core/Monitor/LocalCursorCapture.cs` | `SetCursorPos` 用于本地光标捕获，不是模拟输入 | 保持现状 |
+| JS 脚本 API `GlobalMethod`（`moveMouseTo`/`leftClick`/`rightClick`/`scroll` 等） | 脚本层直接调用鼠标/键盘接口，无法自动转成手柄语义 | 手柄模式启动脚本时告警；后续提供动作化 API |
+| `KeyMouseMacroPlayer` | 已走 `InputHub`，但键鼠宏中的鼠标事件在手柄后端会被丢弃 | 回放手柄模式前检测宏是否含鼠标事件并提示 |
+
+### 8.2 经 InputHub，但手柄后端不支持（会被 warn 丢弃）
+
+| 类别 | 规模 | 典型位置 |
+|---|---|---|
+| 绝对坐标点击（`Region.Click`/`ClickTo`/`GameRegionClick`） | **238 处** | `DesktopRegion.cs`、`ClickExtension.cs`；`AutoLeyLineOutcropTask`(18)、`AutoStygianOnslaughtTask`(15)、`AutoArtifactSalvageTask`(13)、`AutoDomainTask`(13)、`GoToSereniteaPotTask`(13)、`AutoSkipTrigger`(9)、`SwitchCharacterStateMachineTask`(9)、`TpTask`(9) 等 |
+| 绝对移动 `MoveMouseTo` | 8 处 | `DesktopRegion`(4)、`ClickExtension`(4)，最终服务上述点击/宏 |
+| 鼠标拖拽 `LeftButtonDown/Up` | 3 处 | `BvFlow.cs` 的 `Drag` |
+| 滚轮 `VerticalScroll` | ~20 处 | `AutoDomain` 训练手册、`AutoPick` 多选项、`TpTask` 地图缩放、`CraftMaterialTask`、`GridScroller`、`OneKeyClaimRewardTask`、`AutoFight/Avatar`、`AutoLeyLineOutcropTask`、`ChooseFOptionTask`、`GetGridIconsTask` |
+| 未覆盖的裸 VK | `VK_F6`（打开设置菜单）、`VK_RETURN`（聊天）、`VK_V`（任务追踪，已补反查但默认未绑定） | `EnterAndExitWonderlandJob.cs:23`、`ReturnMainUiTask.cs:53`、`GlobalMethod.cs:216` |
+
+### 8.3 已由底层统一覆盖
+
+| 能力 | 说明 |
+|---|---|
+| `SimulateAction(GIActions)` | 全部经 `InputHub` 的模块自动切换；映射见 `GamepadActionMap` |
+| 裸 VK 反查 | `ReverseMappableActions` 覆盖 WASD、Space、ESC、F、Ctrl、X、V 等常用键；未覆盖键 warn |
+| `MoveMouseBy` | 按 `RightStickSensitivity` 换算右摇杆，替代原来的固定 ×256 饱和 |
+| 鼠标中键 | 映射 `CameraRecenter`（默认 R3） |
+| 手柄对话/拾取 UI | AutoSkip 的 View/Menu 模板、AutoPick 的 X 图标 |
+
+### 8.4 结论
+
+- 真正的“底层切换”已经集中在 `InputHub` + `GamepadChannel`；剩下的 238 处点击、20 处滚轮、拖拽和绝对移动**无法用单一底层映射解决**（手柄没有绝对坐标点击能力），必须按模块替换为“焦点导航/动作键/摇杆”语义；
+- 优先处理批次 1/2 的公共链路：`BvFlow.Drag`、`GridScroller`、`CraftMaterialTask`、`TpTask` 地图缩放、`ChooseFOptionTask` 滚轮选人、`AutoPick` 多选项；
+- `VK_F6`/`VK_RETURN` 需要新增 `OpenTheSettingsMenu`/`OpenChatScreen` 配置字段，或明确不支持并告警。
