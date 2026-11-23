@@ -41,22 +41,22 @@ public sealed class LeftStickState
     {
         var x = 0;
         var y = 0;
-        if (_held.Contains(GIActions.MoveLeft))
+        if (_held.Contains(GIActions.MoveLeft) || _held.Contains(GIActions.FocusLeft))
         {
             x -= 1;
         }
 
-        if (_held.Contains(GIActions.MoveRight))
+        if (_held.Contains(GIActions.MoveRight) || _held.Contains(GIActions.FocusRight))
         {
             x += 1;
         }
 
-        if (_held.Contains(GIActions.MoveForward))
+        if (_held.Contains(GIActions.MoveForward) || _held.Contains(GIActions.FocusUp) || _held.Contains(GIActions.ScrollUp))
         {
             y += 1;
         }
 
-        if (_held.Contains(GIActions.MoveBackward))
+        if (_held.Contains(GIActions.MoveBackward) || _held.Contains(GIActions.FocusDown) || _held.Contains(GIActions.ScrollDown))
         {
             y -= 1;
         }

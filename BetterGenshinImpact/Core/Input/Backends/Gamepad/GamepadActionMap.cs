@@ -111,6 +111,12 @@ public static class GamepadActionMap
             case GIActions.ElementalSight:
                 button = config.ElementalSight;
                 return true;
+            case GIActions.MapZoomIn:
+                button = config.MapZoomIn;
+                return true;
+            case GIActions.MapZoomOut:
+                button = config.MapZoomOut;
+                return true;
             default:
                 button = GamepadButton.None;
                 return false;
@@ -204,6 +210,24 @@ public static class GamepadActionMap
                 y = 0;
                 return true;
             case GIActions.MoveRight:
+                x = 1;
+                y = 0;
+                return true;
+            case GIActions.FocusUp:
+            case GIActions.ScrollUp:
+                x = 0;
+                y = 1;
+                return true;
+            case GIActions.FocusDown:
+            case GIActions.ScrollDown:
+                x = 0;
+                y = -1;
+                return true;
+            case GIActions.FocusLeft:
+                x = -1;
+                y = 0;
+                return true;
+            case GIActions.FocusRight:
                 x = 1;
                 y = 0;
                 return true;

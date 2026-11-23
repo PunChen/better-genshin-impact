@@ -44,6 +44,11 @@ public sealed class GamepadInputBackend : IInputBackend
     public void SetRightStick(double x, double y, int durationMs) => _channel.SetRightStick(x, y, durationMs);
 
     /// <summary>
+    /// 设置左摇杆并保持指定时间后归零（x/y 归一化到 -1..1），用于地图拖动/焦点移动
+    /// </summary>
+    public void SetLeftStick(double x, double y, int durationMs) => _channel.SetLeftStick(x, y, durationMs);
+
+    /// <summary>
     /// 向右（正角度）/向左（负角度）转动视角指定角度
     /// </summary>
     public void TurnByAngle(double degrees) => _channel.TurnByAngle(degrees);
@@ -314,6 +319,34 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
     }
 
     /// <summary>
+    /// 设置左摇杆并保持一段时间后归零（x/y 归一化到 -1..1），用于地图拖动/焦点移动
+    /// </summary>
+    public void SetLeftStick(double x, double y, int durationMs)
+    {
+        var nx = (short)Math.Clamp(x * short.MaxValue, short.MinValue, short.MaxValue);
+        var ny = (short)Math.Clamp(y * short.MaxValue, short.MinValue, short.MaxValue);
+
+        lock (_sync)
+        {
+            if (_transport is null)
+            {
+                return;
+            }
+
+            _transport.SetAxis(GamepadAxis.LeftThumbX, nx);
+            _transport.SetAxis(GamepadAxis.LeftThumbY, ny);
+        }
+
+        Thread.Sleep(Math.Max(1, durationMs));
+
+        lock (_sync)
+        {
+            _transport?.SetAxis(GamepadAxis.LeftThumbX, 0);
+            _transport?.SetAxis(GamepadAxis.LeftThumbY, 0);
+        }
+    }
+
+    /// <summary>
     /// 向右（正角度）/向左（负角度）转动视角指定角度，按 <see cref="GamepadConfig.TurnMillisecondsPerDegree"/> 标定
     /// </summary>
     public void TurnByAngle(double degrees)
@@ -521,7 +554,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                 case KeyType.KeyPress:
                     _leftStick.Set(action, true);
                     ApplyLeftStick();
-                    Thread.Sleep(Math.Max(1, config.PressDurationMs));
+                    Thread.Sleep(GetDirectionHoldMs(action, config));
                     _leftStick.Set(action, false);
                     ApplyLeftStick();
                     break;
@@ -536,12 +569,20 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                 case KeyType.Hold:
                     _leftStick.Set(action, true);
                     ApplyLeftStick();
-                    Thread.Sleep(1000);
+                    Thread.Sleep(Math.Max(1000, GetDirectionHoldMs(action, config)));
                     _leftStick.Set(action, false);
                     ApplyLeftStick();
                     break;
             }
         }
+    }
+
+    private static int GetDirectionHoldMs(GIActions action, GamepadConfig config)
+    {
+        return action is GIActions.FocusUp or GIActions.FocusDown or GIActions.FocusLeft or GIActions.FocusRight
+            or GIActions.ScrollUp or GIActions.ScrollDown
+            ? Math.Max(1, config.UiNavigationPressMs)
+            : Math.Max(1, config.PressDurationMs);
     }
 
     private void ApplyLeftStick()

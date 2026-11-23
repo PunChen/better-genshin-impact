@@ -222,6 +222,8 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.LeftThumb, config.QuestNavigation);
         Assert.Equal(GamepadButton.Left, config.ElementalSight);
         Assert.Equal(GamepadButton.LeftShoulder, config.ElementalSightModifier);
+        Assert.Equal(GamepadButton.LeftTrigger, config.MapZoomIn);
+        Assert.Equal(GamepadButton.RightTrigger, config.MapZoomOut);
     }
 
     [Fact]
@@ -242,9 +244,28 @@ public class GamepadMappingTests
     }
 
     [Fact]
-    public void WheelMenuBindings_DefaultDirections()
+    public void UiNavigationActions_MapToLeftStickAndZoomButtons()
     {
+        Assert.True(GamepadActionMap.TryGetDirection(GIActions.FocusUp, out var x, out var y));
+        Assert.Equal((0, 1), (x, y));
+
+        Assert.True(GamepadActionMap.TryGetDirection(GIActions.ScrollDown, out x, out y));
+        Assert.Equal((0, -1), (x, y));
+
+        var stick = new LeftStickState();
+        stick.Set(GIActions.FocusUp, true);
+        Assert.Equal((0, short.MaxValue), stick.GetAxisValues());
+
         var config = new GamepadConfig();
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.MapZoomIn, config, out var zoomIn));
+        Assert.Equal(GamepadButton.LeftTrigger, zoomIn);
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.MapZoomOut, config, out var zoomOut));
+        Assert.Equal(GamepadButton.RightTrigger, zoomOut);
+    }
+
+    [Fact]
+    public void WheelMenuBindings_DefaultDirections()
+    {        var config = new GamepadConfig();
 
         Assert.Equal(GamepadStickDirection.Down, config.OpenMapWheelDirection);
         Assert.Equal(GamepadStickDirection.Right, config.OpenInventoryWheelDirection);

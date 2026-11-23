@@ -202,6 +202,8 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("快捷使用小道具（组合键按键）", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
             new("快捷使用小道具 组合键修饰键", nameof(_gamepadConfig.QuickUseGadgetModifier), _gamepadConfig.QuickUseGadgetModifier),
             new("视角回正（鼠标中键）", nameof(_gamepadConfig.CameraRecenter), _gamepadConfig.CameraRecenter),
+            new("地图放大", nameof(_gamepadConfig.MapZoomIn), _gamepadConfig.MapZoomIn),
+            new("地图缩小", nameof(_gamepadConfig.MapZoomOut), _gamepadConfig.MapZoomOut),
             new("打开地图", nameof(_gamepadConfig.OpenMap), _gamepadConfig.OpenMap),
             new("打开背包", nameof(_gamepadConfig.OpenInventory), _gamepadConfig.OpenInventory),
             new("打开角色界面", nameof(_gamepadConfig.OpenCharacterScreen), _gamepadConfig.OpenCharacterScreen),

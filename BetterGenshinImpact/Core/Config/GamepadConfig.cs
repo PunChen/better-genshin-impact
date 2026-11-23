@@ -186,6 +186,24 @@ public partial class GamepadConfig : ObservableObject
     [ObservableProperty]
     private GamepadButton _cameraRecenter = GamepadButton.RightThumb;
 
+    /// <summary>
+    /// 地图放大（默认 LT）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _mapZoomIn = GamepadButton.LeftTrigger;
+
+    /// <summary>
+    /// 地图缩小（默认 RT）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _mapZoomOut = GamepadButton.RightTrigger;
+
+    /// <summary>
+    /// 界面焦点/列表滚动的左摇杆保持时间（毫秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _uiNavigationPressMs = 120;
+
     #endregion
 
     #region 界面

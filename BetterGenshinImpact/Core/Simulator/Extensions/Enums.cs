@@ -282,4 +282,44 @@ public enum GIActions
     /// </summary>
     HideUI,
 
+    /// <summary>
+    /// 界面焦点向上移动（手柄：左摇杆上）
+    /// </summary>
+    FocusUp,
+
+    /// <summary>
+    /// 界面焦点向下移动（手柄：左摇杆下）
+    /// </summary>
+    FocusDown,
+
+    /// <summary>
+    /// 界面焦点向左移动（手柄：左摇杆左）
+    /// </summary>
+    FocusLeft,
+
+    /// <summary>
+    /// 界面焦点向右移动（手柄：左摇杆右）
+    /// </summary>
+    FocusRight,
+
+    /// <summary>
+    /// 列表向上滚动（手柄：左摇杆上）
+    /// </summary>
+    ScrollUp,
+
+    /// <summary>
+    /// 列表向下滚动（手柄：左摇杆下）
+    /// </summary>
+    ScrollDown,
+
+    /// <summary>
+    /// 地图放大（手柄：LT）
+    /// </summary>
+    MapZoomIn,
+
+    /// <summary>
+    /// 地图缩小（手柄：RT）
+    /// </summary>
+    MapZoomOut,
+
 }
