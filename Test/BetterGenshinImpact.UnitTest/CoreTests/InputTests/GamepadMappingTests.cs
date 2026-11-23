@@ -233,4 +233,24 @@ public class GamepadMappingTests
 
         Assert.False(GamepadActionMap.TryGetModifier(GIActions.Confirm, config, out _));
     }
+
+    [Fact]
+    public void WheelMenuBindings_DefaultDirections()
+    {
+        var config = new GamepadConfig();
+
+        Assert.Equal(GamepadStickDirection.Down, config.OpenMapWheelDirection);
+        Assert.Equal(GamepadStickDirection.Right, config.OpenInventoryWheelDirection);
+        Assert.Equal(GamepadStickDirection.DownLeft, config.OpenQuestMenuWheelDirection);
+        Assert.Equal(GamepadStickDirection.DownRight, config.OpenCharacterScreenWheelDirection);
+        Assert.Equal(GamepadStickDirection.UpLeft, config.OpenBattlePassScreenWheelDirection);
+        Assert.Equal(GamepadStickDirection.Left, config.OpenTheEventsMenuWheelDirection);
+        Assert.Equal(GamepadStickDirection.UpRight, config.OpenAdventurerHandbookWheelDirection);
+
+        Assert.True(GamepadActionMap.TryGetWheel(GIActions.OpenMap, config, out var modifier, out var direction));
+        Assert.Equal(GamepadButton.LeftShoulder, modifier);
+        Assert.Equal(GamepadStickDirection.Down, direction);
+
+        Assert.False(GamepadActionMap.TryGetWheel(GIActions.Confirm, config, out _, out _));
+    }
 }

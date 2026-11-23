@@ -263,4 +263,70 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _elementalSight = GamepadButton.None;
 
     #endregion
+
+    #region 快捷轮盘（LB + 右摇杆）
+
+    /// <summary>
+    /// 快捷轮盘：按住修饰键后拨动右摇杆选择菜单，保持时间（毫秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _wheelSelectionHoldMs = 180;
+
+    /// <summary>打开地图：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openMapWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开地图：轮盘方向（默认下）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openMapWheelDirection = GamepadStickDirection.Down;
+
+    /// <summary>打开背包：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openInventoryWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开背包：轮盘方向（默认右）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openInventoryWheelDirection = GamepadStickDirection.Right;
+
+    /// <summary>打开任务菜单：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openQuestMenuWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开任务菜单：轮盘方向（默认左下）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openQuestMenuWheelDirection = GamepadStickDirection.DownLeft;
+
+    /// <summary>打开角色界面：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openCharacterScreenWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开角色界面：轮盘方向（默认右下）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openCharacterScreenWheelDirection = GamepadStickDirection.DownRight;
+
+    /// <summary>打开纪行界面：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openBattlePassScreenWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开纪行界面：轮盘方向（默认左上）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openBattlePassScreenWheelDirection = GamepadStickDirection.UpLeft;
+
+    /// <summary>打开活动面板：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openTheEventsMenuWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开活动面板：轮盘方向（默认左）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openTheEventsMenuWheelDirection = GamepadStickDirection.Left;
+
+    /// <summary>打开冒险之证：轮盘修饰键</summary>
+    [ObservableProperty]
+    private GamepadButton _openAdventurerHandbookWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>打开冒险之证：轮盘方向（默认右上）</summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openAdventurerHandbookWheelDirection = GamepadStickDirection.UpRight;
+
+    #endregion
 }

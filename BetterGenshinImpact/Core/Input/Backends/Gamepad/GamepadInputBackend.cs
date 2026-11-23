@@ -170,6 +170,12 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
             return this;
         }
 
+        if (GamepadActionMap.TryGetWheel(action, config, out var wheelModifier, out var wheelDirection))
+        {
+            SimulateWheel(wheelModifier, wheelDirection, config);
+            return this;
+        }
+
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
@@ -379,6 +385,12 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
             return true;
         }
 
+        if (GamepadActionMap.TryGetWheel(action, config, out var wheelModifier, out var wheelDirection))
+        {
+            SimulateWheel(wheelModifier, wheelDirection, config);
+            return true;
+        }
+
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
@@ -387,6 +399,49 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         }
 
         return false;
+    }
+
+    private void SimulateWheel(GamepadButton modifier, GamepadStickDirection direction, GamepadConfig config)
+    {
+        var (x, y) = DirectionToAxis(direction);
+        lock (_sync)
+        {
+            var transport = _transport;
+            if (transport is null)
+            {
+                return;
+            }
+
+            // 按住修饰键打开快捷轮盘 → 拨右摇杆选择 → 回中 → 松开修饰键确认
+            transport.SetButton(modifier, true);
+            Thread.Sleep(60);
+            transport.SetAxis(GamepadAxis.RightThumbX, x);
+            transport.SetAxis(GamepadAxis.RightThumbY, y);
+            Thread.Sleep(Math.Max(60, config.WheelSelectionHoldMs));
+            transport.SetAxis(GamepadAxis.RightThumbX, 0);
+            transport.SetAxis(GamepadAxis.RightThumbY, 0);
+            Thread.Sleep(30);
+            transport.SetButton(modifier, false);
+        }
+    }
+
+    private static (short X, short Y) DirectionToAxis(GamepadStickDirection direction)
+    {
+        const double diagonal = 0.7071;
+        var (x, y) = direction switch
+        {
+            GamepadStickDirection.Up => (0, 1),
+            GamepadStickDirection.Down => (0, -1),
+            GamepadStickDirection.Left => (-1, 0),
+            GamepadStickDirection.Right => (1, 0),
+            GamepadStickDirection.UpLeft => (-diagonal, diagonal),
+            GamepadStickDirection.UpRight => (diagonal, diagonal),
+            GamepadStickDirection.DownLeft => (-diagonal, -diagonal),
+            GamepadStickDirection.DownRight => (diagonal, -diagonal),
+            _ => (0, 0),
+        };
+
+        return ((short)(x * short.MaxValue), (short)(y * short.MaxValue));
     }
 
     private void SimulateButton(GamepadButton button, GamepadButton modifier, KeyType type, GamepadConfig config)

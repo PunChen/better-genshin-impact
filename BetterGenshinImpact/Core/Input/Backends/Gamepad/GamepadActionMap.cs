@@ -137,6 +137,51 @@ public static class GamepadActionMap
     }
 
     /// <summary>
+    /// 尝试取得“快捷轮盘”绑定（按住修饰键 + 右摇杆方向）。
+    /// 返回 false 表示该动作没有轮盘绑定或方向为空。
+    /// </summary>
+    public static bool TryGetWheel(GIActions action, GamepadConfig config, out GamepadButton modifier, out GamepadStickDirection direction)
+    {
+        switch (action)
+        {
+            case GIActions.OpenMap:
+                modifier = config.OpenMapWheelModifier;
+                direction = config.OpenMapWheelDirection;
+                break;
+            case GIActions.OpenInventory:
+                modifier = config.OpenInventoryWheelModifier;
+                direction = config.OpenInventoryWheelDirection;
+                break;
+            case GIActions.OpenQuestMenu:
+                modifier = config.OpenQuestMenuWheelModifier;
+                direction = config.OpenQuestMenuWheelDirection;
+                break;
+            case GIActions.OpenCharacterScreen:
+                modifier = config.OpenCharacterScreenWheelModifier;
+                direction = config.OpenCharacterScreenWheelDirection;
+                break;
+            case GIActions.OpenBattlePassScreen:
+                modifier = config.OpenBattlePassScreenWheelModifier;
+                direction = config.OpenBattlePassScreenWheelDirection;
+                break;
+            case GIActions.OpenTheEventsMenu:
+                modifier = config.OpenTheEventsMenuWheelModifier;
+                direction = config.OpenTheEventsMenuWheelDirection;
+                break;
+            case GIActions.OpenAdventurerHandbook:
+                modifier = config.OpenAdventurerHandbookWheelModifier;
+                direction = config.OpenAdventurerHandbookWheelDirection;
+                break;
+            default:
+                modifier = GamepadButton.None;
+                direction = GamepadStickDirection.None;
+                return false;
+        }
+
+        return modifier != GamepadButton.None && direction != GamepadStickDirection.None;
+    }
+
+    /// <summary>
     /// 尝试取得动作对应的左摇杆方向（x/y 取值 -1、0、1）
     /// </summary>
     public static bool TryGetDirection(GIActions action, out int x, out int y)

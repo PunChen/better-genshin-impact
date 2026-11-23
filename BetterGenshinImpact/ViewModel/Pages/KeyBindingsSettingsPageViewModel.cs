@@ -60,8 +60,19 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     /// </summary>
     public IReadOnlyList<GamepadButton> GamepadButtons { get; } = Enum.GetValues<GamepadButton>();
 
+    /// <summary>
+    /// 右摇杆方向可选项（快捷轮盘）
+    /// </summary>
+    public IReadOnlyList<GamepadStickDirection> GamepadDirections { get; } = Enum.GetValues<GamepadStickDirection>();
+
     [ObservableProperty]
     private ObservableCollection<GamepadBindingSettingModel> _gamepadBindingModels = [];
+
+    /// <summary>
+    /// 快捷轮盘绑定（按住修饰键 + 右摇杆方向）
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<GamepadWheelBindingSettingModel> _gamepadWheelBindings = [];
 
     /// <summary>
     /// 手柄状态提示文本
@@ -91,6 +102,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
 
         BuildKeyBindingsList();
         BuildGamepadBindingList();
+        BuildGamepadWheelList();
 
         var list = GetAllNonDirectoryKeyBinding(KeyBindingSettingModels);
         foreach (var keyConfig in list)
@@ -127,6 +139,36 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
                         pi.SetValue(_gamepadConfig, model.ButtonValue, null);
                     }
                 }
+            };
+        }
+
+        foreach (var wheelModel in GamepadWheelBindings)
+        {
+            wheelModel.PropertyChanged += (sender, e) =>
+            {
+                if (sender is not GamepadWheelBindingSettingModel model)
+                {
+                    return;
+                }
+
+                var propertyName = e.PropertyName == nameof(model.Modifier)
+                    ? model.ModifierPropertyName
+                    : e.PropertyName == nameof(model.Direction)
+                        ? model.DirectionPropertyName
+                        : null;
+                if (propertyName is null)
+                {
+                    return;
+                }
+
+                var pi = _gamepadConfig.GetType().GetProperty(propertyName,
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (pi == null || !pi.CanWrite)
+                {
+                    return;
+                }
+
+                pi.SetValue(_gamepadConfig, e.PropertyName == nameof(model.Modifier) ? model.Modifier : model.Direction, null);
             };
         }
     }
@@ -176,6 +218,30 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     }
 
     /// <summary>
+    /// 构造快捷轮盘绑定列表（按住 LB + 右摇杆方向）
+    /// </summary>
+    private void BuildGamepadWheelList()
+    {
+        GamepadWheelBindings =
+        [
+            new("打开地图", nameof(_gamepadConfig.OpenMapWheelModifier), nameof(_gamepadConfig.OpenMapWheelDirection),
+                _gamepadConfig.OpenMapWheelModifier, _gamepadConfig.OpenMapWheelDirection),
+            new("打开背包", nameof(_gamepadConfig.OpenInventoryWheelModifier), nameof(_gamepadConfig.OpenInventoryWheelDirection),
+                _gamepadConfig.OpenInventoryWheelModifier, _gamepadConfig.OpenInventoryWheelDirection),
+            new("打开任务菜单", nameof(_gamepadConfig.OpenQuestMenuWheelModifier), nameof(_gamepadConfig.OpenQuestMenuWheelDirection),
+                _gamepadConfig.OpenQuestMenuWheelModifier, _gamepadConfig.OpenQuestMenuWheelDirection),
+            new("打开角色界面", nameof(_gamepadConfig.OpenCharacterScreenWheelModifier), nameof(_gamepadConfig.OpenCharacterScreenWheelDirection),
+                _gamepadConfig.OpenCharacterScreenWheelModifier, _gamepadConfig.OpenCharacterScreenWheelDirection),
+            new("打开纪行界面", nameof(_gamepadConfig.OpenBattlePassScreenWheelModifier), nameof(_gamepadConfig.OpenBattlePassScreenWheelDirection),
+                _gamepadConfig.OpenBattlePassScreenWheelModifier, _gamepadConfig.OpenBattlePassScreenWheelDirection),
+            new("打开活动面板", nameof(_gamepadConfig.OpenTheEventsMenuWheelModifier), nameof(_gamepadConfig.OpenTheEventsMenuWheelDirection),
+                _gamepadConfig.OpenTheEventsMenuWheelModifier, _gamepadConfig.OpenTheEventsMenuWheelDirection),
+            new("打开冒险之证", nameof(_gamepadConfig.OpenAdventurerHandbookWheelModifier), nameof(_gamepadConfig.OpenAdventurerHandbookWheelDirection),
+                _gamepadConfig.OpenAdventurerHandbookWheelModifier, _gamepadConfig.OpenAdventurerHandbookWheelDirection),
+        ];
+    }
+
+    /// <summary>
     /// 测试确认键，便于确认虚拟手柄可用
     /// </summary>
     [RelayCommand]
@@ -207,7 +273,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         var defaults = new GamepadConfig();
         foreach (var pi in typeof(GamepadConfig).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
         {
-            if (pi.PropertyType == typeof(GamepadButton) && pi.CanWrite)
+            if ((pi.PropertyType == typeof(GamepadButton) || pi.PropertyType == typeof(GamepadStickDirection)) && pi.CanWrite)
             {
                 pi.SetValue(_gamepadConfig, pi.GetValue(defaults));
             }
@@ -220,6 +286,24 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             if (pi?.GetValue(_gamepadConfig) is GamepadButton button)
             {
                 model.ButtonValue = button;
+            }
+        }
+
+        foreach (var model in GamepadWheelBindings)
+        {
+            var modifierPi = typeof(GamepadConfig).GetProperty(model.ModifierPropertyName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var directionPi = typeof(GamepadConfig).GetProperty(model.DirectionPropertyName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+            if (modifierPi?.GetValue(_gamepadConfig) is GamepadButton modifier)
+            {
+                model.Modifier = modifier;
+            }
+
+            if (directionPi?.GetValue(_gamepadConfig) is GamepadStickDirection direction)
+            {
+                model.Direction = direction;
             }
         }
 

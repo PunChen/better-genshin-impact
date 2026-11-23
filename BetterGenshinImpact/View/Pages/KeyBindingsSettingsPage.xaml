@@ -181,55 +181,116 @@
                             <Grid Grid.Row="0" Margin="8,4,8,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="220" />
+                                    <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="170" />
                                 </Grid.ColumnDefinitions>
                                 <ui:TextBlock Grid.Column="0"
                                               FontTypography="BodyStrong"
                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                               Text="{i18n:T 动作}" />
                                 <ui:TextBlock Grid.Column="1"
+                                              Grid.ColumnSpan="2"
                                               FontTypography="BodyStrong"
                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
-                                              Text="{i18n:T 手柄按键}" />
+                                              Text="{i18n:T 手柄操作}" />
                             </Grid>
 
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
-                                <ItemsControl ItemsSource="{Binding GamepadBindingModels}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <Border x:Name="RowBorder"
-                                                    Margin="0,1"
-                                                    Padding="8,6"
-                                                    Background="Transparent"
-                                                    CornerRadius="4">
-                                                <Grid>
-                                                    <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="220" />
-                                                    </Grid.ColumnDefinitions>
-                                                    <TextBlock Grid.Column="0"
-                                                               VerticalAlignment="Center"
-                                                               Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                               Text="{Binding ActionName}"
-                                                               TextWrapping="Wrap" />
-                                                    <ComboBox Grid.Column="1"
-                                                              Height="32"
-                                                              MinWidth="180"
-                                                              Padding="8,4"
-                                                              HorizontalAlignment="Left"
-                                                              VerticalContentAlignment="Center"
-                                                              ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
-                                                              SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
-                                                </Grid>
-                                            </Border>
-                                            <DataTemplate.Triggers>
-                                                <Trigger SourceName="RowBorder" Property="IsMouseOver" Value="True">
-                                                    <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
-                                                </Trigger>
-                                            </DataTemplate.Triggers>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
-                                </ItemsControl>
+                                <StackPanel>
+                                    <ui:TextBlock Margin="8,8,8,4"
+                                                  FontTypography="BodyStrong"
+                                                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                  Text="{i18n:T 快捷轮盘（按住 LB + 右摇杆）}" />
+                                    <ItemsControl ItemsSource="{Binding GamepadWheelBindings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="WheelRowBorder"
+                                                        Margin="0,1"
+                                                        Padding="8,6"
+                                                        Background="Transparent"
+                                                        CornerRadius="4">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="170" />
+                                                            <ColumnDefinition Width="170" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                   Text="{Binding ActionName}"
+                                                                   TextWrapping="Wrap" />
+                                                        <ComboBox Grid.Column="1"
+                                                                  Height="32"
+                                                                  MinWidth="140"
+                                                                  Padding="8,4"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding Modifier, Mode=TwoWay}" />
+                                                        <ComboBox Grid.Column="2"
+                                                                  Height="32"
+                                                                  MinWidth="140"
+                                                                  Padding="8,4"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadDirections, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding Direction, Mode=TwoWay}" />
+                                                    </Grid>
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <Trigger SourceName="WheelRowBorder" Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="WheelRowBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                                    </Trigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <ui:TextBlock Margin="8,12,8,4"
+                                                  FontTypography="BodyStrong"
+                                                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                  Text="{i18n:T 直接按键 / 组合键}" />
+
+                                    <ItemsControl ItemsSource="{Binding GamepadBindingModels}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="RowBorder"
+                                                        Margin="0,1"
+                                                        Padding="8,6"
+                                                        Background="Transparent"
+                                                        CornerRadius="4">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="170" />
+                                                            <ColumnDefinition Width="170" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                   Text="{Binding ActionName}"
+                                                                   TextWrapping="Wrap" />
+                                                        <ComboBox Grid.Column="1"
+                                                                  Grid.ColumnSpan="2"
+                                                                  Height="32"
+                                                                  MinWidth="180"
+                                                                  Padding="8,4"
+                                                                  HorizontalAlignment="Left"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
+                                                    </Grid>
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <Trigger SourceName="RowBorder" Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="RowBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                                    </Trigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
                             </ScrollViewer>
                         </Grid>
                     </ui:Border>
