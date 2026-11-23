@@ -127,34 +127,40 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _drop = GamepadButton.None;
 
     /// <summary>
-    /// 切换小队角色1（手柄切人依赖此绑定，未绑定时自动战斗无法切换角色）
+    /// 切换小队角色1（手柄默认十字键↑）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _switchMember1 = GamepadButton.None;
+    private GamepadButton _switchMember1 = GamepadButton.Up;
 
     /// <summary>
-    /// 切换小队角色2
+    /// 切换小队角色2（手柄默认十字键→）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _switchMember2 = GamepadButton.None;
+    private GamepadButton _switchMember2 = GamepadButton.Right;
 
     /// <summary>
-    /// 切换小队角色3
+    /// 切换小队角色3（手柄默认十字键←）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _switchMember3 = GamepadButton.None;
+    private GamepadButton _switchMember3 = GamepadButton.Left;
 
     /// <summary>
-    /// 切换小队角色4
+    /// 切换小队角色4（手柄默认十字键↓）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _switchMember4 = GamepadButton.None;
+    private GamepadButton _switchMember4 = GamepadButton.Down;
 
     /// <summary>
-    /// 切换小队角色5
+    /// 切换小队角色5（默认 LB + Y）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _switchMember5 = GamepadButton.None;
+    private GamepadButton _switchMember5 = GamepadButton.Y;
+
+    /// <summary>
+    /// 切换小队角色5 的修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _switchMember5Modifier = GamepadButton.LeftShoulder;
 
     /// <summary>
     /// 特定玩法内交互操作（T 键，如抓取叶片等）
@@ -163,10 +169,16 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _interactionInSomeMode = GamepadButton.None;
 
     /// <summary>
-    /// 快捷使用小道具
+    /// 快捷使用小道具（默认 LB + B）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _quickUseGadget = GamepadButton.None;
+    private GamepadButton _quickUseGadget = GamepadButton.B;
+
+    /// <summary>
+    /// 快捷使用小道具的修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _quickUseGadgetModifier = GamepadButton.LeftShoulder;
 
     /// <summary>
     /// 视角回正（对应鼠标中键/R3）
@@ -191,10 +203,16 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _openInventory = GamepadButton.None;
 
     /// <summary>
-    /// 打开派蒙菜单
+    /// 打开派蒙菜单（默认 ☰ Menu）
     /// </summary>
     [ObservableProperty]
     private GamepadButton _openPaimonMenu = GamepadButton.Start;
+
+    /// <summary>
+    /// 打开好友聊天（默认 ⧉ View）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openChatScreen = GamepadButton.Back;
 
     /// <summary>
     /// 打开任务菜单

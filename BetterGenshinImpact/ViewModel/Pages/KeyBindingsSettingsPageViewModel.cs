@@ -154,9 +154,11 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("切换小队角色2", nameof(_gamepadConfig.SwitchMember2), _gamepadConfig.SwitchMember2),
             new("切换小队角色3", nameof(_gamepadConfig.SwitchMember3), _gamepadConfig.SwitchMember3),
             new("切换小队角色4", nameof(_gamepadConfig.SwitchMember4), _gamepadConfig.SwitchMember4),
-            new("切换小队角色5", nameof(_gamepadConfig.SwitchMember5), _gamepadConfig.SwitchMember5),
+            new("切换小队角色5（组合键按键）", nameof(_gamepadConfig.SwitchMember5), _gamepadConfig.SwitchMember5),
+            new("切换小队角色5 组合键修饰键", nameof(_gamepadConfig.SwitchMember5Modifier), _gamepadConfig.SwitchMember5Modifier),
             new("特定玩法内交互（T 键）", nameof(_gamepadConfig.InteractionInSomeMode), _gamepadConfig.InteractionInSomeMode),
-            new("快捷使用小道具", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
+            new("快捷使用小道具（组合键按键）", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
+            new("快捷使用小道具 组合键修饰键", nameof(_gamepadConfig.QuickUseGadgetModifier), _gamepadConfig.QuickUseGadgetModifier),
             new("视角回正（鼠标中键）", nameof(_gamepadConfig.CameraRecenter), _gamepadConfig.CameraRecenter),
             new("打开地图", nameof(_gamepadConfig.OpenMap), _gamepadConfig.OpenMap),
             new("打开背包", nameof(_gamepadConfig.OpenInventory), _gamepadConfig.OpenInventory),
@@ -168,6 +170,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("开启任务追踪", nameof(_gamepadConfig.QuestNavigation), _gamepadConfig.QuestNavigation),
             new("长按打开元素视野", nameof(_gamepadConfig.ElementalSight), _gamepadConfig.ElementalSight),
             new("打开派蒙菜单", nameof(_gamepadConfig.OpenPaimonMenu), _gamepadConfig.OpenPaimonMenu),
+            new("打开好友聊天（View）", nameof(_gamepadConfig.OpenChatScreen), _gamepadConfig.OpenChatScreen),
             new("打开任务菜单", nameof(_gamepadConfig.OpenQuestMenu), _gamepadConfig.OpenQuestMenu),
         ];
     }

@@ -84,6 +84,9 @@ public static class GamepadActionMap
             case GIActions.OpenPaimonMenu:
                 button = config.OpenPaimonMenu;
                 return true;
+            case GIActions.OpenChatScreen:
+                button = config.OpenChatScreen;
+                return true;
             case GIActions.OpenQuestMenu:
                 button = config.OpenQuestMenu;
                 return true;
@@ -110,6 +113,25 @@ public static class GamepadActionMap
                 return true;
             default:
                 button = GamepadButton.None;
+                return false;
+        }
+    }
+
+    /// <summary>
+    /// 尝试取得动作对应的组合键修饰键（如 LB + Y）。没有组合键时返回 false。
+    /// </summary>
+    public static bool TryGetModifier(GIActions action, GamepadConfig config, out GamepadButton modifier)
+    {
+        switch (action)
+        {
+            case GIActions.SwitchMember5:
+                modifier = config.SwitchMember5Modifier;
+                return true;
+            case GIActions.QuickUseGadget:
+                modifier = config.QuickUseGadgetModifier;
+                return true;
+            default:
+                modifier = GamepadButton.None;
                 return false;
         }
     }

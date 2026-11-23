@@ -109,15 +109,10 @@ public class GamepadMappingTests
     [Fact]
     public void TaskActions_DefaultToUnbound()
     {
-        // 新增的任务类动作默认不绑定，避免未验证过的默认键位误触发游戏内行为
+        // 其余任务类动作默认不绑定，避免未验证过的默认键位误触发游戏内行为
         var config = new GamepadConfig();
 
         Assert.Equal(GamepadButton.None, config.Drop);
-        Assert.Equal(GamepadButton.None, config.SwitchMember1);
-        Assert.Equal(GamepadButton.None, config.SwitchMember2);
-        Assert.Equal(GamepadButton.None, config.SwitchMember3);
-        Assert.Equal(GamepadButton.None, config.SwitchMember4);
-        Assert.Equal(GamepadButton.None, config.SwitchMember5);
         Assert.Equal(GamepadButton.None, config.InteractionInSomeMode);
         Assert.Equal(GamepadButton.None, config.OpenCharacterScreen);
         Assert.Equal(GamepadButton.None, config.OpenAdventurerHandbook);
@@ -204,5 +199,38 @@ public class GamepadMappingTests
 
         Assert.True(GamepadActionMap.TryGetButton(GIActions.ElementalSight, config, out var sight));
         Assert.Equal(GamepadButton.RightThumb, sight);
+    }
+
+    [Fact]
+    public void PartySwitchAndGadget_UseGamepadDefaults()
+    {
+        var config = new GamepadConfig();
+
+        Assert.Equal(GamepadButton.Up, config.SwitchMember1);
+        Assert.Equal(GamepadButton.Right, config.SwitchMember2);
+        Assert.Equal(GamepadButton.Left, config.SwitchMember3);
+        Assert.Equal(GamepadButton.Down, config.SwitchMember4);
+
+        // 角色5 = LB + Y；快捷道具 = LB + B
+        Assert.Equal(GamepadButton.Y, config.SwitchMember5);
+        Assert.Equal(GamepadButton.LeftShoulder, config.SwitchMember5Modifier);
+        Assert.Equal(GamepadButton.B, config.QuickUseGadget);
+        Assert.Equal(GamepadButton.LeftShoulder, config.QuickUseGadgetModifier);
+
+        Assert.Equal(GamepadButton.Back, config.OpenChatScreen);
+    }
+
+    [Fact]
+    public void ComboActions_ExposeModifier()
+    {
+        var config = new GamepadConfig();
+
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.SwitchMember5, config, out var switchModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, switchModifier);
+
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.QuickUseGadget, config, out var gadgetModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, gadgetModifier);
+
+        Assert.False(GamepadActionMap.TryGetModifier(GIActions.Confirm, config, out _));
     }
 }

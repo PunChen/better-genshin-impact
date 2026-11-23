@@ -135,6 +135,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         GIActions.OpenAdventurerHandbook,
         GIActions.OpenPartySetupScreen,
         GIActions.OpenPaimonMenu,
+        GIActions.OpenChatScreen,
         GIActions.OpenQuestMenu,
         GIActions.OpenBattlePassScreen,
         GIActions.OpenTheEventsMenu,
@@ -171,7 +172,8 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
 
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
-            SimulateButton(button, type, config);
+            GamepadActionMap.TryGetModifier(action, config, out var modifier);
+            SimulateButton(button, modifier, type, config);
             return this;
         }
 
@@ -379,14 +381,15 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
 
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
-            SimulateButton(button, type, config);
+            GamepadActionMap.TryGetModifier(action, config, out var modifier);
+            SimulateButton(button, modifier, type, config);
             return true;
         }
 
         return false;
     }
 
-    private void SimulateButton(GamepadButton button, KeyType type, GamepadConfig config)
+    private void SimulateButton(GamepadButton button, GamepadButton modifier, KeyType type, GamepadConfig config)
     {
         lock (_sync)
         {
@@ -396,23 +399,59 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                 return;
             }
 
+            var hasModifier = modifier != GamepadButton.None;
             switch (type)
             {
                 case KeyType.KeyPress:
+                    if (hasModifier)
+                    {
+                        transport.SetButton(modifier, true);
+                        Thread.Sleep(30);
+                    }
+
                     transport.SetButton(button, true);
                     Thread.Sleep(Math.Max(1, config.PressDurationMs));
                     transport.SetButton(button, false);
+
+                    if (hasModifier)
+                    {
+                        Thread.Sleep(20);
+                        transport.SetButton(modifier, false);
+                    }
+
                     break;
                 case KeyType.KeyDown:
+                    if (hasModifier)
+                    {
+                        transport.SetButton(modifier, true);
+                        Thread.Sleep(30);
+                    }
+
                     transport.SetButton(button, true);
                     break;
                 case KeyType.KeyUp:
                     transport.SetButton(button, false);
+                    if (hasModifier)
+                    {
+                        transport.SetButton(modifier, false);
+                    }
+
                     break;
                 case KeyType.Hold:
+                    if (hasModifier)
+                    {
+                        transport.SetButton(modifier, true);
+                        Thread.Sleep(30);
+                    }
+
                     transport.SetButton(button, true);
                     Thread.Sleep(1000);
                     transport.SetButton(button, false);
+                    if (hasModifier)
+                    {
+                        transport.SetButton(modifier, false);
+                    }
+
                     break;
             }
         }
