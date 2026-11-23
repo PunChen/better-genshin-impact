@@ -1,0 +1,324 @@
+# 手柄模式鼠标依赖适配方案
+
+> 基于 `feat/xbox-game-input-main` 分支对全部 43 个功能模块的只读代码审计（2026-11）。
+> 目标：让所有依赖鼠标点击 UI 的功能在手柄模式下可用。
+> 手柄模式总体设计见 [input-hub.md](./input-hub.md)。
+
+---
+
+## 1. 现状机制（已验证）
+
+手柄模式（`GamepadMode.Enabled`）下 `GamepadInputBackend`/`GamepadChannel` 的行为：
+
+| 输入 API | 手柄模式下的行为 | 代码位置 |
+|---|---|---|
+| `Click`/`ClickTo`/`GameRegionClick`/`GameRegion1080PPosClick`/`LeftButton`/`RightButton`/`MiddleButton`/`VerticalScroll`/`MoveMouseTo`(绝对) | 限频 warn 后**静默丢弃** | `GamepadInputBackend.cs:244-285`、`InputChannelBase.cs:252-263` |
+| `MoveMouseBy` | 转为右摇杆 **30ms 脉冲**（幅度 clamp 后基本只剩方向） | `GamepadInputBackend.cs:250-275` |
+| 键盘 VK | 经 `TryMapKey` 反查 `ReverseMappableActions` → `GIActions` → 手柄按键；未覆盖键丢弃 | `GamepadInputBackend.cs:100-134、437-456` |
+| `SimulateAction(GIActions)` | 经 `GamepadActionMap.TryGetButton` 映射；未映射动作 warn 丢弃 | `GamepadActionMap.cs` |
+
+所有 `Region.Click()` 最终走 `DesktopRegion.DesktopRegionClick()` → `InputHub.Foreground.Mouse`（`DesktopRegion.cs:17`），因此**全部模块的 UI 点击在手柄模式下统一失效**。
+
+已适配（本分支完成，不在此列）：AutoSkip 对话（View/Menu 模板）、AutoPick（X 图标）、`BvStatus.IsInTalkUi` 手柄分支、任务启停时虚拟手柄连接/断开、设置页手柄绑定列表。
+
+### 1.1 三个横切缺口
+
+1. **缺口①**：`GIActions.OpenTheEventsMenu`、`QuestNavigation` 等未进 `GamepadActionMap`，手柄模式直接丢弃。
+2. **缺口②**：鼠标中键（视角回正）无手柄映射；游戏手柄布局中 **R3（右摇杆按下）= 视角回正**。
+3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
+
+### 1.2 已确认的默认绑定问题
+
+- `QuickUseGadget`、`SwitchMember1-5` 等默认 `GamepadButton.None` → AutoEat/AutoWood/AutoCombo 等模块**默认配置下直接失效**。
+- `KeyPress(VK_ESCAPE)` 反查为 `Cancel=A`，但手柄菜单中 A 通常是"确认选择"，**语义错位**需逐点实测。
+
+---
+
+## 2. 公共基建（先行实施）
+
+| # | 基建项 | 内容 | 受益模块 |
+|---|---|---|---|
+| B1 | **ESC 语义修复** | `GamepadChannel` 对 `VK_ESCAPE` 特判为可配置"返回键"（默认 B），不再依赖键鼠反查；解决 Cancel=A 语义错位 | 全部按 ESC 的模块（约 15 处） |
+| B2 | **中键→R3 映射** | `OnMouseButton(Middle)` → 右摇杆按下（手柄视角回正） | AutoDomain/AutoFight/AutoLeyLine/索敌等约 10 处 |
+| B3 | **右摇杆比例控制原语** | `SetRightStick(x, y, durationMs)` + `TurnByAngle(angle)`，替代 30ms 脉冲；支撑精确转身/瞄准/低头追踪 | 相机类全部模块 |
+| B4 | **映射与默认绑定补齐** | 补 `OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 映射；`QuickUseGadget` 补默认绑定+配置页引导 | AutoEat/AutoWood/幽境危战/纪行/莉奈娅 |
+| B5 | **两个公共控制器** | ① `GamepadFocusNavigator`：截图→识别焦点高亮→十字键/摇杆步进→复核→A 确认；② `GamepadMapCursor`：大地图光标视觉伺服闭环（复用 Common/Map 匹配结果做反馈） | 几乎所有 L 级模块 |
+| B6 | **诊断与兜底** | `WarnUnsupported` 增加丢弃计数/严格模式；模块能力声明（Full/Partial/None）+ UI 提示；B服登录等原生 Win32 弹窗保留绕过 InputHub 的真实鼠标旁路 | 适配期排障 + 登录流程 |
+
+**模板资源**：需统一采集一批手柄 UI 模板（大地图、Paimon 菜单、冒险之证、纪行、邮件、队伍配置、合成台、洞天百宝、对话 A/B/X/Y 角标、确认/取消按钮、钓鱼/烹饪提示），按批次 1 先行。
+（注意：仓库禁止新增 `BetterGenshinImpact\Assets` 目录，模板需走外部资源包流程。）
+
+---
+
+## 3. 分批实施计划
+
+总量级：**S×11 / M×16 / L×16**，另有 8 项确认无需投入。
+
+### 批次 1 —— 高频小改（基建 + S/M 级，可立即动手）
+
+| 模块 | 现状 | 改动方案 | 量 |
+|---|---|---|---|
+| AutoFight | 核心链路可用 | B2 中键修复 + 瞄准改 `SimulateAction(SwitchAimingMode)`(LT，映射已有) + 宏含 `click/scroll` 启动告警 | S-M |
+| ReturnMainUiTask | 基本可用 | exitDoor 兜底分支改按键（B1 后自动收益） | S |
+| BlessingOfTheWelkinMoonTask | 失效 | 空白双击 → 按 A/B 跳过月卡弹窗 | S |
+| AutoSkip 非对话路径 | 对话已适配 | 黑屏剧情/底部三角/角色弹窗/原石奖励改按确认键；邀约选项改摇杆导航 | M |
+| AutoCook | 部分可用 | 确认弹窗"识别+按键"；验证手柄烹饪模板 | S |
+| AutoEat（循环模式） | 失效 | B4 补 `QuickUseGadget` 默认绑定；指定食物路径手柄下禁用提示 | S |
+| AutoOpenChest | 基本可用 | 中键分支改右摇杆脉冲转身重试 | S |
+| AutoCombo | 基本可用 | 右摇杆索敌参数调优 + 切人键绑定引导 | S |
+| GameLoading | 完全失效 | 进入游戏/适龄/月卡/原石弹窗改按确认键；B服窗口走旁路（B6） | M |
+| Macro | 部分失效 | 手柄模式下含鼠标事件的宏给明确警告 | S |
+| GetGridIcons | 完全失效 | 开发工具：入口检测手柄模式直接报错退出 | S |
+
+### 批次 2 —— 每日一条龙链路（核心价值）
+
+| 模块 | 现状 | 改动方案 | 量 |
+|---|---|---|---|
+| ChooseTalkOptionTask | 失效（必经路径） | 手柄对话 A/B/X/Y 直选角标模板 + 按对应键 | M |
+| ClaimMailRewardsTask | 失效 | 手柄 Paimon 菜单模板 + 焦点导航 + A | M |
+| ClaimEncounterPointsRewardsTask | 失效 | 焦点导航 + A | M |
+| CheckRewardsTask | 失效 | B4 补映射 + 页签导航 | M |
+| ClaimBattlePassRewardsTask | 失效 | B4 补 `OpenBattlePassScreen` 映射 + 焦点导航 + A | M |
+| AutoDomain 主流程 | 战斗可用、领奖卡死 | 单人/开始挑战改按 Confirm；领奖弹窗 A/B 模板；`PressUseResin` 按键化（**一处改造，三模块受益**） | M |
+| AutoBoss | 领奖卡死 | 领奖 A/B 化；树脂预检改 OCR 顶部数字；补充树脂先禁用 | M |
+| AutoLeyLineOutcrop | 领奖/复苏失效 | 复用树脂方案 + 复苏界面按 Confirm + 冒险之证导航 | M-L |
+| SwitchPartyTask | 失效 | 手柄队伍界面方向键导航 + A + OCR 复核翻页 | L |
+| OneKeyExpeditionTask | 失效 | 派遣按钮焦点导航 + A | M |
+| GoToAdventurersGuildTask | 依赖项失败 | 随依赖项适配，自身仅回归验证 | S |
+| AutoWood | 主循环失效 | B4 默认绑定 + ESC 改 `OpenPaimonMenu`(Start) + 退出流程手柄导航 | M |
+
+### 批次 3 —— 大地图基建攻坚（自动寻路/传送的底层）
+
+| 模块 | 现状 | 改动方案 | 量 |
+|---|---|---|---|
+| GamepadMapCursor 原语（B5） | 不存在 | 左摇杆视觉伺服移动地图光标 + RT/LT 缩放档位闭环 | L |
+| TpTask | 完全失效（一切传送的底层） | 光标闭环选点 + 按键缩放 + A 传送；区域/图层切换手柄导航；实测 F 与 A 确认等效性 | L |
+| QuickTeleport | 完全失效（日常最高频） | 复用 TpTask 原语：摇杆移光标 → A 选点 → A 传送 | L |
+| LowerHeadThenWalkToTask | 退化 | B3 比例控制 + 闭环微调 | M |
+| ScanPickTask | 部分退化 | 同上；回正视角需校准方案 | M |
+| LinneaMiningTask | 完全失效 | B4 补 `ElementalSight` + B3 视觉伺服瞄准 + 射击键 | L |
+
+### 批次 4 —— 尘歌壶/合成/背包类
+
+| 模块 | 现状 | 改动方案 | 量 |
+|---|---|---|---|
+| QuickSereniteaPot | 开背包后中断 | 背包 LB/RB 切页签 + 壶图标焦点导航 + A | M |
+| GoToSereniteaPotTask | 完全失效 | 依赖批次 3 原语 + 找阿圆视角闭环 + 洞天百宝导航 | L |
+| QuickBuy | 完全失效 | 手柄商店网格十字键导航 + A，数量加减键 | M |
+| GoToCraftingBenchTask | 合成后失效 | 数量加减改手柄键 + A 确认 | M |
+| CraftMaterialTask | 完全失效 | 手柄合成界面整套：方向键列表导航 + OCR 数量闭环（替代滑块拖拽）+ 模板 | L |
+| QuickClaimReward | 失效 | 限定高频界面（纪行/邮件/活动）做焦点导航 | M |
+| SetTimeTask | 完全失效 | 手柄调时为数字+方向键模式，OCR 闭环步进重写（丢弃表盘几何） | L |
+| SwitchCharacterStateMachineTask | 失效 | 网格行列差开环步进 + 校验（可复用 `FixedSizeGridCardLayout` 几何） | L |
+| CountInventoryItem | 失效 | 方向键逐格焦点移动替代滚轮 | L |
+| AutoArtifactSalvage | 开背包后失效 | LB/RB 切 tab + 快速选择导航（可先降级为仅快速分解） | M-L |
+| AutoStygianOnslaught | 完全失效 | B4 补 `OpenTheEventsMenu` + 列表/Boss/难度焦点导航 | L |
+| CharacterDevelopment | 完全失效 | 焦点导航重构，建议先"不支持"提示兜底 | L |
+| AutoGeniusInvokation | 完全失效 | "摇杆移焦点→高亮检测→A"循环重构；先做不支持提示兜底 | L |
+
+### 批次 5 —— 专项/低频/低可行性
+
+| 模块 | 现状 | 改动方案 | 量 |
+|---|---|---|---|
+| AutoFishing | 完全失效 | 钓鱼按键提示识别（抛/提/拉条对应手柄键 hold）+ 换饵界面导航 + 模板重截 | L |
+| AutoMusicGame | 完全失效且**危险**（VK_A/S/D 被反查成左摇杆导致**角色移动**！） | 新增专用琴键映射绕过键盘反查 + 专辑导航 | L |
+| JS / BvFlow API 层 | `click/moveMouseTo/scroll/drag` 全失效 | 新增手柄语义 API（`pressAction("Confirm")`/`gamepadTurn(angle)`）；Click 类调用一次性警告 + 兼容性矩阵文档 | M |
+| ChooseFOptionTask | 无法完成选择 | 实测手柄 F 选项切换方式（上下方向键/左摇杆）后改导航键 + OCR 复核 | M |
+| ExitAndReloginJob | 失效 | 菜单导航 + A；登录界面直接 A | M |
+| EnterAndExitWonderlandJob | 失效 | 奇域列表焦点导航 + A；低频 | M |
+| UseRedeemCode | 失效 | webview 需虚拟光标，可行性最低——**优先评估网页 API 兑换替代** | L |
+
+---
+
+## 4. 分模块明细（含调用点）
+
+### 4.1 传送与日常（审计组①）
+
+#### QuickTeleport（快速传送）— L
+- 调用点：`QuickTeleportTrigger.cs:113` 点击"传送"按钮；`:169` 点击传送点选项列表最高项
+- 现状：识别有效但点击丢弃，快捷键按下后无反应
+- 方案：左摇杆视觉伺服移动地图光标到目标传送点 → A 选择 → A 确认；选项列表改"上方向键选择 + A 确认"；与 TpTask 共用光标闭环原语
+
+#### QuickBuy（快捷购买）— M
+- 调用点：`QuickBuyTask.cs:38-51` 尘歌壶拖拽列表+定点点击；`:57` 右下购买/兑换；`:61-75` 弹窗购买
+- 方案：洞天百宝手柄网格 + 十字键导航 + A；识别"已售/摩拉币"图标定位当前页；数量用加减键
+
+#### QuickClaimReward（快捷领取奖励）— M
+- 调用点：`OneKeyClaimRewardTask.cs:196` 点击领取图标；`:263` 滚轮下滑
+- 方案：识别领取图标后焦点导航闭环；通用性差，限定高频界面（纪行/邮件/活动）
+
+#### QuickForge（快捷锻造）— 无需投入
+- `QuickForgeTask.cs` 为空壳类（6 行，无实现、全仓库无引用）
+
+#### QuickSereniteaPot（快捷尘歌壶）— M
+- 调用点：`QuickSereniteaPotTask.cs:70` 点背包道具页签；`:44` 点壶图标；`:82` 放置确认；`:125` 进入/离开尘歌壶
+- 现状：`OpenInventory`/`PickUpOrInteract` 可生效，开背包后中断
+- 方案：背包页签 LB/RB；壶图标焦点导航 + A；确认/传送选项识别后按 A
+
+#### UseRedeemCode（兑换码）— L
+- 调用点：`UseRedemptionCodeTask.cs:60/65/69` ESC 菜单→设置→账户→前往兑换；`:108-125` webview 内粘贴/确认/清除
+- 方案：菜单部分十字键导航；webview 需右摇杆虚拟光标闭环，可行性最低，建议 API 替代
+
+#### Common/Job 逐文件
+
+| 文件 | 调用点 | 现状 | 方案 | 量 |
+|---|---|---|---|---|
+| ReturnMainUiTask.cs | `:36` exitDoor 点击 | 基本可用（ESC→B 生效） | 删/改兜底分支 | S |
+| ChooseTalkOptionTask.cs | `:137` 退出对话；`:241` OCR 对话选项点击 | 不能工作（空格推进可生效） | 手柄对话 A/B/X/Y 角标直选 + 新模板 | M |
+| ChooseFOptionTask.cs | `:131` MoveMouseBy 重试；`:144` 滚轮切 F 选项 | 不能完成选择 | 实测手柄切换方式后改导航键 + OCR 复核 | M |
+| CheckRewardsTask.cs | `:92`/`:192` 点冒险之证"委托"页签 | 不能工作（F1 生效） | 页签识别 + LB/RB 或方向键切换 | M |
+| ClaimBattlePassRewardsTask.cs | `:62/77/96` 定点点击+一键领取 | 不能工作；F4 动作未进 GamepadActionMap | 补映射 + 焦点导航 + A | M |
+| ClaimEncounterPointsRewardsTask.cs | `:80` 委托按钮；`:122` 领取按钮 | 不能工作 | 焦点导航 + A | M |
+| ClaimMailRewardsTask.cs | `:50` 邮件图标；`:57` 收取按钮 | 不能工作（ESC→B 可开菜单） | 手柄 Paimon 菜单模板 + 焦点导航 | M |
+| BlessingOfTheWelkinMoonTask.cs | `:31/37/39` 空白双击跳过月卡 | 不能工作 | 改按 A/B 跳过 | S |
+| ExitAndReloginJob.cs | `:41` 退出游戏；`:55` 确认；`:92` 进入游戏 | 不能工作 | 菜单导航 + A；登录界面直接 A | M |
+| EnterAndExitWonderlandJob.cs | `:32/72/117/132` 奇域选择/确认/返回 | 不能工作 | 焦点导航 + A | M |
+| GoToAdventurersGuildTask.cs | 自身无直接鼠标 | 依赖项失败 | 随依赖项适配，自身仅回归 | S |
+| OneKeyExpeditionTask.cs（AutoSkip 目录） | `:28` 全部领取；`:43` 再次派遣 | 不能工作 | 焦点导航 + A | M |
+| ExpeditionTask.cs（AutoSkip 目录） | `:44/83/91/95/103/138` | [Obsolete]（4.3 废弃） | 不建议投入 | — |
+| GoToCraftingBenchTask.cs | 自身无直接鼠标，依赖 Bv.Click 系列 | 进入合成对话后失败 | 数量加减改手柄键 + A | M |
+| CraftMaterialTask.cs | `:355-356` 筛选；`:372-382` 列表复位拖拽+滚轮；`:424` 材料点击；`:488/507` 加成角色；`:542-675` 滑块拖拽；`:568/575` 加减；`:691-697` 提交确认 | 完全不能工作 | 手柄合成界面整套重写：方向键导航 + OCR 数量闭环 | L |
+| CountInventoryItem.cs | `:239-247` 滚动条长按拖拽；间接 GridScroller 滚轮 | 不能翻页 | 方向键逐格焦点移动 + 定期校验 | L |
+| SwitchPartyTask.cs | `:126` 队伍按钮；`:155-159` 长按滚动；`:191/219/223` 队伍点击；`:241/253` 确认 | 不能工作（T 开界面生效） | 手柄队伍界面方向键导航 + A + OCR 复核翻页 | L |
+| SwitchCharacterStateMachineTask.cs | `:1516-1524/1543` 排序；`:1596` 角色卡片；`:1657` OCR 点击 | 不能工作 | 网格行列差 → 方向键开环步进 + A | L |
+| GoToSereniteaPotTask.cs | `:132/145/172` 地图图标与传送；`:271-340` 中键回正+MoveMouseBy 找阿圆；`:415-609` 商店购买/关闭 | 完全不能工作 | 依赖 TpTask 光标闭环 + 右摇杆比例 API + QuickBuy 导航 | L |
+| LowerHeadThenWalkToTask.cs | `:55/88/108/144` MoveMouseBy 视角控制 | 退化为粗转，追踪失败 | B3 比例持续控制 + 闭环 | M |
+| ScanPickTask.cs | `:67` 扫圈；`:171-173` 中键回正+低头 | 部分退化 | 同上；回正需校准方案 | M |
+| LinneaMiningTask.cs | `:101-201` 中键长按元素视野；`:125-210` MoveMouseBy 瞄准；`:236` 左键射箭 | 完全不能工作 | B4 补 `ElementalSight`；瞄准 B3 视觉伺服 | L |
+| SetTimeTask.cs | `:54/58-71/95-127` 菜单时间图标、表盘拖拽、空白点击 | 完全不能工作 | 手柄调时为数字+方向键，OCR 闭环步进重写 | L |
+| WalkToFTask.cs | 无鼠标依赖 | **手柄模式可用** | 无需改动 | 0 |
+
+#### Common/Map（大地图服务）— 无需投入
+全目录无鼠标依赖（grep 零匹配）。`MapManager`、`BigMapTeyvat256Layer`（SIFT 匹配 `GetBigMapRect`）、MiniMap/CameraOrientation 均为纯计算；其输出喂给 TpTask 的鼠标流程，TpTask 适配后可继续复用做闭环反馈。
+
+#### TpTask（传送任务，AutoTrackPath/TpTask.cs）— L
+- 调用点：`:859/867` 传送点绝对点击；`:973` 回退点击；`:1299` ClickMapPoint；`:1634-1641` 地图拖拽；`:1717` 滚轮缩放（含每格校准）；`:1955-1975` 左键拖图；`:2428/2444` 区域切换；`:2573/2599` 地表/地下图层；`:3486` 候选列表点击
+- 特例：`:2717-2721` `PressTeleportConfirmKey` 按 F 确认（手柄下 F→PickUpOrInteract 可发出，但手柄大地图确认键是 A，需实测等效性）
+- 现状：完全不能工作；是所有自动路径/一条龙传送的底层依赖
+- 方案：左摇杆光标视觉伺服 + RT/LT 或方向键缩放档位 + A 选择/A 传送；区域/图层切换识别手柄按钮后导航；Common/Map 结果做闭环反馈
+
+### 4.2 战斗与副本（审计组②）
+
+#### AutoDomain（自动秘境）— 主流程 M / 培养指南 L
+- 调用点：`AutoDomainTask.cs:647-681` 周日选奖励（MoveMouseTo+滚轮+点击）；`:707` 单人挑战；`:749` 开始挑战；`:795/808` 地脉异常提示；`:1144` 中键回正；`:1380/1391` 锁东方向（→右摇杆，可用）；`:1422` 石化古树；`:1587-1628` 领奖退出/继续/取消；`:1703-1708` ExitDomain；`:1741-1788` `PressUseResin` + 20/40 切换
+- TrainingGuide 三个 partial：`TrainingGuide.cs:177/186/281/408-413/451/593/604`、`TrainingGuide.Navigation.cs:40`、`TrainingGuide.LowAR.cs:25/33/202/218/223` 冒险之证导航
+- 现状：战斗循环可用（WASD 反查→左摇杆），进本确认→领奖→用树脂→退出全链路失效
+- 方案：单人/开始挑战改按 Confirm(A)；领奖弹窗识别手柄 A/B 提示模板；`PressUseResin` 定位树脂行后按 Confirm（**public static，被 AutoStygianOnslaught/AutoLeyLineOutcrop 复用，一处改造三处受益**）；培养指南按手柄布局冒险之证重写导航层
+
+#### AutoBoss（自动周本/Boss）— M
+- 调用点：`AutoBossTask.cs:305` 大地图点树脂图标；`:542/568/578` 补充树脂面板；`:729` 数量"+"；`:776/791` 弹窗关闭；`:1246-1264` 对准征讨之花（→右摇杆，可用）；`:1414` "使用原粹树脂"点击；`:1481/1485` 结果页关闭
+- 方案：领奖识别手柄 A/B 提示按 Confirm/Cancel；树脂预检改 OCR 顶部数字（参照 AutoLeyLine `CountOriginalResin`）；补充树脂手柄模式先禁用
+
+#### AutoStygianOnslaught（幽境危战）— L
+- 调用点：`AutoStygianOnslaughtTask.cs:337` `OpenTheEventsMenu`（**无手柄映射，第一道阻断**）；`:356-368` 活动列表拖动；`:375/413/431/462` 条目/挑战/传送/确认；`:554-717` 继续/退出；`:901-928` 难度切换；`:962` Boss 点击；`:1115-1177` 预设队伍拖动；`:1200` 退出秘境
+- 方案：① 补 `OpenTheEventsMenu` 手柄路径；② 列表/Boss/难度改"摇杆移动焦点 + 焦点高亮检测 + A 确认"（需新增模板）；③ 继续/退出按 A/B
+
+#### AutoLeyLineOutcrop（地脉衍出）— M-L
+- 调用点：`AutoLeyLineOutcropTask.cs:1391` 中键回正；`:1491/1495` 对准地脉花（→右摇杆，可用）；`:1557` 点"复苏"；`:1837-1900` 激活弹窗/用树脂/20-40 切换；`:2085-2223` 冒险之证导航/追踪/补充树脂
+- 方案：复用 AutoDomain 树脂 A/B 方案；复苏界面按 Confirm；冒险之证手柄导航；中键→R3
+
+#### AutoGeniusInvokation（七圣召唤）— L
+- 调用点：`GeniusInvokationControl.cs:352/361/501-504/519/605-617/657-672/699/716-719/735/744/851-857` 全部固定/识别坐标点击与拖拽；`Model/Character.cs:80-111` 角色卡点击；`Model/Duel.cs:238`
+- 现状：100% 依赖绝对坐标点击，完全不可用
+- 方案：TCG 手柄布局支持完整摇杆导航，把坐标点击重构为"摇杆移焦点→识别焦点高亮→A 确认"循环；或降级为启动即提示不支持
+
+#### AutoFight（自动战斗）— S-M ⭐
+- **可用部分**（SimulateAction/反查）：`Avatar.cs:528-541` Attack、`:546-598` UseSkill、`:875-890` Dash、`:892-925` Walk、`:932-935` MoveCamera（→右摇杆）、`:375-398` 切人、`:1145` Jump、`:1161-1163` Charge；`AvatarSpecialActions.cs:183/228/290/368` 特化重击旋转（→右摇杆，可用需调优）；`AvatarRecognition.cs:461/493/516` 持续索敌
+- **失效部分**：`Avatar.cs:1200-1215` Click（三键全丢弃）；`:1225-1228` Scroll；`:186/208` 游泳脱困 RightButton（瞄准无实现）；`AvatarRecognition.cs:538`、`AutoFightSeek.cs:304/342` 中键回正；`CombatCommand.cs:224-307` 宏 `mousedown/mouseup/click/scroll` 丢弃、`Aim` 未实现
+- 方案：① B2 中键→R3；② 瞄准改 `SimulateAction(GIActions.SwitchAimingMode)`（LT，`GamepadActionMap.cs:48-50` 已有映射）；③ 策略文本含 click/scroll 宏时启动 warn
+
+#### AutoArtifactSalvage（圣遗物分解）— M-L
+- 调用点：`AutoArtifactSalvageTask.cs:117/199` 背包 tab 点击；`:236` 分解按钮；`:254/279` 快速选择/星级；`:295-315` 确认链；`:335-457` 筛选与格子选/反选；`GridScroller.cs:50/63/82` 滚轮
+- 方案：LB/RB 切 tab（新增 GIAction）+ 十字键/A 导航 + 格子遍历改摇杆光标推算；可先降级为仅快速分解主路径
+
+#### CharacterDevelopment（角色养成）— L
+- 调用点：`CharacterDevelopmentTask.cs:552/564/871` 模板点击；`:613/644/660/708/728` TryClickText；`:795` 天赋 ClickTo；`CharacterSelectionHelper.cs:189/266` 点击 + GridScroller
+- 方案：手柄布局 LB/RB 切分类 + 摇杆导航 + A 确认；需新增焦点高亮模板；建议暂缓
+
+#### GetGridIcons（背包格子图标）— S（禁用）
+- 调用点：`GetGridIconsTask.cs:94/140/176`；`GridIconsAccuracyTestTask.cs:125`
+- 属开发工具非用户功能；方案：Start 入口检测手柄模式直接报错退出
+
+### 4.3 生活与脚本（审计组③）
+
+#### AutoFishing（自动钓鱼）— L
+- 调用点：`Behaviours.cs:201` 右键开换饵；`:224/239` 选饵/确认；`:472/755/860/1047` 举竿/抛竿/收杆/提竿左键；**:1241-1315 拉条左键按住/松开（核心玩法）**；`:511-1429` 瞄准 MoveMouseBy；`Behaviours.PartII.cs:158/189` 转圈、`:254/344` 确认按钮；`AutoFishingTask.cs:273` SetTimeTask 昼夜切换
+- 方案：识别手柄钓鱼 UI 按键提示（抛/提/拉条=RT hold）；GamepadChannel 增加右扳机按住原子接口；换饵改手柄菜单导航；重截手柄布局模板
+
+#### AutoCook（自动烹饪）— S
+- 调用点：`AutoCookTask.cs:74` `Bv.ClickWhiteConfirmButton`（丢弃）；`:89` `KeyPress(VK_SPACE)` → Confirm=B（可用，需实测烹饪确认键）；`:66/160` 模板需验证手柄布局
+
+#### AutoEat（自动吃药）— 循环 S / 指定食物 L
+- 调用点：`AutoEatTask.cs:172`、`AutoEatTrigger.cs:87/102` `QuickUseGadget`（默认 None 丢弃）；`:102/124` 食物格子/确认点击
+- 方案：循环模式补 `QuickUseGadget` 默认绑定；指定食物模式建议手柄下禁用
+
+#### AutoWood（自动伐木）— M
+- 调用点：`AutoWoodTask.cs:447/454/475` `QuickUseGadget` 未绑定；`:488/506` ESC（反查 Cancel=A，打不开派蒙菜单，需 Start）；`:518/528/552` 退出/确认/进入游戏；`:417` WonderlandJob；`Login3rdParty.cs:114/129` B服窗口
+- 方案：`QuickUseGadget` 默认绑定；PressEsc 改 `OpenPaimonMenu`；退出流程手柄菜单导航；B服窗口保留键鼠旁路
+
+#### AutoOpenChest（自动开宝箱）— S
+- 调用点：`AutoOpenChestTask.cs:67` 中键重置视角（丢弃，可能卡循环）；`:73` 转身 MoveMouseBy（右摇杆脉冲，粗可用）
+- 方案：中键分支改右摇杆俯仰脉冲或转身重试
+
+#### AutoMusicGame（自动音游）— L（⚠️ 危险）
+- 调用点：`AutoMusicGameTask.cs:33-41` VK_A/S/D/J/K/L —— **A/S/D 被反查成左摇杆（角色移动！），J/K/L 丢弃**；`AutoAlbumTask.cs:104/118/135/130/141/158/190` 专辑流程全点击
+- 方案：新增专用琴键映射（绕过键盘反查，直接走 GamepadChannel 原子接口）；专辑导航改手柄菜单导航
+
+#### AutoCombo（自动连招）— S
+- 调用点：`Behaviours.cs:295` NormalAttack→A（可用）；其余委托 AutoFight Avatar；`AutoComboRunTask.cs:108-121` 索敌右摇杆粗瞄准
+- 注意：切人依赖 `SwitchMember1-5` 绑定（默认 None）
+
+#### Macro（宏）— 拦截 M / 全量 L
+- 调用点：`TurnAroundMacro.cs:15` MoveMouseBy（右摇杆单脉冲，语义变化）；`QuickEnhanceArtifactMacro.cs:25-37` 五连点全丢弃；`KeyMouseMacroPlayer.cs:89/122/149/157`（鼠标事件丢弃，键盘反查可用，`:177` MoveMouseBy 脉冲）
+- 方案：先做拦截提示（手柄模式下含鼠标事件的宏给出明确警告）；`QuickEnhanceArtifact` 按手柄圣遗物 UI 重做
+
+#### AutoSkip 非对话路径 — M
+- 已适配：`AutoSkipTrigger.cs:357-445`（对话选项 ControllerChoiceButton + Confirm）、`:547-552` AdvanceDialogue
+- 剩余调用点：`:603/607` 黑屏剧情点击；`:700/704` 邀约跳过；`:790-791` 原石奖励；`:1263/1267`→`HangoutOption.cs:70/75` 邀约选项；`:1333` ClosePopupPage（ESC 可发键，PageClose 模板需验证）；`:1374/1378` 底部三角；`:1482/1486` 角色弹窗；`:1518-1538` SubmitGoods 三连点；`OneKeyExpeditionTask.cs:28/43`；`AutoTrackTask.cs:94/118/120/143/181/215/236/276`（`QuestNavigation` 未映射）
+- 方案：黑屏/弹窗/角色弹窗改按确认类按键（各 S，需实测手柄 UI 哪个键关闭）；邀约改"识别手柄选择 UI→摇杆方向+确认"（M）；AutoTrackTask 建议禁用或重写（M-L）
+
+#### GameLoading（登录/加载）— M
+- 调用点：`GameLoading.cs:103/148/158/175/181/192/201-213` 适龄提示/顶号弹窗/进入游戏/月卡/原石/B服协议
+- 方案：EnterGame 识别后按确认键；各弹窗改按确认/取消；B服登录窗口为原生 Win32 弹窗，需保留绕过 InputHub 的真实鼠标旁路
+
+#### JS API（GlobalMethod.cs）与 BvFlow — M
+- 调用点：`GlobalMethod.cs:36-49` keyDown/keyUp/keyPress 反查可用；`:89-95` moveMouseBy 脉冲；`:97-165` moveMouseTo/click/leftButton*/rightButton*/middleButton*/verticalScroll 丢弃
+- `BvFlow.cs:89-97` KeyPress 可用；`:99-163` Click/Drag 系列丢弃（`BvFlowServices.Create:537-565` 全走鼠标）；`BvPage.cs:149-152`；`BvLocator.cs:114-131`；`BvFlowAction.cs:57-119`；JS 注册 `EngineExtend.cs:153-173/102`
+- 现状：依赖 click/moveMouseTo/滚轮/拖拽的 JS 脚本手柄模式失效；keyPress+moveMouseBy 脚本可部分运行
+- 方案：新增手柄语义 JS API（`pressAction("Confirm")`/`gamepadTurn(angle)`）；BvFlow 增加 PressConfirm 类动作；输出兼容性矩阵文档
+
+#### 无鼠标依赖（无需改动）
+FarmingPlan（纯数据/统计）、MapMask（仅遮罩绘制）、SkillCd（仅识别+绘制）
+
+---
+
+## 5. 无需投入模块汇总
+
+| 模块 | 原因 |
+|---|---|
+| Common/Map 全目录 | 纯计算零鼠标依赖，TpTask 适配后复用其输出 |
+| WalkToFTask | 全走 GIActions，手柄模式已可用 |
+| QuickForge | 空壳类，无实现无引用 |
+| ExpeditionTask（AutoSkip 目录） | [Obsolete]（4.3 废弃） |
+| FarmingPlan / MapMask / SkillCd | 无输入调用 |
+| AvatarGridIconRecognizer / ItemIconRecognizer / ItemMetadataCache 等识别器/数据类 | 纯识别/数据/参数类 |
+
+---
+
+## 6. 实测确认清单（适配前必做）
+
+1. **ESC→A 语义错位**（B1）：菜单中按 A 是"确认"而非"返回"，逐点实测各弹窗
+2. **手柄 UI 模板兼容性**：连手柄后 PC 布局模板（`BtnWhiteConfirm` 等）是否还能匹配
+3. **TpTask 的 F 传送确认**在手柄大地图中与 A 的等效性
+4. **F 多选项交互**的手柄切换方式（ChooseFOptionTask 前置）
+5. **Confirm=B / NormalAttack=A 同键多义**在对话与战斗上下文的实际表现
+6. **钓鱼/烹饪/音游**手柄布局的实际按键提示
+7. **`MoveMouseBy` 大距离转身**（如 0,7000）的右摇杆换算标定
+
+---
+
+## 7. 路线图
+
+> **批次 1（基建+小改）→ 批次 2（一条龙链路）→ 批次 3（大地图攻坚）→ 批次 4/5（长尾）**
+>
+> 批次 1+2 完成后，"每日一条龙 + 副本领奖"即可在纯手柄模式跑通，覆盖绝大多数日常使用场景；批次 3 是解锁自动寻路传送的关键一战。
