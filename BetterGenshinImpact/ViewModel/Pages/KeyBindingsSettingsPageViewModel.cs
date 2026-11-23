@@ -211,6 +211,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("打开活动面板", nameof(_gamepadConfig.OpenTheEventsMenu), _gamepadConfig.OpenTheEventsMenu),
             new("开启任务追踪", nameof(_gamepadConfig.QuestNavigation), _gamepadConfig.QuestNavigation),
             new("长按打开元素视野", nameof(_gamepadConfig.ElementalSight), _gamepadConfig.ElementalSight),
+            new("元素视野 组合键修饰键", nameof(_gamepadConfig.ElementalSightModifier), _gamepadConfig.ElementalSightModifier),
             new("打开派蒙菜单", nameof(_gamepadConfig.OpenPaimonMenu), _gamepadConfig.OpenPaimonMenu),
             new("打开好友聊天（View）", nameof(_gamepadConfig.OpenChatScreen), _gamepadConfig.OpenChatScreen),
             new("打开任务菜单", nameof(_gamepadConfig.OpenQuestMenu), _gamepadConfig.OpenQuestMenu),

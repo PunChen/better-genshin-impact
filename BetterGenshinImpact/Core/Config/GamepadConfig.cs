@@ -251,16 +251,22 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _openTheEventsMenu = GamepadButton.None;
 
     /// <summary>
-    /// 开启任务追踪
+    /// 开启任务追踪（默认 LS/左摇杆按下）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _questNavigation = GamepadButton.None;
+    private GamepadButton _questNavigation = GamepadButton.LeftThumb;
 
     /// <summary>
-    /// 长按打开元素视野
+    /// 长按打开元素视野（默认 LB + 十字键左）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _elementalSight = GamepadButton.None;
+    private GamepadButton _elementalSight = GamepadButton.Left;
+
+    /// <summary>
+    /// 元素视野的组合键修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _elementalSightModifier = GamepadButton.LeftShoulder;
 
     #endregion
 

@@ -130,6 +130,9 @@ public static class GamepadActionMap
             case GIActions.QuickUseGadget:
                 modifier = config.QuickUseGadgetModifier;
                 return true;
+            case GIActions.ElementalSight:
+                modifier = config.ElementalSightModifier;
+                return true;
             default:
                 modifier = GamepadButton.None;
                 return false;

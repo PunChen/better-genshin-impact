@@ -218,6 +218,10 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.LeftShoulder, config.QuickUseGadgetModifier);
 
         Assert.Equal(GamepadButton.Back, config.OpenChatScreen);
+
+        Assert.Equal(GamepadButton.LeftThumb, config.QuestNavigation);
+        Assert.Equal(GamepadButton.Left, config.ElementalSight);
+        Assert.Equal(GamepadButton.LeftShoulder, config.ElementalSightModifier);
     }
 
     [Fact]
@@ -230,6 +234,9 @@ public class GamepadMappingTests
 
         Assert.True(GamepadActionMap.TryGetModifier(GIActions.QuickUseGadget, config, out var gadgetModifier));
         Assert.Equal(GamepadButton.LeftShoulder, gadgetModifier);
+
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.ElementalSight, config, out var sightModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, sightModifier);
 
         Assert.False(GamepadActionMap.TryGetModifier(GIActions.Confirm, config, out _));
     }
