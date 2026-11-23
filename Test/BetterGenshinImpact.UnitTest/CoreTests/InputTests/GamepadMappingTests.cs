@@ -59,6 +59,72 @@ public class GamepadMappingTests
     }
 
     [Fact]
+    public void PartySwitchAndTaskActions_AreMappedWhenBound()
+    {
+        var config = new GamepadConfig
+        {
+            SwitchMember1 = GamepadButton.Up,
+            SwitchMember2 = GamepadButton.Left,
+            SwitchMember3 = GamepadButton.Right,
+            SwitchMember4 = GamepadButton.Down,
+            SwitchMember5 = GamepadButton.Guide,
+            Drop = GamepadButton.B,
+            InteractionInSomeMode = GamepadButton.X,
+            OpenCharacterScreen = GamepadButton.Y,
+            OpenAdventurerHandbook = GamepadButton.Back,
+            OpenPartySetupScreen = GamepadButton.LeftShoulder,
+        };
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.SwitchMember1, config, out var member1));
+        Assert.Equal(GamepadButton.Up, member1);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.SwitchMember2, config, out var member2));
+        Assert.Equal(GamepadButton.Left, member2);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.SwitchMember3, config, out var member3));
+        Assert.Equal(GamepadButton.Right, member3);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.SwitchMember4, config, out var member4));
+        Assert.Equal(GamepadButton.Down, member4);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.SwitchMember5, config, out var member5));
+        Assert.Equal(GamepadButton.Guide, member5);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.Drop, config, out var drop));
+        Assert.Equal(GamepadButton.B, drop);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.InteractionInSomeMode, config, out var interact));
+        Assert.Equal(GamepadButton.X, interact);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.OpenCharacterScreen, config, out var characterScreen));
+        Assert.Equal(GamepadButton.Y, characterScreen);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.OpenAdventurerHandbook, config, out var handbook));
+        Assert.Equal(GamepadButton.Back, handbook);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.OpenPartySetupScreen, config, out var partySetup));
+        Assert.Equal(GamepadButton.LeftShoulder, partySetup);
+    }
+
+    [Fact]
+    public void TaskActions_DefaultToUnbound()
+    {
+        // 新增的任务类动作默认不绑定，避免未验证过的默认键位误触发游戏内行为
+        var config = new GamepadConfig();
+
+        Assert.Equal(GamepadButton.None, config.Drop);
+        Assert.Equal(GamepadButton.None, config.SwitchMember1);
+        Assert.Equal(GamepadButton.None, config.SwitchMember2);
+        Assert.Equal(GamepadButton.None, config.SwitchMember3);
+        Assert.Equal(GamepadButton.None, config.SwitchMember4);
+        Assert.Equal(GamepadButton.None, config.SwitchMember5);
+        Assert.Equal(GamepadButton.None, config.InteractionInSomeMode);
+        Assert.Equal(GamepadButton.None, config.OpenCharacterScreen);
+        Assert.Equal(GamepadButton.None, config.OpenAdventurerHandbook);
+        Assert.Equal(GamepadButton.None, config.OpenPartySetupScreen);
+    }
+
+    [Fact]
     public void SprintKeyboardAndMouse_ShareSameBinding()
     {
         var config = new GamepadConfig { Sprint = GamepadButton.RightTrigger };

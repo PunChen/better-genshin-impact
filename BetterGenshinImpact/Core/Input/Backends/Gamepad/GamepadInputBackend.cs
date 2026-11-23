@@ -95,6 +95,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
     /// <summary>
     /// 需要参与“键盘按键反查动作”的动作清单。
     /// 顺序有讲究：Space 同时可能是跳跃和推进对话，这里优先按对话推进处理。
+    /// 移动方向（WASD）也在其中：键鼠宏回放、JS 脚本等直接按 WASD 的旧代码可以正确映射到左摇杆。
     /// </summary>
     private static readonly GIActions[] ReverseMappableActions =
     [
@@ -113,8 +114,21 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         GIActions.Drop,
         GIActions.QuickUseGadget,
         GIActions.SwitchToWalkOrRun,
+        GIActions.InteractionInSomeMode,
+        GIActions.MoveForward,
+        GIActions.MoveBackward,
+        GIActions.MoveLeft,
+        GIActions.MoveRight,
+        GIActions.SwitchMember1,
+        GIActions.SwitchMember2,
+        GIActions.SwitchMember3,
+        GIActions.SwitchMember4,
+        GIActions.SwitchMember5,
         GIActions.OpenMap,
         GIActions.OpenInventory,
+        GIActions.OpenCharacterScreen,
+        GIActions.OpenAdventurerHandbook,
+        GIActions.OpenPartySetupScreen,
         GIActions.OpenPaimonMenu,
         GIActions.OpenQuestMenu,
     ];

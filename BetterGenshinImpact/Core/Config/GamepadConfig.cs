@@ -103,6 +103,48 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _switchToWalkOrRun = GamepadButton.None;
 
     /// <summary>
+    /// 落下（滑翔/攀爬/下落攻击场景使用）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _drop = GamepadButton.None;
+
+    /// <summary>
+    /// 切换小队角色1（手柄切人依赖此绑定，未绑定时自动战斗无法切换角色）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _switchMember1 = GamepadButton.None;
+
+    /// <summary>
+    /// 切换小队角色2
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _switchMember2 = GamepadButton.None;
+
+    /// <summary>
+    /// 切换小队角色3
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _switchMember3 = GamepadButton.None;
+
+    /// <summary>
+    /// 切换小队角色4
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _switchMember4 = GamepadButton.None;
+
+    /// <summary>
+    /// 切换小队角色5
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _switchMember5 = GamepadButton.None;
+
+    /// <summary>
+    /// 特定玩法内交互操作（T 键，如抓取叶片等）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _interactionInSomeMode = GamepadButton.None;
+
+    /// <summary>
     /// 快捷使用小道具
     /// </summary>
     [ObservableProperty]
@@ -135,6 +177,24 @@ public partial class GamepadConfig : ObservableObject
     /// </summary>
     [ObservableProperty]
     private GamepadButton _openQuestMenu = GamepadButton.None;
+
+    /// <summary>
+    /// 打开角色界面
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openCharacterScreen = GamepadButton.None;
+
+    /// <summary>
+    /// 打开冒险之证界面
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openAdventurerHandbook = GamepadButton.None;
+
+    /// <summary>
+    /// 打开队伍配置界面
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openPartySetupScreen = GamepadButton.None;
 
     #endregion
 }

@@ -51,6 +51,27 @@ public static class GamepadActionMap
             case GIActions.SwitchToWalkOrRun:
                 button = config.SwitchToWalkOrRun;
                 return true;
+            case GIActions.Drop:
+                button = config.Drop;
+                return true;
+            case GIActions.SwitchMember1:
+                button = config.SwitchMember1;
+                return true;
+            case GIActions.SwitchMember2:
+                button = config.SwitchMember2;
+                return true;
+            case GIActions.SwitchMember3:
+                button = config.SwitchMember3;
+                return true;
+            case GIActions.SwitchMember4:
+                button = config.SwitchMember4;
+                return true;
+            case GIActions.SwitchMember5:
+                button = config.SwitchMember5;
+                return true;
+            case GIActions.InteractionInSomeMode:
+                button = config.InteractionInSomeMode;
+                return true;
             case GIActions.QuickUseGadget:
                 button = config.QuickUseGadget;
                 return true;
@@ -65,6 +86,15 @@ public static class GamepadActionMap
                 return true;
             case GIActions.OpenQuestMenu:
                 button = config.OpenQuestMenu;
+                return true;
+            case GIActions.OpenCharacterScreen:
+                button = config.OpenCharacterScreen;
+                return true;
+            case GIActions.OpenAdventurerHandbook:
+                button = config.OpenAdventurerHandbook;
+                return true;
+            case GIActions.OpenPartySetupScreen:
+                button = config.OpenPartySetupScreen;
                 return true;
             default:
                 button = GamepadButton.None;
