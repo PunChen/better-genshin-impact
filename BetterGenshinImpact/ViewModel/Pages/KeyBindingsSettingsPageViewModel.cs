@@ -66,6 +66,11 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     /// </summary>
     public IReadOnlyList<GamepadStickDirection> GamepadDirections { get; } = Enum.GetValues<GamepadStickDirection>();
 
+    /// <summary>
+    /// 短按/长按可选项
+    /// </summary>
+    public IReadOnlyList<GamepadPressMode> GamepadPressModes { get; } = Enum.GetValues<GamepadPressMode>();
+
     [ObservableProperty]
     private ObservableCollection<GamepadBindingSettingModel> _gamepadBindingModels = [];
 
@@ -74,6 +79,12 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     /// </summary>
     [ObservableProperty]
     private ObservableCollection<GamepadWheelBindingSettingModel> _gamepadWheelBindings = [];
+
+    /// <summary>
+    /// 双键组合绑定（修饰键 + 主键，均可短按/长按）
+    /// </summary>
+    [ObservableProperty]
+    private ObservableCollection<GamepadComboBindingSettingModel> _gamepadComboBindings = [];
 
     /// <summary>
     /// 手柄状态提示文本
@@ -105,6 +116,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         BuildKeyBindingsList();
         BuildGamepadBindingList();
         BuildGamepadWheelList();
+        BuildGamepadComboList();
 
         var list = GetAllNonDirectoryKeyBinding(KeyBindingSettingModels);
         foreach (var keyConfig in list)
@@ -173,6 +185,44 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
                 pi.SetValue(_gamepadConfig, e.PropertyName == nameof(model.Modifier) ? model.Modifier : model.Direction, null);
             };
         }
+        foreach (var comboModel in GamepadComboBindings)
+        {
+            comboModel.PropertyChanged += (sender, e) =>
+            {
+                if (sender is not GamepadComboBindingSettingModel model)
+                {
+                    return;
+                }
+
+                var propertyName = e.PropertyName switch
+                {
+                    nameof(model.Modifier) => model.ModifierPropertyName,
+                    nameof(model.Button) => model.ButtonPropertyName,
+                    nameof(model.ModifierMode) => model.ModifierModePropertyName,
+                    nameof(model.ButtonMode) => model.ButtonModePropertyName,
+                    _ => null,
+                };
+                if (propertyName is null)
+                {
+                    return;
+                }
+
+                object value = e.PropertyName switch
+                {
+                    nameof(model.Modifier) => model.Modifier,
+                    nameof(model.Button) => model.Button,
+                    nameof(model.ModifierMode) => model.ModifierMode,
+                    _ => model.ButtonMode,
+                };
+
+                var pi = _gamepadConfig.GetType().GetProperty(propertyName,
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+                if (pi is { CanWrite: true })
+                {
+                    pi.SetValue(_gamepadConfig, value, null);
+                }
+            };
+        }
     }
 
     /// <summary>
@@ -198,22 +248,13 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("切换小队角色2", nameof(_gamepadConfig.SwitchMember2), _gamepadConfig.SwitchMember2),
             new("切换小队角色3", nameof(_gamepadConfig.SwitchMember3), _gamepadConfig.SwitchMember3),
             new("切换小队角色4", nameof(_gamepadConfig.SwitchMember4), _gamepadConfig.SwitchMember4),
-            new("切换小队角色5（组合键）", nameof(_gamepadConfig.SwitchMember5), _gamepadConfig.SwitchMember5),
-            new("特定玩法内交互（T 键，组合键按键）", nameof(_gamepadConfig.InteractionInSomeMode), _gamepadConfig.InteractionInSomeMode),
-            new("快捷使用小道具（组合键）", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
             new("呼出快捷轮盘", nameof(_gamepadConfig.ShortcutWheel), _gamepadConfig.ShortcutWheel),
             new("视角回正（鼠标中键）", nameof(_gamepadConfig.CameraRecenter), _gamepadConfig.CameraRecenter),
-            new("中断挑战（LS+RS 组合键按键）", nameof(_gamepadConfig.AbandonChallenge), _gamepadConfig.AbandonChallenge),
             new("地图放大", nameof(_gamepadConfig.MapZoomIn), _gamepadConfig.MapZoomIn),
             new("地图缩小", nameof(_gamepadConfig.MapZoomOut), _gamepadConfig.MapZoomOut),
-            new("镜头拉近（LB+LT 组合键按键）", nameof(_gamepadConfig.CameraZoomIn), _gamepadConfig.CameraZoomIn),
-            new("镜头拉远（LB+RT 组合键按键）", nameof(_gamepadConfig.CameraZoomOut), _gamepadConfig.CameraZoomOut),
             new("打开队伍配置界面", nameof(_gamepadConfig.OpenPartySetupScreen), _gamepadConfig.OpenPartySetupScreen),
-            new("打开多人游戏界面（LB+十字键→ 组合键按键）", nameof(_gamepadConfig.OpenCoOpScreen), _gamepadConfig.OpenCoOpScreen),
-            new("查看教程详情（LB+十字键↑ 组合键按键）", nameof(_gamepadConfig.CheckTutorialDetails), _gamepadConfig.CheckTutorialDetails),
             new("打开好友界面", nameof(_gamepadConfig.OpenFriendsScreen), _gamepadConfig.OpenFriendsScreen),
             new("开启任务追踪", nameof(_gamepadConfig.QuestNavigation), _gamepadConfig.QuestNavigation),
-            new("长按打开元素视野", nameof(_gamepadConfig.ElementalSight), _gamepadConfig.ElementalSight),
             new("打开派蒙菜单", nameof(_gamepadConfig.OpenPaimonMenu), _gamepadConfig.OpenPaimonMenu),
             new("打开好友聊天（View）", nameof(_gamepadConfig.OpenChatScreen), _gamepadConfig.OpenChatScreen),
         ];
@@ -242,6 +283,52 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
                 _gamepadConfig.OpenAdventurerHandbookWheelModifier, _gamepadConfig.OpenAdventurerHandbookWheelDirection),
             new("打开祈愿界面", nameof(_gamepadConfig.OpenWishScreenWheelModifier), nameof(_gamepadConfig.OpenWishScreenWheelDirection),
                 _gamepadConfig.OpenWishScreenWheelModifier, _gamepadConfig.OpenWishScreenWheelDirection),
+        ];
+    }
+
+    /// <summary>
+    /// 构造双键组合列表（修饰键 + 主键，两个键均可短按/长按）
+    /// </summary>
+    private void BuildGamepadComboList()
+    {
+        GamepadComboBindings =
+        [
+            new("切换小队角色5", nameof(_gamepadConfig.SwitchMember5Modifier), nameof(_gamepadConfig.SwitchMember5),
+                nameof(_gamepadConfig.SwitchMember5ModifierPressMode), nameof(_gamepadConfig.SwitchMember5PressMode),
+                _gamepadConfig.SwitchMember5Modifier, _gamepadConfig.SwitchMember5,
+                _gamepadConfig.SwitchMember5ModifierPressMode, _gamepadConfig.SwitchMember5PressMode),
+            new("特定玩法内交互（T）", nameof(_gamepadConfig.InteractionInSomeModeModifier), nameof(_gamepadConfig.InteractionInSomeMode),
+                nameof(_gamepadConfig.InteractionInSomeModeModifierPressMode), nameof(_gamepadConfig.InteractionInSomeModePressMode),
+                _gamepadConfig.InteractionInSomeModeModifier, _gamepadConfig.InteractionInSomeMode,
+                _gamepadConfig.InteractionInSomeModeModifierPressMode, _gamepadConfig.InteractionInSomeModePressMode),
+            new("快捷使用小道具", nameof(_gamepadConfig.QuickUseGadgetModifier), nameof(_gamepadConfig.QuickUseGadget),
+                nameof(_gamepadConfig.QuickUseGadgetModifierPressMode), nameof(_gamepadConfig.QuickUseGadgetPressMode),
+                _gamepadConfig.QuickUseGadgetModifier, _gamepadConfig.QuickUseGadget,
+                _gamepadConfig.QuickUseGadgetModifierPressMode, _gamepadConfig.QuickUseGadgetPressMode),
+            new("中断挑战", nameof(_gamepadConfig.AbandonChallengeModifier), nameof(_gamepadConfig.AbandonChallenge),
+                nameof(_gamepadConfig.AbandonChallengeModifierPressMode), nameof(_gamepadConfig.AbandonChallengePressMode),
+                _gamepadConfig.AbandonChallengeModifier, _gamepadConfig.AbandonChallenge,
+                _gamepadConfig.AbandonChallengeModifierPressMode, _gamepadConfig.AbandonChallengePressMode),
+            new("打开多人游戏界面", nameof(_gamepadConfig.OpenCoOpScreenModifier), nameof(_gamepadConfig.OpenCoOpScreen),
+                nameof(_gamepadConfig.OpenCoOpScreenModifierPressMode), nameof(_gamepadConfig.OpenCoOpScreenPressMode),
+                _gamepadConfig.OpenCoOpScreenModifier, _gamepadConfig.OpenCoOpScreen,
+                _gamepadConfig.OpenCoOpScreenModifierPressMode, _gamepadConfig.OpenCoOpScreenPressMode),
+            new("查看教程详情", nameof(_gamepadConfig.CheckTutorialDetailsModifier), nameof(_gamepadConfig.CheckTutorialDetails),
+                nameof(_gamepadConfig.CheckTutorialDetailsModifierPressMode), nameof(_gamepadConfig.CheckTutorialDetailsPressMode),
+                _gamepadConfig.CheckTutorialDetailsModifier, _gamepadConfig.CheckTutorialDetails,
+                _gamepadConfig.CheckTutorialDetailsModifierPressMode, _gamepadConfig.CheckTutorialDetailsPressMode),
+            new("元素视野", nameof(_gamepadConfig.ElementalSightModifier), nameof(_gamepadConfig.ElementalSight),
+                nameof(_gamepadConfig.ElementalSightModifierPressMode), nameof(_gamepadConfig.ElementalSightPressMode),
+                _gamepadConfig.ElementalSightModifier, _gamepadConfig.ElementalSight,
+                _gamepadConfig.ElementalSightModifierPressMode, _gamepadConfig.ElementalSightPressMode),
+            new("镜头拉近", nameof(_gamepadConfig.CameraZoomInModifier), nameof(_gamepadConfig.CameraZoomIn),
+                nameof(_gamepadConfig.CameraZoomInModifierPressMode), nameof(_gamepadConfig.CameraZoomInPressMode),
+                _gamepadConfig.CameraZoomInModifier, _gamepadConfig.CameraZoomIn,
+                _gamepadConfig.CameraZoomInModifierPressMode, _gamepadConfig.CameraZoomInPressMode),
+            new("镜头拉远", nameof(_gamepadConfig.CameraZoomOutModifier), nameof(_gamepadConfig.CameraZoomOut),
+                nameof(_gamepadConfig.CameraZoomOutModifierPressMode), nameof(_gamepadConfig.CameraZoomOutPressMode),
+                _gamepadConfig.CameraZoomOutModifier, _gamepadConfig.CameraZoomOut,
+                _gamepadConfig.CameraZoomOutModifierPressMode, _gamepadConfig.CameraZoomOutPressMode),
         ];
     }
 
@@ -287,9 +374,8 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
 
         var duration = GetGamepadTestDuration(model.ConfigPropertyName);
         var (modifier, button) = ResolveGamepadTestCombo(model.ConfigPropertyName, model.ButtonValue);
-        var modifierHoldMs = IsCameraZoomProperty(model.ConfigPropertyName)
-            ? _gamepadConfig.CameraZoomModifierHoldMs
-            : 30;
+        var (modifierMode, _) = ResolvePressModes(model.ConfigPropertyName);
+        var modifierHoldMs = modifierMode == GamepadPressMode.Long ? _gamepadConfig.LongPressDurationMs : 30;
         var success = modifier != GamepadButton.None
             ? GamepadInputBackend.TestCombo(modifier, button, duration, out var error, modifierHoldMs)
             : GamepadInputBackend.TestButton(button, duration, out error);
@@ -298,6 +384,40 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             GamepadStatus = modifier != GamepadButton.None
                 ? $"已测试组合键：{model.ActionName} → {modifier}+{button}"
                 : $"已测试：{model.ActionName} → {button}";
+        }
+        else
+        {
+            GamepadStatus = $"测试失败：{error ?? "虚拟手柄未连接，请确认已安装 ViGEmBus 驱动"}";
+        }
+    }
+
+    /// <summary>
+    /// 双键组合行测试：按行内配置的短按/长按方式执行
+    /// </summary>
+    [RelayCommand]
+    private void TestGamepadComboBinding(GamepadComboBindingSettingModel? model)
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        if (!_gamepadConfig.Enabled)
+        {
+            GamepadStatus = "请先启用手柄模式";
+            return;
+        }
+
+        var pressDuration = model.ButtonMode == GamepadPressMode.Long
+            ? _gamepadConfig.LongPressDurationMs
+            : Math.Max(120, _gamepadConfig.PressDurationMs);
+        var modifierHold = model.ModifierMode == GamepadPressMode.Long
+            ? _gamepadConfig.LongPressDurationMs
+            : 30;
+
+        if (GamepadInputBackend.TestCombo(model.Modifier, model.Button, pressDuration, out var error, modifierHold))
+        {
+            GamepadStatus = $"已测试组合键：{model.ActionName} → {model.Modifier}({model.ModifierMode})+{model.Button}({model.ButtonMode})";
         }
         else
         {
@@ -314,12 +434,36 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             return 800;
         }
 
-        if (IsCameraZoomProperty(propertyName))
-        {
-            return _gamepadConfig.CameraZoomPressDurationMs;
-        }
+        var (_, buttonMode) = ResolvePressModes(propertyName);
+        return buttonMode == GamepadPressMode.Long
+            ? _gamepadConfig.LongPressDurationMs
+            : Math.Max(120, _gamepadConfig.PressDurationMs);
+    }
 
-        return Math.Max(120, _gamepadConfig.PressDurationMs);
+    private (GamepadPressMode Modifier, GamepadPressMode Button) ResolvePressModes(string propertyName)
+    {
+        return propertyName switch
+        {
+            nameof(GamepadConfig.SwitchMember5) or nameof(GamepadConfig.SwitchMember5Modifier)
+                => (_gamepadConfig.SwitchMember5ModifierPressMode, _gamepadConfig.SwitchMember5PressMode),
+            nameof(GamepadConfig.QuickUseGadget) or nameof(GamepadConfig.QuickUseGadgetModifier)
+                => (_gamepadConfig.QuickUseGadgetModifierPressMode, _gamepadConfig.QuickUseGadgetPressMode),
+            nameof(GamepadConfig.ElementalSight) or nameof(GamepadConfig.ElementalSightModifier)
+                => (_gamepadConfig.ElementalSightModifierPressMode, _gamepadConfig.ElementalSightPressMode),
+            nameof(GamepadConfig.InteractionInSomeMode) or nameof(GamepadConfig.InteractionInSomeModeModifier)
+                => (_gamepadConfig.InteractionInSomeModeModifierPressMode, _gamepadConfig.InteractionInSomeModePressMode),
+            nameof(GamepadConfig.AbandonChallenge) or nameof(GamepadConfig.AbandonChallengeModifier)
+                => (_gamepadConfig.AbandonChallengeModifierPressMode, _gamepadConfig.AbandonChallengePressMode),
+            nameof(GamepadConfig.OpenCoOpScreen) or nameof(GamepadConfig.OpenCoOpScreenModifier)
+                => (_gamepadConfig.OpenCoOpScreenModifierPressMode, _gamepadConfig.OpenCoOpScreenPressMode),
+            nameof(GamepadConfig.CheckTutorialDetails) or nameof(GamepadConfig.CheckTutorialDetailsModifier)
+                => (_gamepadConfig.CheckTutorialDetailsModifierPressMode, _gamepadConfig.CheckTutorialDetailsPressMode),
+            nameof(GamepadConfig.CameraZoomIn) or nameof(GamepadConfig.CameraZoomInModifier)
+                => (_gamepadConfig.CameraZoomInModifierPressMode, _gamepadConfig.CameraZoomInPressMode),
+            nameof(GamepadConfig.CameraZoomOut) or nameof(GamepadConfig.CameraZoomOutModifier)
+                => (_gamepadConfig.CameraZoomOutModifierPressMode, _gamepadConfig.CameraZoomOutPressMode),
+            _ => (GamepadPressMode.Short, GamepadPressMode.Short),
+        };
     }
 
     private static bool IsCameraZoomProperty(string propertyName)
@@ -390,7 +534,8 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         var defaults = new GamepadConfig();
         foreach (var pi in typeof(GamepadConfig).GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance))
         {
-            if ((pi.PropertyType == typeof(GamepadButton) || pi.PropertyType == typeof(GamepadStickDirection)) && pi.CanWrite)
+            if ((pi.PropertyType == typeof(GamepadButton) || pi.PropertyType == typeof(GamepadStickDirection)
+                 || pi.PropertyType == typeof(GamepadPressMode)) && pi.CanWrite)
             {
                 pi.SetValue(_gamepadConfig, pi.GetValue(defaults));
             }
@@ -421,6 +566,38 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             if (directionPi?.GetValue(_gamepadConfig) is GamepadStickDirection direction)
             {
                 model.Direction = direction;
+            }
+        }
+
+        foreach (var model in GamepadComboBindings)
+        {
+            var modifierPi = typeof(GamepadConfig).GetProperty(model.ModifierPropertyName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var buttonPi = typeof(GamepadConfig).GetProperty(model.ButtonPropertyName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var modifierModePi = typeof(GamepadConfig).GetProperty(model.ModifierModePropertyName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+            var buttonModePi = typeof(GamepadConfig).GetProperty(model.ButtonModePropertyName,
+                System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
+
+            if (modifierPi?.GetValue(_gamepadConfig) is GamepadButton modifier)
+            {
+                model.Modifier = modifier;
+            }
+
+            if (buttonPi?.GetValue(_gamepadConfig) is GamepadButton button)
+            {
+                model.Button = button;
+            }
+
+            if (modifierModePi?.GetValue(_gamepadConfig) is GamepadPressMode modifierMode)
+            {
+                model.ModifierMode = modifierMode;
+            }
+
+            if (buttonModePi?.GetValue(_gamepadConfig) is GamepadPressMode buttonMode)
+            {
+                model.ButtonMode = buttonMode;
             }
         }
 

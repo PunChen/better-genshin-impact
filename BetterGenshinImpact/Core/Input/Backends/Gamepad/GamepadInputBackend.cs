@@ -326,16 +326,14 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
+            var (modifierMode, buttonMode) = GamepadActionMap.GetPressModes(action, config);
             var pressDurationMs = action switch
             {
                 GIActions.SwitchAimingMode => config.AimingPressDurationMs,
                 GIActions.ShortcutWheel => config.ShortcutWheelPressDurationMs,
-                GIActions.CameraZoomIn or GIActions.CameraZoomOut => config.CameraZoomPressDurationMs,
-                _ => config.PressDurationMs,
+                _ => buttonMode == GamepadPressMode.Long ? config.LongPressDurationMs : config.PressDurationMs,
             };
-            var modifierHoldMs = action is GIActions.CameraZoomIn or GIActions.CameraZoomOut
-                ? config.CameraZoomModifierHoldMs
-                : 30;
+            var modifierHoldMs = modifierMode == GamepadPressMode.Long ? config.LongPressDurationMs : 30;
             SimulateButton(button, modifier, type, config, pressDurationMs, modifierHoldMs);
             return this;
         }
@@ -579,16 +577,14 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
+            var (modifierMode, buttonMode) = GamepadActionMap.GetPressModes(action, config);
             var pressDurationMs = action switch
             {
                 GIActions.SwitchAimingMode => config.AimingPressDurationMs,
                 GIActions.ShortcutWheel => config.ShortcutWheelPressDurationMs,
-                GIActions.CameraZoomIn or GIActions.CameraZoomOut => config.CameraZoomPressDurationMs,
-                _ => config.PressDurationMs,
+                _ => buttonMode == GamepadPressMode.Long ? config.LongPressDurationMs : config.PressDurationMs,
             };
-            var modifierHoldMs = action is GIActions.CameraZoomIn or GIActions.CameraZoomOut
-                ? config.CameraZoomModifierHoldMs
-                : 30;
+            var modifierHoldMs = modifierMode == GamepadPressMode.Long ? config.LongPressDurationMs : 30;
             SimulateButton(button, modifier, type, config, pressDurationMs, modifierHoldMs);
             return true;
         }

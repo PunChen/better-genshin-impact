@@ -320,6 +320,22 @@ public class GamepadMappingTests
     }
 
     [Fact]
+    public void ComboPressModes_DefaultToShortExceptCameraZoom()
+    {
+        var config = new GamepadConfig();
+
+        var (quickModifier, quickButton) = GamepadActionMap.GetPressModes(GIActions.QuickUseGadget, config);
+        Assert.Equal(GamepadPressMode.Short, quickModifier);
+        Assert.Equal(GamepadPressMode.Short, quickButton);
+
+        var (camModifier, camButton) = GamepadActionMap.GetPressModes(GIActions.CameraZoomIn, config);
+        Assert.Equal(GamepadPressMode.Long, camModifier);
+        Assert.Equal(GamepadPressMode.Long, camButton);
+
+        Assert.True(config.LongPressDurationMs >= 500);
+    }
+
+    [Fact]
     public void UiNavigationActions_MapToLeftStickAndZoomButtons()
     {
         Assert.True(GamepadActionMap.TryGetDirection(GIActions.FocusUp, out var x, out var y));

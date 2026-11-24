@@ -261,7 +261,83 @@
                                     <ui:TextBlock Margin="8,12,8,4"
                                                   FontTypography="BodyStrong"
                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
-                                                  Text="{i18n:T 直接按键 / 组合键}" />
+                                                  Text="{i18n:T 组合键（两个键，均可短按/长按）}" />
+
+                                    <ItemsControl ItemsSource="{Binding GamepadComboBindings}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="ComboRowBorder"
+                                                        Margin="0,1"
+                                                        Padding="8,6"
+                                                        Background="Transparent"
+                                                        CornerRadius="4">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="150" />
+                                                            <ColumnDefinition Width="80" />
+                                                            <ColumnDefinition Width="150" />
+                                                            <ColumnDefinition Width="80" />
+                                                            <ColumnDefinition Width="70" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                   Text="{Binding ActionName}"
+                                                                   TextWrapping="Wrap" />
+                                                        <ComboBox Grid.Column="1"
+                                                                  Height="32"
+                                                                  MinWidth="120"
+                                                                  Padding="8,4"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding Modifier, Mode=TwoWay}" />
+                                                        <ComboBox Grid.Column="2"
+                                                                  Height="32"
+                                                                  Margin="4,0,0,0"
+                                                                  Padding="6,4"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadPressModes, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding ModifierMode, Mode=TwoWay}" />
+                                                        <ComboBox Grid.Column="3"
+                                                                  Height="32"
+                                                                  Margin="8,0,0,0"
+                                                                  MinWidth="120"
+                                                                  Padding="8,4"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding Button, Mode=TwoWay}" />
+                                                        <ComboBox Grid.Column="4"
+                                                                  Height="32"
+                                                                  Margin="4,0,0,0"
+                                                                  Padding="6,4"
+                                                                  VerticalContentAlignment="Center"
+                                                                  ItemsSource="{Binding DataContext.GamepadPressModes, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                  SelectedItem="{Binding ButtonMode, Mode=TwoWay}" />
+                                                        <ui:Button Grid.Column="5"
+                                                                   Width="60"
+                                                                   MinWidth="0"
+                                                                   Margin="6,0,0,0"
+                                                                   Padding="4,2"
+                                                                   HorizontalAlignment="Center"
+                                                                   Content="{i18n:T 测试}"
+                                                                   Command="{Binding DataContext.TestGamepadComboBindingCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                   CommandParameter="{Binding}" />
+                                                    </Grid>
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <Trigger SourceName="ComboRowBorder" Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="ComboRowBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                                    </Trigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <ui:TextBlock Margin="8,12,8,4"
+                                                  FontTypography="BodyStrong"
+                                                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                  Text="{i18n:T 直接按键}" />
 
                                     <ItemsControl ItemsSource="{Binding GamepadBindingModels}">
                                         <ItemsControl.ItemTemplate>

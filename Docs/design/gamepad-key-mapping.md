@@ -62,6 +62,10 @@
 | 元素视野 | **LB + 十字键左** | `ElementalSight=Left`、`ElementalSightModifier=LeftShoulder` | 🟡 已实现待验证 |
 | 视角回正（鼠标中键） | RS（右摇杆按下；PS 手柄称 R3） | `CameraRecenter=RightThumb` | 🟡 已实现待验证 |
 
+> 双键组合在设置页以单行显示：修饰键 + 修饰键按压方式（短/长） + 主键 + 主键按压方式（短/长）。
+> 短按使用 PressDurationMs（默认 60ms，测试至少 120ms），长按使用 LongPressDurationMs（默认 800ms）。
+> 修饰键长按时先保持长按时间再按主键；镜头拉近/拉远默认两个键都是长按。
+
 组合键执行顺序：按住修饰键 → 按目标键 → 保持 `PressDurationMs` → 释放目标键 → 释放修饰键。
 呼出快捷轮盘（A19）需要长按，使用 `ShortcutWheelPressDurationMs=800`；其他组合键仍用 `PressDurationMs`。
 

@@ -25,6 +25,12 @@ public partial class GamepadConfig : ObservableObject
     private int _pressDurationMs = 60;
 
     /// <summary>
+    /// 长按模式的保持时间（毫秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _longPressDurationMs = 800;
+
+    /// <summary>
     /// 任务结束/程序退出时是否释放所有按键
     /// </summary>
     [ObservableProperty]
@@ -419,6 +425,63 @@ public partial class GamepadConfig : ObservableObject
             Sprint = GamepadButton.RightShoulder;
         }
     }
+    #region 组合键按压方式（短按/长按）
+
+    [ObservableProperty]
+    private GamepadPressMode _switchMember5ModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _switchMember5PressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _quickUseGadgetModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _quickUseGadgetPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _elementalSightModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _elementalSightPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _interactionInSomeModeModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _interactionInSomeModePressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _abandonChallengeModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _abandonChallengePressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _openCoOpScreenModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _openCoOpScreenPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _checkTutorialDetailsModifierPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _checkTutorialDetailsPressMode = GamepadPressMode.Short;
+
+    [ObservableProperty]
+    private GamepadPressMode _cameraZoomInModifierPressMode = GamepadPressMode.Long;
+
+    [ObservableProperty]
+    private GamepadPressMode _cameraZoomInPressMode = GamepadPressMode.Long;
+
+    [ObservableProperty]
+    private GamepadPressMode _cameraZoomOutModifierPressMode = GamepadPressMode.Long;
+
+    [ObservableProperty]
+    private GamepadPressMode _cameraZoomOutPressMode = GamepadPressMode.Long;
+
+    #endregion
     #region 快捷轮盘（LB + 右摇杆）
 
     /// <summary>

@@ -237,6 +237,26 @@ public static class GamepadActionMap
     }
 
     /// <summary>
+    /// 取得组合键两个按键的按压方式（短按/长按）。
+    /// </summary>
+    public static (GamepadPressMode Modifier, GamepadPressMode Button) GetPressModes(GIActions action, GamepadConfig config)
+    {
+        return action switch
+        {
+            GIActions.SwitchMember5 => (config.SwitchMember5ModifierPressMode, config.SwitchMember5PressMode),
+            GIActions.QuickUseGadget => (config.QuickUseGadgetModifierPressMode, config.QuickUseGadgetPressMode),
+            GIActions.ElementalSight => (config.ElementalSightModifierPressMode, config.ElementalSightPressMode),
+            GIActions.InteractionInSomeMode => (config.InteractionInSomeModeModifierPressMode, config.InteractionInSomeModePressMode),
+            GIActions.AbandonChallenge => (config.AbandonChallengeModifierPressMode, config.AbandonChallengePressMode),
+            GIActions.OpenCoOpScreen => (config.OpenCoOpScreenModifierPressMode, config.OpenCoOpScreenPressMode),
+            GIActions.CheckTutorialDetails => (config.CheckTutorialDetailsModifierPressMode, config.CheckTutorialDetailsPressMode),
+            GIActions.CameraZoomIn => (config.CameraZoomInModifierPressMode, config.CameraZoomInPressMode),
+            GIActions.CameraZoomOut => (config.CameraZoomOutModifierPressMode, config.CameraZoomOutPressMode),
+            _ => (GamepadPressMode.Short, GamepadPressMode.Short),
+        };
+    }
+
+    /// <summary>
     /// 尝试取得动作对应的左摇杆方向（x/y 取值 -1、0、1）
     /// </summary>
     public static bool TryGetDirection(GIActions action, out int x, out int y)
