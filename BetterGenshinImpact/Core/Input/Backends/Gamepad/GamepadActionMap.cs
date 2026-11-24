@@ -117,6 +117,12 @@ public static class GamepadActionMap
             case GIActions.MapZoomOut:
                 button = config.MapZoomOut;
                 return true;
+            case GIActions.CameraZoomIn:
+                button = config.CameraZoomIn;
+                return true;
+            case GIActions.CameraZoomOut:
+                button = config.CameraZoomOut;
+                return true;
             case GIActions.AbandonChallenge:
                 button = config.AbandonChallenge;
                 return true;
@@ -162,6 +168,12 @@ public static class GamepadActionMap
                 return true;
             case GIActions.CheckTutorialDetails:
                 modifier = config.CheckTutorialDetailsModifier;
+                return true;
+            case GIActions.CameraZoomIn:
+                modifier = config.CameraZoomInModifier;
+                return true;
+            case GIActions.CameraZoomOut:
+                modifier = config.CameraZoomOutModifier;
                 return true;
             default:
                 modifier = GamepadButton.None;

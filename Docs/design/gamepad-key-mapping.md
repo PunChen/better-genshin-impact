@@ -23,6 +23,8 @@
 | 确认 / 取消 | B / A | `Confirm` / `Cancel` | `B` / `A` |
 | 移动角色 | 左摇杆 | `GIActions.Move*` | 左摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） |
 | 转动视角 | 右摇杆 | `MoveMouseBy` | 右摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） |
+| 镜头拉近 | LB + LT | `CameraZoomIn` | LB + LT（镜头距离调节，手柄专属功能） |
+| 镜头拉远 | LB + RT | `CameraZoomOut` | LB + RT（同） |
 
 ### 1.2 第三人称射击（独立布局）
 
@@ -92,6 +94,8 @@ GamepadUiNavigator.Focus(GamepadStickDirection.Down);
 GamepadUiNavigator.Scroll(-3);        // 正数向上，负数向下
 GamepadUiNavigator.ZoomIn();          // LT
 GamepadUiNavigator.ZoomOut();         // RT
+GamepadUiNavigator.CameraZoomIn();    // LB + LT（镜头拉近）
+GamepadUiNavigator.CameraZoomOut();   // LB + RT（镜头拉远）
 GamepadUiNavigator.DragMap(1, 0, 300);
 ```
 
@@ -134,9 +138,9 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | D3 | JS 脚本鼠标 API | 启动告警 / 禁用 |
 | D4 | 地图、滑条拖拽 | 不支持 / 摇杆模拟（地图已支持） |
 
-## 5. 全量映射清单（57 项 GIActions 状态标记）
+## 5. 全量映射清单（59 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 46 项 / ⚠️ 已实现但默认未绑定 2 项 / ❌ 缺失 8 项 / 🚫 无需映射 1 项**。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 48 项 / ⚠️ 已实现但默认未绑定 2 项 / ❌ 缺失 8 项 / 🚫 无需映射 1 项**。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -211,6 +215,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | ✅ | 待确认项 B2，待实机确认 |
 | MapZoomIn | 地图放大 | LT | ✅ | |
 | MapZoomOut | 地图缩小 | RT | ✅ | |
+| CameraZoomIn | 镜头拉近 | LB + LT | ✅ | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
+| CameraZoomOut | 镜头拉远 | LB + RT | ✅ | 同上 |
 
 ### 5.7 缺失/无需映射项（7 项缺失 + 1 项无需映射；第 8 项缺失 `OpenTheSettingsMenu` 见 §5.5）
 
@@ -243,7 +249,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ### 5.10 键盘反查表（ReverseMappableActions）覆盖说明
 
-`GamepadChannel.ReverseMappableActions` 含 41 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。
+`GamepadChannel.ReverseMappableActions` 含 41 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。另 `MapZoomIn/Out`、`CameraZoomIn/Out` 为手柄专属动作（无键盘键），仅在 `TryGetButton`/`GamepadUiNavigator` 中定义，不进反查表。
 
 ## 6. 注意事项
 

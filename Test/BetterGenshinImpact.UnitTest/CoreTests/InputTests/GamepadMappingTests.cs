@@ -152,6 +152,28 @@ public class GamepadMappingTests
     }
 
     [Fact]
+    public void CameraZoom_UseGamepadDefaults()
+    {
+        // 镜头距离调节为手柄专属功能（键盘无对应键）：拉近 LB + LT，拉远 LB + RT
+        var config = new GamepadConfig();
+
+        Assert.Equal(GamepadButton.LeftTrigger, config.CameraZoomIn);
+        Assert.Equal(GamepadButton.LeftShoulder, config.CameraZoomInModifier);
+        Assert.Equal(GamepadButton.RightTrigger, config.CameraZoomOut);
+        Assert.Equal(GamepadButton.LeftShoulder, config.CameraZoomOutModifier);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.CameraZoomIn, config, out var zoomIn));
+        Assert.Equal(GamepadButton.LeftTrigger, zoomIn);
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.CameraZoomIn, config, out var zoomInModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, zoomInModifier);
+
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.CameraZoomOut, config, out var zoomOut));
+        Assert.Equal(GamepadButton.RightTrigger, zoomOut);
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.CameraZoomOut, config, out var zoomOutModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, zoomOutModifier);
+    }
+
+    [Fact]
     public void SprintKeyboardAndMouse_ShareSameBinding()
     {
         var config = new GamepadConfig { Sprint = GamepadButton.RightTrigger };

@@ -57,6 +57,16 @@ public static class GamepadUiNavigator
     public static void ZoomOut() => InputHub.Foreground.SimulateAction(GIActions.MapZoomOut);
 
     /// <summary>
+    /// 镜头拉近（LB + LT；手柄专属的镜头距离调节）
+    /// </summary>
+    public static void CameraZoomIn() => InputHub.Foreground.SimulateAction(GIActions.CameraZoomIn);
+
+    /// <summary>
+    /// 镜头拉远（LB + RT；手柄专属的镜头距离调节）
+    /// </summary>
+    public static void CameraZoomOut() => InputHub.Foreground.SimulateAction(GIActions.CameraZoomOut);
+
+    /// <summary>
     /// 拖动地图（左摇杆持续偏移，x/y 归一化到 -1..1）；地图光标移动等价于拖动地图
     /// </summary>
     public static void DragMap(double x, double y, int durationMs = 300)

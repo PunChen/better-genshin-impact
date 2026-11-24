@@ -217,6 +217,30 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _mapZoomOut = GamepadButton.RightTrigger;
 
     /// <summary>
+    /// 镜头拉近（默认 LB + LT）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _cameraZoomIn = GamepadButton.LeftTrigger;
+
+    /// <summary>
+    /// 镜头拉近的组合键修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _cameraZoomInModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>
+    /// 镜头拉远（默认 LB + RT）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _cameraZoomOut = GamepadButton.RightTrigger;
+
+    /// <summary>
+    /// 镜头拉远的组合键修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _cameraZoomOutModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>
     /// 界面焦点/列表滚动的左摇杆保持时间（毫秒）
     /// </summary>
     [ObservableProperty]

@@ -322,4 +322,14 @@ public enum GIActions
     /// </summary>
     MapZoomOut,
 
+    /// <summary>
+    /// 镜头拉近（手柄：LB + LT；镜头距离调节为手柄专属功能，键盘无对应键）
+    /// </summary>
+    CameraZoomIn,
+
+    /// <summary>
+    /// 镜头拉远（手柄：LB + RT；镜头距离调节为手柄专属功能，键盘无对应键）
+    /// </summary>
+    CameraZoomOut,
+
 }
