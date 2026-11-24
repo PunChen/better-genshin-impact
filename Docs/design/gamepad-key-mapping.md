@@ -5,7 +5,7 @@
 > 总体方案见 [gamepad-adaptation-plan.md](./gamepad-adaptation-plan.md)。
 
 > **标记体系（2026-11-24 起）**：⬜ 未确认 → 🔵 已确认待实现 → 🟡 已实现待验证 → 🟢 已验证正确；🚫 无需映射（终态）。
-> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 20 项映射经实机测试标 🟢，其余待回归）。
+> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 33 项映射经实机测试标 🟢，其余待回归）。
 
 ## 1. 游戏内基准布局（截图确认）
 
@@ -65,18 +65,18 @@
 组合键执行顺序：按住修饰键 → 按目标键 → 保持 `PressDurationMs` → 释放目标键 → 释放修饰键。
 呼出快捷轮盘（A19）需要长按，使用 `ShortcutWheelPressDurationMs=800`；其他组合键仍用 `PressDurationMs`。
 
-### 2.2 快捷轮盘（LB + 右摇杆方向）— 🟡 已实现待验证
+### 2.2 快捷轮盘（LB + 右摇杆方向）— 🟢 已验证正确
 
-| 功能 | 手柄 | 配置字段 |
-|---|---|---|
-| 打开地图 | LB + 右摇杆↓ | `OpenMapWheelDirection=Down` |
-| 打开背包 | LB + 右摇杆→ | `OpenInventoryWheelDirection=Right` |
-| 打开任务菜单 | LB + 右摇杆↙ | `OpenQuestMenuWheelDirection=DownLeft` |
-| 打开角色界面 | LB + 右摇杆↘ | `OpenCharacterScreenWheelDirection=DownRight` |
-| 打开纪行 | LB + 右摇杆↖ | `OpenBattlePassScreenWheelDirection=UpLeft` |
-| 打开活动面板 | LB + 右摇杆← | `OpenTheEventsMenuWheelDirection=Left` |
-| 打开冒险之证 | LB + 右摇杆↗ | `OpenAdventurerHandbookWheelDirection=UpRight` |
-| 打开祈愿界面 | LB + 右摇杆↑ | `OpenWishScreenWheelDirection=Up` |
+| 功能 | 手柄 | 配置字段 | 状态 |
+|---|---|---|---|
+| 打开地图 | LB + 右摇杆↓ | `OpenMapWheelDirection=Down` | 🟢 已验证正确 |
+| 打开背包 | LB + 右摇杆→ | `OpenInventoryWheelDirection=Right` | 🟢 已验证正确 |
+| 打开任务菜单 | LB + 右摇杆↙ | `OpenQuestMenuWheelDirection=DownLeft` | 🟢 已验证正确 |
+| 打开角色界面 | LB + 右摇杆↘ | `OpenCharacterScreenWheelDirection=DownRight` | 🟢 已验证正确 |
+| 打开纪行 | LB + 右摇杆↖ | `OpenBattlePassScreenWheelDirection=UpLeft` | 🟢 已验证正确 |
+| 打开活动面板 | LB + 右摇杆← | `OpenTheEventsMenuWheelDirection=Left` | 🟢 已验证正确 |
+| 打开冒险之证 | LB + 右摇杆↗ | `OpenAdventurerHandbookWheelDirection=UpRight` | 🟢 已验证正确 |
+| 打开祈愿界面 | LB + 右摇杆↑ | `OpenWishScreenWheelDirection=Up` | 🟢 已验证正确 |
 
 修饰键均为 `LeftShoulder`；执行流程：按住 LB 打开轮盘 → 拨右摇杆 → 保持 `WheelSelectionHoldMs`（默认 300ms）→ 回中 → 松开 LB。
 
@@ -151,9 +151,9 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 ## 5. 全量映射清单（59 项 GIActions 状态标记）
 
 
-> **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」这一组直接按键/组合键已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
+> **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」以及全部 8 个快捷轮盘方向均已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 25 项 / 🟡 已实现待验证 27 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 33 项 / 🟡 已实现待验证 19 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -197,18 +197,18 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | Cancel | 取消/返回 | A | 🟢 | `KeyPress(VK_ESCAPE)` 反查为 A 正确（B1 已确认：游戏内 B=确认、A=取消/返回，语义无误）；BGI 输出待实机回归验证 |
 | SkipDialog | 跳过/推进对话 | B | 🟢 | |
 
-### 5.4 界面打开（快捷轮盘 LB + 右摇杆方向）— 全部已实现
+### 5.4 界面打开（快捷轮盘 LB + 右摇杆方向）— 🟢 已验证正确
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
 | OpenMap | 打开地图 | LB + 右摇杆↓ | 🟢 | 2026-11-25 实机测试通过 |
-| OpenInventory | 打开背包 | LB + 右摇杆→ | 🟡 | |
-| OpenQuestMenu | 打开任务菜单 | LB + 右摇杆↙ | 🟡 | |
-| OpenCharacterScreen | 打开角色界面 | LB + 右摇杆↘ | 🟡 | |
-| OpenBattlePassScreen | 打开纪行 | LB + 右摇杆↖ | 🟡 | |
-| OpenTheEventsMenu | 打开活动面板 | LB + 右摇杆← | 🟡 | |
-| OpenAdventurerHandbook | 打开冒险之证 | LB + 右摇杆↗ | 🟡 | |
-| OpenWishScreen | 打开祈愿界面 | LB + 右摇杆↑ | 🟡 | 方案 A20（2026-11-24 实测更正：非十字键↑；轮盘第 8 向，8 向全满） |
+| OpenInventory | 打开背包 | LB + 右摇杆→ | 🟢 | |
+| OpenQuestMenu | 打开任务菜单 | LB + 右摇杆↙ | 🟢 | |
+| OpenCharacterScreen | 打开角色界面 | LB + 右摇杆↘ | 🟢 | |
+| OpenBattlePassScreen | 打开纪行 | LB + 右摇杆↖ | 🟢 | |
+| OpenTheEventsMenu | 打开活动面板 | LB + 右摇杆← | 🟢 | |
+| OpenAdventurerHandbook | 打开冒险之证 | LB + 右摇杆↗ | 🟢 | |
+| OpenWishScreen | 打开祈愿界面 | LB + 右摇杆↑ | 🟢 | 方案 A20（2026-11-24 实测更正：非十字键↑；轮盘第 8 向，8 向全满） |
 
 ### 5.5 界面打开（独立按键 / 已定方案）
 
