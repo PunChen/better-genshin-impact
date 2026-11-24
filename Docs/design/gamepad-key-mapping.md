@@ -5,7 +5,7 @@
 > 总体方案见 [gamepad-adaptation-plan.md](./gamepad-adaptation-plan.md)。
 
 > **标记体系（2026-11-24 起）**：⬜ 未确认 → 🔵 已确认待实现 → 🟡 已实现待验证 → 🟢 已验证正确；🚫 无需映射（终态）。
-> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 33 项映射经实机测试标 🟢，其余待回归）。
+> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 36 项映射经实机测试标 🟢，其余待回归）。
 
 ## 1. 游戏内基准布局（截图确认）
 
@@ -157,7 +157,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 > **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」以及全部 8 个快捷轮盘方向均已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 33 项 / 🟡 已实现待验证 19 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 36 项 / 🟡 已实现待验证 16 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -184,7 +184,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | InteractionInSomeMode | 特定玩法交互（T） | LB + X | 🟢 | 方案 A14：`X` + 修饰键 `LeftShoulder` |
 | QuickUseGadget | 快捷使用小道具 | LB + B | 🟢 | 组合键 |
 | ShortcutWheel | 呼出快捷轮盘 | LB（按住） | 🟢 | 方案 A19：按住呼出轮盘，方向选择走 §5.4 轮盘机制 |
-| QuestNavigation | 任务追踪 | LS（左摇杆按下） | 🟡 | |
+| QuestNavigation | 任务追踪 | LS（左摇杆按下） | 🟢 | |
 | ElementalSight | 元素视野 | LB + 十字键← | 🟡 | 组合键 |
 | AbandonChallenge | 中断挑战 | LS + RS | 🟢 | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
 | SwitchMember1 | 切换角色 1 | 十字键↑ | 🟢 | |
@@ -218,8 +218,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| OpenPaimonMenu | 打开派蒙界面 | Start（☰ Menu） | 🟡 | |
-| OpenChatScreen | 好友聊天 | Back（⧉ View） | 🟡 | |
+| OpenPaimonMenu | 打开派蒙界面 | Start（☰ Menu） | 🟢 | |
+| OpenChatScreen | 好友聊天 | Back（⧉ View） | 🟢 | |
 | OpenPartySetupScreen | 打开队伍配置 | `None` | 🟡 | 方案 A7 已落地：`PaimonMenuNavigateJob` 派蒙菜单导航（见 §7.3） |
 | OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | 🔵 | 方案 A9：派蒙菜单导航路径已实现，F6 语义待实机确认（见 §4.1 A9 备注 / §7.3） |
 | OpenCoOpScreen | 打开多人游戏界面 | LB + 十字键→ | 🟡 | 方案 A16：`Right` + 修饰键 `LeftShoulder` |
