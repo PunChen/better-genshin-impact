@@ -425,6 +425,32 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         }
     }
 
+    /// <summary>
+    /// 固定摇杆测试：左摇杆前进 / 右摇杆向右转视角
+    /// </summary>
+    [RelayCommand]
+    private void TestGamepadFixedInput(GamepadFixedInputSettingModel? model)
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        if (!_gamepadConfig.Enabled)
+        {
+            GamepadStatus = "请先启用手柄模式";
+            return;
+        }
+
+        var ok = model.IsRightStick
+            ? GamepadInputBackend.TestStick(true, 1, 0, 600, out var error)
+            : GamepadInputBackend.TestStick(false, 0, 1, 600, out error);
+
+        GamepadStatus = ok
+            ? $"已测试固定摇杆：{model.ActionName} → {model.ValueText}"
+            : $"测试失败：{error ?? "虚拟手柄未连接，请确认已安装 ViGEmBus 驱动"}";
+    }
+
     private int GetGamepadTestDuration(string propertyName)
     {
         // 瞄准模式（LT）需要长按才能触发，其他按键保持较短时间

@@ -337,6 +337,55 @@
                                     <ui:TextBlock Margin="8,12,8,4"
                                                   FontTypography="BodyStrong"
                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                  Text="{i18n:T 固定摇杆（不可修改）}" />
+
+                                    <ItemsControl ItemsSource="{Binding GamepadFixedInputs}">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border x:Name="FixedRowBorder"
+                                                        Margin="0,1"
+                                                        Padding="8,6"
+                                                        Background="Transparent"
+                                                        CornerRadius="4">
+                                                    <Grid>
+                                                        <Grid.ColumnDefinitions>
+                                                            <ColumnDefinition Width="*" />
+                                                            <ColumnDefinition Width="300" />
+                                                            <ColumnDefinition Width="80" />
+                                                        </Grid.ColumnDefinitions>
+                                                        <TextBlock Grid.Column="0"
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="{DynamicResource TextFillColorPrimaryBrush}"
+                                                                   Text="{Binding ActionName}" />
+                                                        <TextBox Grid.Column="1"
+                                                                 Height="32"
+                                                                 Padding="8,4"
+                                                                 IsEnabled="False"
+                                                                 Text="{Binding ValueText, Mode=OneWay}"
+                                                                 VerticalContentAlignment="Center" />
+                                                        <ui:Button Grid.Column="2"
+                                                                   Width="60"
+                                                                   MinWidth="0"
+                                                                   Margin="8,0,0,0"
+                                                                   Padding="4,2"
+                                                                   HorizontalAlignment="Center"
+                                                                   Content="{i18n:T 测试}"
+                                                                   Command="{Binding DataContext.TestGamepadFixedInputCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                   CommandParameter="{Binding}" />
+                                                    </Grid>
+                                                </Border>
+                                                <DataTemplate.Triggers>
+                                                    <Trigger SourceName="FixedRowBorder" Property="IsMouseOver" Value="True">
+                                                        <Setter TargetName="FixedRowBorder" Property="Background" Value="{DynamicResource SubtleFillColorSecondaryBrush}" />
+                                                    </Trigger>
+                                                </DataTemplate.Triggers>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <ui:TextBlock Margin="8,12,8,4"
+                                                  FontTypography="BodyStrong"
+                                                  Foreground="{DynamicResource TextFillColorPrimaryBrush}"
                                                   Text="{i18n:T 直接按键}" />
 
                                     <ItemsControl ItemsSource="{Binding GamepadBindingModels}">

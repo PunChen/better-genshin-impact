@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -82,6 +82,43 @@ public sealed class GamepadInputBackend : IInputBackend
             transport.SetButton(button, true);
             Thread.Sleep(Math.Max(120, durationMs));
             transport.SetButton(button, false);
+            Thread.Sleep(100);
+            error = null;
+            return true;
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 设置页“测试按键”使用：测试固定摇杆（左摇杆移动 / 右摇杆视角）
+    /// </summary>
+    public static bool TestStick(bool rightStick, double x, double y, int durationMs, out string? error)
+    {
+        FocusGameWindow();
+
+        using var transport = new Xbox360Transport();
+        if (!transport.TryConnect())
+        {
+            error = transport.LastError;
+            return false;
+        }
+
+        try
+        {
+            Thread.Sleep(600);
+            var (xAxis, yAxis) = rightStick
+                ? (GamepadAxis.RightThumbX, GamepadAxis.RightThumbY)
+                : (GamepadAxis.LeftThumbX, GamepadAxis.LeftThumbY);
+
+            transport.SetAxis(xAxis, (short)Math.Clamp(x * short.MaxValue, short.MinValue, short.MaxValue));
+            transport.SetAxis(yAxis, (short)Math.Clamp(y * short.MaxValue, short.MinValue, short.MaxValue));
+            Thread.Sleep(Math.Max(120, durationMs));
+            transport.SetAxis(xAxis, 0);
+            transport.SetAxis(yAxis, 0);
             Thread.Sleep(100);
             error = null;
             return true;
