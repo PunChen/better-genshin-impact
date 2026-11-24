@@ -274,7 +274,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 场景 | 判断方法 | 机制 | 状态 |
 |---|---|---|---|
 | 对话界面判断 | `Bv.IsInTalkUi()` | 键鼠模式：DisabledUiButton 模板；**手柄模式特判**：View（双方框）+ Menu（三横杠）两个按钮同时出现才算对话（`GamepadMode.Enabled` 分支，命中时遮罩窗口画红框便于调试） | 🟢 **已验证正确**（2026-11-24 实机：剧情对话中 View+Menu 双命中稳定） |
-| 地图界面判断 | `Bv.IsInBigMapUi()` | 地图缩放按钮 / 设置按钮模板匹配（ROI 固定 1080p 坐标）；另有 `BigMapIsUnderground()`（地下图层）、`GetBigMapScale()`（缩放级别） | ⬜ 待实机验证：**缩放控件模板手柄模式下命中率未验证**（手柄模式 UI 布局可能整体不同） |
+| 地图界面判断 | `Bv.IsInBigMapUi()` | 地图缩放按钮 / 设置按钮模板匹配（ROI 固定 1080p 坐标）；另有 `BigMapIsUnderground()`（地下图层）、`GetBigMapScale()`（缩放级别） | 🟡 识别层部分实证：传送按钮/选项列表/传送点图标两模式一致（2026-11-24 实测，模板可复用）；缩放/设置控件（`MapScaleButton`/`MapSettingsButton`）命中率待验证 |
 | 大世界画面判断 | `Bv.IsInMainUi()` | 左上四分之一 ROI 匹配派蒙头像 + 复苏提示排除；`WaitForMainUi()` 异步等待 | ⬜ 待实机验证，风险分层：**派蒙头像两模式大概率一致（低风险）**；**复苏排除 `IsInRevivePrompt` 高风险**——门禁是 AutoFight 黑色确认按钮模板（键鼠样式），手柄模式复苏弹窗按钮显示手柄按键提示样式，模板可能不命中 → 门禁失败后 OCR「复苏」不执行 → **全队死亡时复苏弹窗检测失效，`IsInMainUi` 误判为大世界**（影响 `WaitForMainUi`/返回主界面等调用方） |
 | 统一入口 | `Bv.WhichGameUi()` | `GameUiCategory { Talk > BigMap > Main > Unknown }` 按优先级分类；`TaskTriggerDispatcher` 每帧计算 `CurrentGameUiCategory`，触发器按 `SupportedGameUiCategory` 过滤（AutoSkip=Talk、QuickTeleport=BigMap、MapMask 含 BigMap 判断） | 🟡 待验证 |
 
@@ -316,3 +316,20 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 4. **A9 语义待确认**：`OpenTheSettingsMenu`（F6）唯一活跃调用点 `EnterAndExitWonderlandJob`（千星奇域入口）的按键语义为「打开玩法系统界面（尘歌壶猫尾酒馆等特定场景）」，与派蒙菜单「设置」可能不是同一界面，**该调用点未接线**；待实机确认 F6 实际语义后再决定。
 5. **战斗中派蒙菜单**（2026-11-24 检查补充）：AutoFight 战斗结束检测路径（`AutoFightTask` 924/963、`AutoFightSeek` 324/335 已接入 A7 导航）会在**战斗中**按 Start 打开派蒙菜单再导航到队伍配置——单机战斗中暂停菜单应可正常打开（游戏暂停）；联机不暂停但菜单可开。待实机确认。
 6. **手柄模板资源包依赖**（2026-11-24 检查补充）：4 个手柄模板（`ControllerMenuButton`/`ControllerViewButton`/`ControllerChoiceButton`/`ControllerPick`）已在 `GameTask/AutoSkip/Assets/Recognition.json` 与 `GameTask/AutoPick/Assets/Recognition.json` 中声明，PNG 图像需由 BetterGI.Assets 外部资源包提供（仓库禁止新增 `Assets` 目录）——需确认资源包已包含对应图像。
+
+### 7.4 地图界面手柄操作语义（2026-11-24 实测，批次 3 重构依据）
+
+手柄模式大地图 UI 的上下文操作与键鼠的「拖拽/滚轮/点击」完全不同，是 TpTask/QuickTeleport 手柄化重构的交互规范：
+
+| 操作 | 手柄 | 对比键鼠 |
+|---|---|---|
+| 光标 | 左摇杆移动**选中圈光标**（屏幕上可见的圈，可作视觉伺服特征） | 鼠标自由光标 |
+| 视口移动 | 通过移动选中圈实现 | 按住左键拖拽 |
+| 选点 | 圈对准传送点图标后按 **B** | 左键点击 |
+| 缩放 | **LT/RT**（放大/缩小方向待确认） | 滚轮 |
+| 候选列表（同名点待选） | 左摇杆上下选择 + **B** 确认 | 左键点击列表项 |
+| 区域列表 | **Y** 打开（默认显示当前区域，屏幕右侧列出全部可选区域）→ 左摇杆上下左右选中 → **B** 跳转该区域默认传送点 → 再 **B** 传送 | 左键点击左上角区域名开列表再点击 |
+
+识别层实证：传送按钮、选项列表、传送点图标**两模式一致**，模板可直接复用；仅确认/取消等按键提示角标（A/B 图标）不同。
+
+**待确认**：① LT/RT 放大/缩小方向；② 选中传送点后传送面板弹出，B 是否直接触发传送（决定 QuickTeleport 传送按钮 `ra.Click()` 的替代方式：直接按 B vs 焦点导航）；③ 选中圈的视觉特征截图（做视觉伺服模板，走外部资源包）；④ `MapScaleButton`/`MapSettingsButton` 模板手柄模式命中率（LT/RT 缩放时滑块控件是否照常显示——zoom 闭环测量依赖它）。
