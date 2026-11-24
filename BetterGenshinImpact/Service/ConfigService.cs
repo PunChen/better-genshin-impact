@@ -1,4 +1,4 @@
-using BetterGenshinImpact.Core.Config;
+﻿using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Service.Interface;
 using BetterGenshinImpact.View.Windows;
 using OpenCvSharp;
@@ -189,6 +189,7 @@ public class ConfigService : IConfigService
             }
 
             config.AutoPickConfig.MigrateLegacyConfig();
+            config.GamepadConfig?.MigrateLegacyBindings();
             Config = config;
             return config;
         }

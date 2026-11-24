@@ -219,6 +219,7 @@
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="170" />
                                                             <ColumnDefinition Width="170" />
+                                                        <ColumnDefinition Width="80" />
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Grid.Column="0"
                                                                    VerticalAlignment="Center"
@@ -242,7 +243,7 @@
                                                                   ItemsSource="{Binding DataContext.GamepadDirections, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                   SelectedItem="{Binding Direction, Mode=TwoWay}" />
                                                         <ui:Button Grid.Column="3"
-                                                                   Padding="8,2"
+                                                                   Width="60" MinWidth="0" Padding="4,2" HorizontalAlignment="Center"
                                                                    Content="{i18n:T 测试}"
                                                                    Command="{Binding DataContext.TestGamepadWheelBindingCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                    CommandParameter="{Binding}" />
@@ -275,6 +276,7 @@
                                                             <ColumnDefinition Width="*" />
                                                             <ColumnDefinition Width="170" />
                                                             <ColumnDefinition Width="170" />
+                                                        <ColumnDefinition Width="80" />
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Grid.Column="0"
                                                                    VerticalAlignment="Center"
@@ -291,7 +293,7 @@
                                                                   ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                   SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
                                                         <ui:Button Grid.Column="3"
-                                                                   Padding="8,2"
+                                                                   Width="60" MinWidth="0" Padding="4,2" HorizontalAlignment="Center"
                                                                    Content="{i18n:T 测试}"
                                                                    Command="{Binding DataContext.TestGamepadBindingCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                    CommandParameter="{Binding}" />

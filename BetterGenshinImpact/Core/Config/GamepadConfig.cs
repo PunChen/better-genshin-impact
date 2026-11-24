@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Fischless.WindowsInput.Gamepad;
 
@@ -384,6 +384,17 @@ public partial class GamepadConfig : ObservableObject
 
     #endregion
 
+    /// <summary>
+    /// 兼容旧配置：早期保存过 ElementalSkill=RB、Sprint=RT 的错误默认值，这里纠正。
+    /// </summary>
+    public void MigrateLegacyBindings()
+    {
+        if (ElementalSkill == GamepadButton.RightShoulder && Sprint == GamepadButton.RightTrigger)
+        {
+            ElementalSkill = GamepadButton.RightTrigger;
+            Sprint = GamepadButton.RightShoulder;
+        }
+    }
     #region 快捷轮盘（LB + 右摇杆）
 
     /// <summary>
