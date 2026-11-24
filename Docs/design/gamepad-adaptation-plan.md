@@ -24,7 +24,7 @@
 
 ### 1.1 三个横切缺口
 
-1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；仍缺 `OpenNotificationDetails`、`HideUI` 等低频界面动作（`OpenWishScreen` 已于 2026-11-24 落地 A20：LB+右摇杆↑，轮盘第 8 向）。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判且 **View+Menu 双命中已实机稳定验证 🟢** / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7）；⚠️ 地图/大世界模板为键鼠时代资产，游戏连手柄后 UI 可能整体切换布局，命中率待实机验证（详见 §7.1 修正备注，复苏排除 `IsInRevivePrompt` 为高风险项），运动状态判断手柄缺口已登记 B6。
+1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；低频界面动作 5 项（`OpenTheFurnishingScreen` F7/`OpenStellarReunion` F8/`OpenNotificationDetails` Y/`OpenSpecialEnvironmentInformation` U/`HideUI` `/`）已标记**暂不映射**（2026-11-24 决定，低优先级：无内置调用方，仅脚本生态可能使用），有需要再实测补映射。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判且 **View+Menu 双命中已实机稳定验证 🟢** / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7）；⚠️ 地图/大世界模板为键鼠时代资产，游戏连手柄后 UI 可能整体切换布局，命中率待实机验证（详见 §7.1 修正备注，复苏排除 `IsInRevivePrompt` 为高风险项），运动状态判断手柄缺口已登记 B6。
 2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 RS）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
 4. **缺口④**（2026-11-24 深挖传送/尘歌壶链路时发现）：`Bv.FindF`/`Bv.FindFAndPress`/`Bv.FindFKeyText` 系列依赖 AutoPick 的**键鼠 F 图标模板**（`PickRo`），手柄模式下 F 提示显示为 X 图标 → 恒返回 false。影响 **8 个模块 16 处调用**：地脉衍出（接触/地脉之花识别）、幽境危战、快捷尘歌壶（进入/离开尘歌壶）、LowerHeadThenWalkTo、凯瑟琳（冒险家协会）、合成台、尘歌壶找阿圆、钓鱼。**已于 2026-11-24 修复**：`FindF`/`FindFKeyText` 增加 `GamepadMode.Enabled` 分支换 `ControllerPick` 模板（X 图标较小，按图标中心扩展出与键鼠等价的 40px 几何，后续文字偏移计算不变，与 `AutoPickTrigger` 同一处理方式）；`FindFAndPress` 的按键走 `PickVk`(F) 反查 `PickUpOrInteract` ✓ 已可用。
@@ -58,7 +58,7 @@
 | B1 ESC 语义 | ✅ 已核对 | 游戏内 B=确认、A=取消/返回；ESC→A 正确，不改键，仅保留 `Cancel` 可配置 |
 | B2 中键→RS | ✅ 已实现 | 新增 `GamepadConfig.CameraRecenter`（默认 `RightThumb`），`OnMouseButton(Middle)` 按下并保持 `PressDurationMs` |
 | B3 右摇杆原语 | ✅ 已实现 | 新增 `GamepadInputBackend.SetRightStick(x,y,ms)`、`TurnByAngle(deg)`；`OnMoveBy` 按 `RightStickSensitivity` 比例换算，Y 轴取反修正；新增 `RightStickPulseMs`/`TurnMillisecondsPerDegree` |
-| B4 映射补齐 | ✅ 基本完成 | 纪行/活动/任务追踪/元素视野/祈愿（A20）/好友（A18）/队伍配置（A7）字段与映射均已补；`QuickUseGadget`（LB+B，A14）、`SwitchMember1-5`（十字键/Y）已有默认绑定；剩余低频项 `OpenNotificationDetails`/`HideUI` 待定 |
+| B4 映射补齐 | ✅ 基本完成 | 纪行/活动/任务追踪/元素视野/祈愿（A20）/好友（A18）/队伍配置（A7）字段与映射均已补；`QuickUseGadget`（LB+B，A14）、`SwitchMember1-5`（十字键/Y）已有默认绑定；剩余 5 项低频动作（F7/F8/Y/U/`/`）已标记暂不映射（2026-11-24） |
 | B5 焦点/地图控制器 | ⏳ 研究项 | 需先验证焦点高亮/地图光标视觉特征，不进入批次 1 |
 | B6 诊断 | ⏳ 部分 | 已有 `WarnUnsupported` 限频告警；丢弃计数/严格模式待做 |
 

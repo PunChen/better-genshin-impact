@@ -147,7 +147,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（59 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 52 项 / 🔵 已确认待实现 1 项 / ⬜ 未确认 5 项 / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 52 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项（低优先级，2026-11-24 决定） / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -227,15 +227,17 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | CameraZoomIn | 镜头拉近 | LB + LT | 🟡 | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
 | CameraZoomOut | 镜头拉远 | LB + RT | 🟡 | 同上 |
 
-### 5.7 ⬜ 未确认与无需映射项（未确认 5 项 + 无需映射 1 项；另 1 项已确认待实现见 §4.1/§5.5）
+### 5.7 ⏸️ 暂不映射与无需映射项（暂不映射 5 项 + 无需映射 1 项；另 1 项已确认待实现见 §4.1/§5.5）
+
+> 2026-11-24 决定：以下 5 项**标记「暂不映射」**——均无内置功能调用方（仅键盘层定义），只有 JS 脚本/宏生态可能用到；有需要时再实测手柄键补映射。
 
 | GIActions | 功能 | 键鼠默认键 | 状态 | 建议 |
 |---|---|---|---|---|
-| OpenTheFurnishingScreen | 打开摆设界面（尘歌壶） | F7 | ⬜ | 按需 |
-| OpenStellarReunion | 打开星之归还 | F8 | ⬜ | 可不补（条件触发，无任务使用） |
-| OpenNotificationDetails | 打开通知详情 | Y | ⬜ | 可不补 |
-| OpenSpecialEnvironmentInformation | 打开特殊环境说明 | U | ⬜ | 可不补 |
-| HideUI | 隐藏主界面 | `/` | ⬜ | 可不补（拍照场景） |
+| OpenTheFurnishingScreen | 打开摆设界面（尘歌壶） | F7 | ⏸️ 暂不映射 | 按需 |
+| OpenStellarReunion | 打开星之归还 | F8 | ⏸️ 暂不映射 | 可不补（条件触发，无任务使用） |
+| OpenNotificationDetails | 打开通知详情 | Y | ⏸️ 暂不映射 | 可不补 |
+| OpenSpecialEnvironmentInformation | 打开特殊环境说明 | U | ⏸️ 暂不映射 | 可不补 |
+| HideUI | 隐藏主界面 | `/` | ⏸️ 暂不映射 | 可不补（拍照场景） |
 | ShowCursor | 呼出鼠标 | Alt | 🚫 | 无需映射：手柄模式无鼠标光标概念，反查表不含 Alt 是正确的 |
 
 ### 5.8 非 GIActions 的特殊映射
@@ -266,13 +268,13 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|
 | OpenTheSettingsMenu | F6 | 🔵 | A9：派蒙菜单导航路径已实现，F6 语义待实机确认（`EnterAndExitWonderlandJob:23` VK_F6 直按丢弃） |
 | ShowCursor | Alt | 🚫 | 手柄无鼠标语义，永久不映射 |
-| OpenTheFurnishingScreen | F7 | ⬜ | 尘歌壶摆设界面（壶内），待实测手柄键 |
-| OpenStellarReunion | F8 | ⬜ | 星之归还（回归活动），待实测 |
-| OpenNotificationDetails | Y | ⬜ | 通知详情，待实测 |
-| OpenSpecialEnvironmentInformation | U | ⬜ | 特殊环境说明，待实测 |
-| HideUI | `/` | ⬜ | 隐藏主界面，待实测 |
+| OpenTheFurnishingScreen | F7 | ⏸️ | 暂不映射（2026-11-24 决定）：尘歌壶摆设界面，无内置调用方，有需要再补 |
+| OpenStellarReunion | F8 | ⏸️ | 暂不映射：星之归还，同上 |
+| OpenNotificationDetails | Y | ⏸️ | 暂不映射：通知详情，同上 |
+| OpenSpecialEnvironmentInformation | U | ⏸️ | 暂不映射：特殊环境说明，同上 |
+| HideUI | `/` | ⏸️ | 暂不映射：隐藏主界面，同上 |
 
-后 5 项 ⬜ 在 GameTask 内无 `SimulateAction` 调用（仅键盘层定义），空缺暂无直接功能受害者；键盘宏按 F7/F8/Y/U/`/` 在手柄模式丢弃。
+后 5 项 ⏸️ 在 GameTask 内无 `SimulateAction` 调用（仅键盘层定义），已标记**暂不映射（低优先级）**——只有 JS 脚本/宏生态按 F7/F8/Y/U/`/` 时会丢弃，有需要再实测补映射。
 
 **功能点裸 VK 审计**（GameTask 98 处 `VK.VK_*` 使用归类）：
 
