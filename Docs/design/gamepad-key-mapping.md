@@ -21,8 +21,8 @@
 | 打开派蒙界面 | ☰ Menu | `OpenPaimonMenu` | `Start` |
 | 好友聊天 | ⧉ View | `OpenChatScreen` | `Back` |
 | 确认 / 取消 | B / A | `Confirm` / `Cancel` | `B` / `A` |
-| 移动角色 | 左摇杆 | `GIActions.Move*` | — |
-| 转动视角 | 右摇杆 | `MoveMouseBy` | — |
+| 移动角色 | 左摇杆 | `GIActions.Move*` | 左摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） |
+| 转动视角 | 右摇杆 | `MoveMouseBy` | 右摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） |
 
 ### 1.2 第三人称射击（独立布局）
 
