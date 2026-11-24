@@ -126,6 +126,9 @@ public static class GamepadActionMap
             case GIActions.CheckTutorialDetails:
                 button = config.CheckTutorialDetails;
                 return true;
+            case GIActions.OpenFriendsScreen:
+                button = config.OpenFriendsScreen;
+                return true;
             default:
                 button = GamepadButton.None;
                 return false;

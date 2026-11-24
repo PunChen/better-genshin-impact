@@ -149,6 +149,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         GIActions.AbandonChallenge,
         GIActions.OpenCoOpScreen,
         GIActions.CheckTutorialDetails,
+        GIActions.OpenFriendsScreen,
     ];
 
     private readonly object _sync = new();

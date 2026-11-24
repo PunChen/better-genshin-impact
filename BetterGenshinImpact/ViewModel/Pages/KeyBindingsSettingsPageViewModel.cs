@@ -218,6 +218,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("打开多人游戏界面 组合键修饰键", nameof(_gamepadConfig.OpenCoOpScreenModifier), _gamepadConfig.OpenCoOpScreenModifier),
             new("查看教程详情（LB+十字键↑ 组合键按键）", nameof(_gamepadConfig.CheckTutorialDetails), _gamepadConfig.CheckTutorialDetails),
             new("查看教程详情 组合键修饰键", nameof(_gamepadConfig.CheckTutorialDetailsModifier), _gamepadConfig.CheckTutorialDetailsModifier),
+            new("打开好友界面", nameof(_gamepadConfig.OpenFriendsScreen), _gamepadConfig.OpenFriendsScreen),
             new("开启任务追踪", nameof(_gamepadConfig.QuestNavigation), _gamepadConfig.QuestNavigation),
             new("长按打开元素视野", nameof(_gamepadConfig.ElementalSight), _gamepadConfig.ElementalSight),
             new("元素视野 组合键修饰键", nameof(_gamepadConfig.ElementalSightModifier), _gamepadConfig.ElementalSightModifier),

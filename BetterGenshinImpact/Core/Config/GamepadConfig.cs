@@ -311,6 +311,12 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _checkTutorialDetailsModifier = GamepadButton.LeftShoulder;
 
     /// <summary>
+    /// 打开好友界面（无专用手柄按键；默认走派蒙菜单 + 文字识别「好友」+ 左摇杆导航，此处可绑定直连键）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openFriendsScreen = GamepadButton.None;
+
+    /// <summary>
     /// 开启任务追踪（默认 LS/左摇杆按下）
     /// </summary>
     [ObservableProperty]

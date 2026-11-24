@@ -117,6 +117,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | A15 | 中断挑战（P） | 实测确认为 **LS + RS**（两摇杆同时按下）。**已落地**：`AbandonChallenge=LeftThumb`、`AbandonChallengeModifier=RightThumb`（先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪） |
 | A16 | 打开多人游戏界面（F2） | 实测确认为 **LB + 十字键→**。**已落地**：`OpenCoOpScreen=Right`、`OpenCoOpScreenModifier=LeftShoulder` |
 | A17 | 查看教程详情（G） | 实测确认为 **LB + 十字键↑**。**已落地**：`CheckTutorialDetails=Up`、`CheckTutorialDetailsModifier=LeftShoulder` |
+| A18 | 打开好友界面（O） | 使用**派蒙菜单 + 文字识别「好友」+ 左摇杆上下左右导航锁定**（与 A7 同模式，无专用手柄按键）。已加 `OpenFriendsScreen` 配置字段（默认 `None`，可绑定直连键），导航流程待实施 |
 
 ### 4.2 待确认项
 
@@ -135,7 +136,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（57 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 46 项 / ⚠️ 已实现但默认未绑定 1 项 / ❌ 缺失 9 项 / 🚫 无需映射 1 项**。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 46 项 / ⚠️ 已实现但默认未绑定 2 项 / ❌ 缺失 8 项 / 🚫 无需映射 1 项**。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -200,6 +201,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | ❌ | 已定方案 A9：派蒙菜单 + 左摇杆导航锁定齿轮图标（需采集图标资源）；唯一活跃调用点 `EnterAndExitWonderlandJob.cs:23` |
 | OpenCoOpScreen | 打开多人游戏界面 | LB + 十字键→ | ✅ | 方案 A16：`Right` + 修饰键 `LeftShoulder` |
 | CheckTutorialDetails | 查看教程详情 | LB + 十字键↑ | ✅ | 方案 A17：`Up` + 修饰键 `LeftShoulder` |
+| OpenFriendsScreen | 打开好友界面 | 无直连键（默认 `None`） | ⚠️ | 已定方案 A18：派蒙菜单 + 文字识别「好友」+ 左摇杆导航锁定（与 A7 同模式），待实施 |
 
 ### 5.6 UI 导航原语 — 全部已实现
 
@@ -210,7 +212,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | MapZoomIn | 地图放大 | LT | ✅ | |
 | MapZoomOut | 地图缩小 | RT | ✅ | |
 
-### 5.7 缺失/无需映射项（8 项缺失 + 1 项无需映射；第 9 项缺失 `OpenTheSettingsMenu` 见 §5.5）
+### 5.7 缺失/无需映射项（7 项缺失 + 1 项无需映射；第 8 项缺失 `OpenTheSettingsMenu` 见 §5.5）
 
 | GIActions | 功能 | 键鼠默认键 | 状态 | 建议 |
 |---|---|---|---|---|
@@ -220,7 +222,6 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | OpenStellarReunion | 打开星之归还 | F8 | ❌ | 可不补（条件触发，无任务使用） |
 | OpenNotificationDetails | 打开通知详情 | Y | ❌ | 可不补 |
 | OpenSpecialEnvironmentInformation | 打开特殊环境说明 | U | ❌ | 可不补 |
-| OpenFriendsScreen | 打开好友界面 | O | ❌ | 按需 |
 | HideUI | 隐藏主界面 | `/` | ❌ | 可不补（拍照场景） |
 | ShowCursor | 呼出鼠标 | Alt | 🚫 | 无需映射：手柄模式无鼠标光标概念，反查表不含 Alt 是正确的 |
 
@@ -242,7 +243,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ### 5.10 键盘反查表（ReverseMappableActions）覆盖说明
 
-`GamepadChannel.ReverseMappableActions` 含 40 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。
+`GamepadChannel.ReverseMappableActions` 含 41 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。
 
 ## 6. 注意事项
 

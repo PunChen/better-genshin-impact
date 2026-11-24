@@ -24,7 +24,7 @@
 
 ### 1.1 三个横切缺口
 
-1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；仍缺 `OpenWishScreen`、`OpenNotificationDetails`、`HideUI`、`OpenFriendsScreen` 等低频界面动作。
+1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenFriendsScreen` 已定方案 A18（派蒙菜单 + 文字识别「好友」+ 左摇杆导航，待实施）；仍缺 `OpenWishScreen`、`OpenNotificationDetails`、`HideUI` 等低频界面动作。
 2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 RS）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
 

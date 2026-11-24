@@ -116,6 +116,8 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.None, config.OpenCharacterScreen);
         Assert.Equal(GamepadButton.None, config.OpenAdventurerHandbook);
         Assert.Equal(GamepadButton.None, config.OpenPartySetupScreen);
+        // 好友界面无专用手柄按键，默认走派蒙菜单 + 文字识别导航（方案 A18）
+        Assert.Equal(GamepadButton.None, config.OpenFriendsScreen);
     }
 
     [Fact]
