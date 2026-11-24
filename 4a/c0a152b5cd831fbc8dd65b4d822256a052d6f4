@@ -1,0 +1,28 @@
+BetterGenshinImpact/GameTask/AutoFight/AutoFightJsonTask.cs
+  h_af85ab4e4c7fdb 629-636
+BetterGenshinImpact/GameTask/AutoFight/AutoFightSeek.cs
+  h_af85ab4e4c7fdb 16,325,336
+BetterGenshinImpact/GameTask/AutoFight/AutoFightTask.cs
+  h_af85ab4e4c7fdb 597-604,931,970
+BetterGenshinImpact/GameTask/Common/Job/PaimonMenuNavigateJob.cs
+  h_af85ab4e4c7fdb 1-161
+BetterGenshinImpact/GameTask/Common/Job/SwitchCharacterStateMachineTask.cs
+  h_af85ab4e4c7fdb 1140
+BetterGenshinImpact/GameTask/Common/Job/SwitchPartyTask.cs
+  h_af85ab4e4c7fdb 55-62
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 27
+Docs/design/gamepad-key-mapping.md
+  h_af85ab4e4c7fdb 119-120,127,136,148,210-211,214,227,264-300
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "4ac0a152b5cd831fbc8dd65b4d822256a052d6f4",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
