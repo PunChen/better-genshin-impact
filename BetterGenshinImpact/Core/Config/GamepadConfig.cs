@@ -341,6 +341,24 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _checkTutorialDetailsModifier = GamepadButton.LeftShoulder;
 
     /// <summary>
+    /// 打开祈愿界面（默认走快捷轮盘 LB + 右摇杆↑，此处可绑定直连键）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openWishScreen = GamepadButton.None;
+
+    /// <summary>
+    /// 打开祈愿界面的轮盘修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openWishScreenWheelModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>
+    /// 打开祈愿界面的轮盘方向（默认右摇杆↑，轮盘第 8 向）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadStickDirection _openWishScreenWheelDirection = GamepadStickDirection.Up;
+
+    /// <summary>
     /// 打开好友界面（无专用手柄按键；默认走派蒙菜单 + 文字识别「好友」+ 左摇杆导航，此处可绑定直连键）
     /// </summary>
     [ObservableProperty]

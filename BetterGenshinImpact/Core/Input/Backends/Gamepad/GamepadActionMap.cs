@@ -135,6 +135,9 @@ public static class GamepadActionMap
             case GIActions.CheckTutorialDetails:
                 button = config.CheckTutorialDetails;
                 return true;
+            case GIActions.OpenWishScreen:
+                button = config.OpenWishScreen;
+                return true;
             case GIActions.OpenFriendsScreen:
                 button = config.OpenFriendsScreen;
                 return true;
@@ -219,6 +222,10 @@ public static class GamepadActionMap
             case GIActions.OpenAdventurerHandbook:
                 modifier = config.OpenAdventurerHandbookWheelModifier;
                 direction = config.OpenAdventurerHandbookWheelDirection;
+                break;
+            case GIActions.OpenWishScreen:
+                modifier = config.OpenWishScreenWheelModifier;
+                direction = config.OpenWishScreenWheelDirection;
                 break;
             default:
                 modifier = GamepadButton.None;

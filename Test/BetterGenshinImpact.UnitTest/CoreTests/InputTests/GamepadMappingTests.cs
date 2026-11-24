@@ -55,7 +55,8 @@ public class GamepadMappingTests
     {
         var config = new GamepadConfig();
 
-        Assert.False(GamepadActionMap.TryGetButton(GIActions.OpenWishScreen, config, out _));
+        // ShowCursor（呼出鼠标）为 🚫 无需映射项，永久不进 TryGetButton
+        Assert.False(GamepadActionMap.TryGetButton(GIActions.ShowCursor, config, out _));
     }
 
     [Fact]
@@ -149,6 +150,14 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.Up, tutorial);
         Assert.True(GamepadActionMap.TryGetModifier(GIActions.CheckTutorialDetails, config, out var tutorialModifier));
         Assert.Equal(GamepadButton.LeftShoulder, tutorialModifier);
+
+        // 祈愿界面 = LB + 右摇杆↑（轮盘第 8 向，2026-11-24 实测更正：非十字键↑）
+        Assert.Equal(GamepadButton.None, config.OpenWishScreen);
+        Assert.Equal(GamepadButton.LeftShoulder, config.OpenWishScreenWheelModifier);
+        Assert.Equal(GamepadStickDirection.Up, config.OpenWishScreenWheelDirection);
+        Assert.True(GamepadActionMap.TryGetWheel(GIActions.OpenWishScreen, config, out var wishModifier, out var wishDirection));
+        Assert.Equal(GamepadButton.LeftShoulder, wishModifier);
+        Assert.Equal(GamepadStickDirection.Up, wishDirection);
     }
 
     [Fact]

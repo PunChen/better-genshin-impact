@@ -254,6 +254,8 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
                 _gamepadConfig.OpenTheEventsMenuWheelModifier, _gamepadConfig.OpenTheEventsMenuWheelDirection),
             new("打开冒险之证", nameof(_gamepadConfig.OpenAdventurerHandbookWheelModifier), nameof(_gamepadConfig.OpenAdventurerHandbookWheelDirection),
                 _gamepadConfig.OpenAdventurerHandbookWheelModifier, _gamepadConfig.OpenAdventurerHandbookWheelDirection),
+            new("打开祈愿界面", nameof(_gamepadConfig.OpenWishScreenWheelModifier), nameof(_gamepadConfig.OpenWishScreenWheelDirection),
+                _gamepadConfig.OpenWishScreenWheelModifier, _gamepadConfig.OpenWishScreenWheelDirection),
         ];
     }
 

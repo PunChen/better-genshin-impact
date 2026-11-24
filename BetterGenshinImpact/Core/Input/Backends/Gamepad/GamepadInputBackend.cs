@@ -150,6 +150,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         GIActions.AbandonChallenge,
         GIActions.OpenCoOpScreen,
         GIActions.CheckTutorialDetails,
+        GIActions.OpenWishScreen,
         GIActions.OpenFriendsScreen,
     ];
 
