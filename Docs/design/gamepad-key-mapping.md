@@ -371,3 +371,23 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 ③ **TODO（待补充截图）**：选中圈截图，做视觉伺服模板（走外部资源包）；
 ④ **缩放滑块在地图界面缩放时会显示**——`MapScaleButton` 模板可继续用于 zoom 闭环测量；TODO：待补一张手柄模式地图截图（含滑块与选中圈）复核；
 ⑤ 候选列表：识别传送锚点图标（复用 `MapChooseIcon` 模板）定位目标项，左摇杆导航 + B 确认传送。
+
+### 7.5 手柄实现待实测假设与阻塞点（2026-11-24 实现批次）
+
+**本轮已实现（🟡 待实机验证）**：
+
+| 功能 | 实现 | 关键假设（待实测） |
+|---|---|---|
+| QuickTeleport 传送按钮 | 手柄模式按 B（Confirm）替代 `ra.Click()`（两段式第二段） | ① 面板出现时按 B 直接触发传送——**用户已实测** ✓ |
+| QuickTeleport 候选列表 | 手柄模式按 B 替代点击最高项 | ② 假设列表默认焦点在第一项（最高项）；若无默认焦点需补左摇杆导航 + 高亮检测 |
+| ChooseTalkOptionTask 选项导航 | `NavigateAndConfirmByGamepadAsync`：OCR 选项按 Y 升序取索引 → `FocusDown`×索引 → B 确认（覆盖 SingleSelectText / SelectLastOptionOnce / SelectLastOptionUntilEnd） | ③ 对话选项弹出时默认焦点在第一项；④ 单次 FocusDown 脉冲移动一项（250ms 间隔）；⑤ OCR 结果索引不受污染文本影响 |
+| AutoSkip 感叹号/选项/底部三角 | 三处点击改手柄按 B（:882 / :1121 / :1378） | ⑥ 同 ③④ |
+| AutoFight 宏鼠标命令 | `Avatar.cs` 手柄模式限频告警（mousedown/mouseup/click/scroll 丢弃提示，30s 一次） | 无假设 |
+
+**阻塞点（未实现，待实测后补）**：
+
+1. **邀约**（`AutoSkipTrigger` :704 跳过按钮 / :1267 邀约选项 / `HangoutOption`）：手柄模式邀约界面的跳过与选项选择方式未知，邀约剧情手柄语义待实测；
+2. **提交物品**（`SubmitGoods` :1518/:1526/:1538）：手柄模式提交物品界面的物品选择方式未知（左摇杆+B？），黑白确认按钮按 B 为合理假设但整链阻塞未改；
+3. **AutoPick 滚轮场景**（:337 `VerticalScroll`）：多物品拾取列表滚动的手柄对应操作未知；
+4. **PathExecutor 复苏点击**（:334/:651 `ClickIfInReviveModal`）：复苏弹窗手柄默认焦点与确认键未知——若默认焦点在「取消」，按 B 会误退导致死亡状态循环，**有风险未实现**，待实测弹窗焦点行为；
+5. **ClickChatExitUntilMainUi**（`ChooseTalkOptionTask` chatExit 点击）：手柄模式退出对话按钮的对应按键未知（A？），邀约/对话强退场景待实测。

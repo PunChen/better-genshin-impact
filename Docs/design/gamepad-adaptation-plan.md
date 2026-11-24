@@ -72,11 +72,11 @@
 
 | 模块 | 现状 | 改动方案 | 量 |
 |---|---|---|---|
-| AutoFight | 核心链路可用 | B2 中键修复 + 瞄准改 `SimulateAction(SwitchAimingMode)`(LT，映射已有) + 宏含 `click/scroll` 启动告警 | S-M |
+| AutoFight | 核心链路可用 | B2 中键修复 + 瞄准改 `SimulateAction(SwitchAimingMode)`(LT，映射已有) + ✅ 宏含 `mousedown/mouseup/click/scroll` 手柄模式限频告警（2026-11-24，`Avatar.cs WarnGamepadMouseUnsupported`） | S-M |
 | ReturnMainUiTask | 基本可用 | exitDoor 兜底分支改按键（B1 后自动收益）；`:53` VK_RETURN 无反查（手柄丢弃），建议改 `SimulateAction(Confirm)` | S |
 | SkillCdTrigger | **手柄模式不触发**（2026-11-24 审计发现） | `GetAsyncKeyState(VK_1-4)` 只听物理键盘，手柄玩家十字键切人 BGI 感知不到 → 技能 CD 悬浮窗不显示；需监听虚拟手柄十字键输出（ViGEm 回环/XInput 轮询） | M |
 | BlessingOfTheWelkinMoonTask | 失效 | 空白双击 → 按 A/B 跳过月卡弹窗 | S |
-| AutoSkip 非对话路径 | 对话已适配 | 黑屏剧情/底部三角/角色弹窗/原石奖励改按确认键；邀约选项改摇杆导航（2026-11-24 复查定位 7 处点击：`AutoSkipTrigger` :704/:882/:1121/:1267/:1378/:1518/:1526/:1538） | M |
+| AutoSkip 非对话路径 | 部分完成 | ✅ 感叹号（:882）/选项点击（:1121）/底部三角（:1378）已改手柄 B（2026-11-24）；❌ 剩余阻塞待实测（key-mapping §7.5）：邀约跳过按钮（:704）+ 邀约选项（:1267）、提交物品（:1518/:1526/:1538）手柄语义未知 | M |
 | AutoPick 滚轮场景 | 低频失效 | `AutoPickTrigger:337` VerticalScroll 丢弃——多物品拾取列表滚动场景；待实测手柄对应操作后补 | S |
 | AutoCook | 部分可用 | 确认弹窗"识别+按键"；验证手柄烹饪模板 | S |
 | AutoEat（循环模式） | 🟡 核心可用 | `QuickUseGadget` 默认绑定已完成（A14：LB+B）；剩余：指定食物路径手柄下禁用提示 | S |
@@ -90,7 +90,7 @@
 
 | 模块 | 现状 | 改动方案 | 量 |
 |---|---|---|---|
-| ChooseTalkOptionTask | 失效（必经路径） | 手柄对话 A/B/X/Y 直选角标模板 + 按对应键 | M |
+| ChooseTalkOptionTask | ✅ 已实现（2026-11-24） | 手柄模式选项导航：`NavigateAndConfirmByGamepadAsync`（FocusDown×索引 → B 确认），覆盖 SingleSelectText/SelectLastOptionOnce/SelectLastOptionUntilEnd 三个方法；待实测假设见 key-mapping §7.5（默认焦点第一项/单脉冲移动一项/OCR 索引干净） | M |
 | ClaimMailRewardsTask | 失效 | 复用 `PaimonMenuNavigateJob`（Start→OCR→导航→确认，基建 2026-11-24 已就绪）+ 邮件界面内部焦点导航 | M |
 | ClaimEncounterPointsRewardsTask | 失效 | 焦点导航 + A | M |
 | CheckRewardsTask | 失效 | B4 补映射 + 页签导航 | M |
@@ -111,7 +111,7 @@
 |---|---|---|---|
 | GamepadMapCursor 原语（B5） | 不存在 | 选中圈模板匹配定位 + 左摇杆视觉伺服移动圈（实测圈可见，可行性已确认）+ LT/RT 缩放档位闭环 | L |
 | TpTask | 完全失效（一切传送的底层） | 按实测语义重构：圈伺服替代拖拽视口与绝对点击（圈对准 + B）；LT/RT 替代滚轮（zoom 档位化闭环重写）；候选列表左摇杆+B；区域切换 Y+左摇杆+B（替代 SwitchArea 点击链） | L |
-| QuickTeleport | 完全失效（日常最高频） | 识别层已实测确认可复用（图标一致）；**传送流程已实测确认两段式（2026-11-24）：B 选中 → 面板弹出 → 再次 B 确认传送，面板无需导航**；传送按钮 `ra.Click()` 改 `SimulateAction(Confirm)`；选项列表：默认高亮待确认（若默认第一项则连按两次 B，否则左摇杆+B） | M |
+| QuickTeleport | ✅ 已实现（2026-11-24） | 传送按钮（:113）与候选列表（:169）`ra.Click()` 改手柄 `SimulateAction(Confirm)`（两段式第二段按 B 确认传送，用户实测）；候选列表假设默认焦点第一项，待实测（key-mapping §7.5） | M |
 | LowerHeadThenWalkToTask | 退化 | B3 比例控制 + 闭环微调 | M |
 | PathExecutor 复苏点击 | 全队死亡不自动复苏 | `PathExecutor:334/:651` `ClickIfInReviveModal` 点击丢弃；改 OCR「复苏」定位 + 按确认（复苏弹窗确认键待实测） | S-M |
 | ScanPickTask | 部分退化 | 同上；回正视角需校准方案 | M |

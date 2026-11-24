@@ -1,6 +1,9 @@
 using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
+using BetterGenshinImpact.Core.Simulator.Extensions;
 using BetterGenshinImpact.GameTask.Common;
 using BetterGenshinImpact.GameTask.Model.Area;
 using BetterGenshinImpact.GameTask.QuickTeleport.Assets;
@@ -110,7 +113,16 @@ internal class QuickTeleportTrigger : ITaskTrigger
         var hasTeleportButton = false;
         imageRegion.Find(GetRecognitionObject("TeleportButton", imageRegion), ra =>
         {
-            ra.Click();
+            if (GamepadMode.Enabled)
+            {
+                // 手柄两段式传送（§7.4）：选中传送点弹出面板后，按 B（Confirm）确认传送
+                InputHub.Foreground.SimulateAction(GIActions.Confirm);
+            }
+            else
+            {
+                ra.Click();
+            }
+
             hasTeleportButton = true;
             // if ((DateTime.Now - _prevClickTeleportButtonTime).TotalSeconds > 1)
             // {
@@ -166,7 +178,17 @@ internal class QuickTeleportTrigger : ITaskTrigger
 
                 _prevClickOptionButtonTime = DateTime.Now;
                 TaskControl.Sleep(_config.TeleportListClickDelay);
-                ra.Click();
+                if (GamepadMode.Enabled)
+                {
+                    // 手柄模式：候选列表按 B（Confirm）确认选中；
+                    // 假设列表默认焦点在第一项（与对话选项同源假设），待实测复核
+                    InputHub.Foreground.SimulateAction(GIActions.Confirm);
+                }
+                else
+                {
+                    ra.Click();
+                }
+
                 hasMapChooseIcon = true;
                 break;
             }

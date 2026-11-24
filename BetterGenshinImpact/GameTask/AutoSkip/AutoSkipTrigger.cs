@@ -879,7 +879,16 @@ public partial class AutoSkipTrigger : ITaskTrigger
                     return true;
                 }
 
-                exclamationIconRa.Click();
+                if (GamepadMode.Enabled)
+                {
+                    // 手柄模式：感叹号选项为唯一「继续」选项，按 B（Confirm）确认
+                    InputHub.Foreground.SimulateAction(GIActions.Confirm);
+                }
+                else
+                {
+                    exclamationIconRa.Click();
+                }
+
                 AutoSkipLog("点击感叹号选项");
                 return true;
             }
@@ -1112,7 +1121,12 @@ public partial class AutoSkipTrigger : ITaskTrigger
         }
 
         RefreshOperationMode();
-        if (UseBackgroundOperation && !SystemControl.IsGenshinImpactActive())
+        if (GamepadMode.Enabled)
+        {
+            // 手柄模式：按 B（Confirm）选择当前焦点选项（默认第一项）
+            InputHub.Foreground.SimulateAction(GIActions.Confirm);
+        }
+        else if (UseBackgroundOperation && !SystemControl.IsGenshinImpactActive())
         {
             region.BackgroundClick();
         }
@@ -1369,7 +1383,12 @@ public partial class AutoSkipTrigger : ITaskTrigger
             }
 
             using var triangleRegion = croppedRegion.Derive(triangleRect);
-            if (UseBackgroundOperation && !SystemControl.IsGenshinImpactActive())
+            if (GamepadMode.Enabled)
+            {
+                // 手柄模式：底部三角为对话推进标志，按 B（Confirm）推进
+                InputHub.Foreground.SimulateAction(GIActions.Confirm);
+            }
+            else if (UseBackgroundOperation && !SystemControl.IsGenshinImpactActive())
             {
                 triangleRegion.BackgroundClick();
             }

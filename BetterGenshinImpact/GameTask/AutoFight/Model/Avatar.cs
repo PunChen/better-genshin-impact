@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Recognition.OCR;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
 using BetterGenshinImpact.Core.Script.Dependence;
@@ -1163,8 +1164,27 @@ public class Avatar
         InputHub.Foreground.SimulateAction(GIActions.NormalAttack, KeyType.KeyUp);
     }
 
+    /// <summary>
+    /// 手柄模式下宏鼠标命令告警限频时间戳
+    /// </summary>
+    private static DateTime _lastGamepadMouseWarnTime = DateTime.MinValue;
+
+    /// <summary>
+    /// 战斗宏中的鼠标命令（mousedown/mouseup/click/scroll）在手柄模式下会被输入通道丢弃，
+    /// 限频告警提示宏作者改用按键/动作命令。
+    /// </summary>
+    private static void WarnGamepadMouseUnsupported(string method)
+    {
+        if (GamepadMode.Enabled && (DateTime.Now - _lastGamepadMouseWarnTime).TotalSeconds > 30)
+        {
+            _lastGamepadMouseWarnTime = DateTime.Now;
+            Logger.LogWarning("战斗宏包含鼠标命令 {Method}，手柄模式下将被丢弃；请改用按键/动作命令（如 keydown/attack）", method);
+        }
+    }
+
     public void MouseDown(string key = "left")
     {
+        WarnGamepadMouseUnsupported("mousedown");
         key = key.ToLower();
         if (key == "left")
         {
@@ -1182,6 +1202,7 @@ public class Avatar
 
     public void MouseUp(string key = "left")
     {
+        WarnGamepadMouseUnsupported("mouseup");
         key = key.ToLower();
         if (key == "left")
         {
@@ -1199,6 +1220,7 @@ public class Avatar
 
     public void Click(string key = "left")
     {
+        WarnGamepadMouseUnsupported("click");
         key = key.ToLower();
         if (key == "left")
         {
@@ -1224,6 +1246,7 @@ public class Avatar
 
     public void Scroll(int scrollAmountInClicks)
     {
+        WarnGamepadMouseUnsupported("scroll");
         InputHub.Foreground.Mouse.VerticalScroll(scrollAmountInClicks);
     }
 

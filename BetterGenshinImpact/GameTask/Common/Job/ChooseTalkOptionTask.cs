@@ -1,4 +1,6 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
+using BetterGenshinImpact.Core.Simulator.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -34,6 +36,23 @@ public partial class ChooseTalkOptionTask
     }
 
     public string Name => "持续对话并选择目标选项";
+
+    /// <summary>
+    /// 手柄模式：对话选项为垂直列表，焦点默认在第一项（与 AutoSkipTrigger 手柄分支同源假设），
+    /// 通过 FocusDown（左摇杆/十字键下）移动焦点到目标项后按 B（Confirm）确认。
+    /// 假设单次脉冲移动一项；若实测不符需改为高亮检测闭环。
+    /// </summary>
+    private static async Task NavigateAndConfirmByGamepadAsync(int targetIndex, CancellationToken ct)
+    {
+        for (var i = 0; i < targetIndex; i++)
+        {
+            InputHub.Foreground.SimulateAction(GIActions.FocusDown);
+            await Task.Delay(250, ct); // 游戏 UI 响应有 30~60ms 延迟，选项切换留余量
+        }
+
+        await Task.Delay(300, ct);
+        InputHub.Foreground.SimulateAction(GIActions.Confirm);
+    }
 
     // private readonly AutoSkipConfig _config = TaskContext.Instance().Config.AutoSkipConfig;
 
@@ -90,7 +109,16 @@ public partial class ChooseTalkOptionTask
                         }
                     }
 
-                    ClickOcrRegion(optionRa);
+                    if (GamepadMode.Enabled)
+                    {
+                        // 手柄模式：选项列表按 Y 升序，索引即从第一项向下移动的步数
+                        await NavigateAndConfirmByGamepadAsync(optionRegions.IndexOf(optionRa), ct);
+                    }
+                    else
+                    {
+                        ClickOcrRegion(optionRa);
+                    }
+
                     await Task.Delay(300, ct);
                     return TalkOptionRes.FoundAndClick;
                 }
@@ -109,7 +137,16 @@ public partial class ChooseTalkOptionTask
             chatOptionResultList = [.. chatOptionResultList.OrderByDescending(r => r.Y)];
             if (chatOptionResultList.Count > 0)
             {
-                ClickOcrRegion(chatOptionResultList[0]);
+                if (GamepadMode.Enabled)
+                {
+                    // 手柄模式：焦点默认第一项，移动到最后一项（最下面）后确认
+                    await NavigateAndConfirmByGamepadAsync(chatOptionResultList.Count - 1, ct);
+                }
+                else
+                {
+                    ClickOcrRegion(chatOptionResultList[0]);
+                }
+
                 await Task.Delay(200, ct);
             }
         }
@@ -161,7 +198,15 @@ public partial class ChooseTalkOptionTask
                 chatOptionResultList = [.. chatOptionResultList.OrderByDescending(r => r.Y)];
                 if (chatOptionResultList.Count > 0)
                 {
-                    ClickOcrRegion(chatOptionResultList[0]);
+                    if (GamepadMode.Enabled)
+                    {
+                        // 手柄模式：焦点默认第一项，移动到最后一项（最下面）后确认
+                        await NavigateAndConfirmByGamepadAsync(chatOptionResultList.Count - 1, ct);
+                    }
+                    else
+                    {
+                        ClickOcrRegion(chatOptionResultList[0]);
+                    }
                 }
                 else
                 {
