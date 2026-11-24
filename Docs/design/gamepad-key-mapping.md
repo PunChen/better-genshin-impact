@@ -273,7 +273,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | 场景 | 判断方法 | 机制 | 状态 |
 |---|---|---|---|
-| 对话界面判断 | `Bv.IsInTalkUi()` | 键鼠模式：DisabledUiButton 模板；**手柄模式特判**：View（双方框）+ Menu（三横杠）两个按钮同时出现才算对话（`GamepadMode.Enabled` 分支，命中时遮罩窗口画红框便于调试） | 🟡 已适配待验证 |
+| 对话界面判断 | `Bv.IsInTalkUi()` | 键鼠模式：DisabledUiButton 模板；**手柄模式特判**：View（双方框）+ Menu（三横杠）两个按钮同时出现才算对话（`GamepadMode.Enabled` 分支，命中时遮罩窗口画红框便于调试） | 🟢 **已验证正确**（2026-11-24 实机：剧情对话中 View+Menu 双命中稳定） |
 | 地图界面判断 | `Bv.IsInBigMapUi()` | 地图缩放按钮 / 设置按钮模板匹配（ROI 固定 1080p 坐标）；另有 `BigMapIsUnderground()`（地下图层）、`GetBigMapScale()`（缩放级别） | ⬜ 待实机验证：**缩放控件模板手柄模式下命中率未验证**（手柄模式 UI 布局可能整体不同） |
 | 大世界画面判断 | `Bv.IsInMainUi()` | 左上四分之一 ROI 匹配派蒙头像 + 复苏提示排除；`WaitForMainUi()` 异步等待 | ⬜ 待实机验证，风险分层：**派蒙头像两模式大概率一致（低风险）**；**复苏排除 `IsInRevivePrompt` 高风险**——门禁是 AutoFight 黑色确认按钮模板（键鼠样式），手柄模式复苏弹窗按钮显示手柄按键提示样式，模板可能不命中 → 门禁失败后 OCR「复苏」不执行 → **全队死亡时复苏弹窗检测失效，`IsInMainUi` 误判为大世界**（影响 `WaitForMainUi`/返回主界面等调用方） |
 | 统一入口 | `Bv.WhichGameUi()` | `GameUiCategory { Talk > BigMap > Main > Unknown }` 按优先级分类；`TaskTriggerDispatcher` 每帧计算 `CurrentGameUiCategory`，触发器按 `SupportedGameUiCategory` 过滤（AutoSkip=Talk、QuickTeleport=BigMap、MapMask 含 BigMap 判断） | 🟡 待验证 |
