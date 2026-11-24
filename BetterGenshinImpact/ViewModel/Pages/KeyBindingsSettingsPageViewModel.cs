@@ -1,4 +1,4 @@
-using BetterGenshinImpact.Core.Config;
+﻿using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Model;
 using BetterGenshinImpact.Service.Interface;
 using BetterGenshinImpact.ViewModel;
@@ -301,7 +301,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             return;
         }
 
-        var duration = Math.Max(120, _gamepadConfig.PressDurationMs);
+        var duration = GetGamepadTestDuration(model.ConfigPropertyName);
         var (modifier, button) = ResolveGamepadTestCombo(model.ConfigPropertyName, model.ButtonValue);
         var success = modifier != GamepadButton.None
             ? GamepadInputBackend.TestCombo(modifier, button, duration, out var error)
@@ -316,6 +316,17 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         {
             GamepadStatus = $"测试失败：{error ?? "虚拟手柄未连接，请确认已安装 ViGEmBus 驱动"}";
         }
+    }
+
+    private int GetGamepadTestDuration(string propertyName)
+    {
+        // 瞄准模式（LT）需要长按才能触发，其他按键保持较短时间
+        if (propertyName == nameof(GamepadConfig.SwitchAimingMode))
+        {
+            return 800;
+        }
+
+        return Math.Max(120, _gamepadConfig.PressDurationMs);
     }
 
     private (GamepadButton Modifier, GamepadButton Button) ResolveGamepadTestCombo(string propertyName, GamepadButton value)
@@ -361,7 +372,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             return;
         }
 
-        if (GamepadInputBackend.TestWheel(model.Modifier, model.Direction, 180, out var error))
+        if (GamepadInputBackend.TestWheel(model.Modifier, model.Direction, Math.Max(250, _gamepadConfig.WheelSelectionHoldMs), out var error))
         {
             GamepadStatus = $"已测试轮盘：{model.ActionName} → {model.Modifier}+{model.Direction}";
         }

@@ -1,4 +1,4 @@
-# 手柄按键映射明细（feat/xbox-game-input-main）
+﻿# 手柄按键映射明细（feat/xbox-game-input-main）
 
 > 依据游戏内「设置 → 按键 → 手柄」截图与逐项确认整理（2026-11）。
 > 对应代码：`GamepadConfig`、`GamepadActionMap`、`GamepadInputBackend`、`GamepadUiNavigator`。
@@ -75,7 +75,7 @@
 | 打开冒险之证 | LB + 右摇杆↗ | `OpenAdventurerHandbookWheelDirection=UpRight` |
 | 打开祈愿界面 | LB + 右摇杆↑ | `OpenWishScreenWheelDirection=Up` |
 
-修饰键均为 `LeftShoulder`；执行流程：按住 LB 打开轮盘 → 拨右摇杆 → 保持 `WheelSelectionHoldMs`（默认 180ms）→ 回中 → 松开 LB。
+修饰键均为 `LeftShoulder`；执行流程：按住 LB 打开轮盘 → 拨右摇杆 → 保持 `WheelSelectionHoldMs`（默认 300ms）→ 回中 → 松开 LB。
 
 ### 2.3 菜单 / 地图 UI 原语
 

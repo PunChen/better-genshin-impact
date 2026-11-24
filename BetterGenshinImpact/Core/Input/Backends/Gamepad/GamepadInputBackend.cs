@@ -326,7 +326,10 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
-            SimulateButton(button, modifier, type, config);
+            var pressDurationMs = action == GIActions.SwitchAimingMode
+                ? config.AimingPressDurationMs
+                : config.PressDurationMs;
+            SimulateButton(button, modifier, type, config, pressDurationMs);
             return this;
         }
 
@@ -420,7 +423,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                     // 鼠标中键通常只有一次 down/up，按下后保持一小段时间保证游戏能识别
                     if (down)
                     {
-                        Thread.Sleep(Math.Max(1, config.PressDurationMs));
+                        Thread.Sleep(Math.Max(120, config.PressDurationMs));
                         _transport.SetButton(config.CameraRecenter, false);
                     }
                 }
@@ -569,7 +572,10 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
-            SimulateButton(button, modifier, type, config);
+            var pressDurationMs = action == GIActions.SwitchAimingMode
+                ? config.AimingPressDurationMs
+                : config.PressDurationMs;
+            SimulateButton(button, modifier, type, config, pressDurationMs);
             return true;
         }
 
@@ -619,7 +625,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         return ((short)(x * short.MaxValue), (short)(y * short.MaxValue));
     }
 
-    private void SimulateButton(GamepadButton button, GamepadButton modifier, KeyType type, GamepadConfig config)
+    private void SimulateButton(GamepadButton button, GamepadButton modifier, KeyType type, GamepadConfig config, int pressDurationMs)
     {
         lock (_sync)
         {
@@ -640,7 +646,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                     }
 
                     transport.SetButton(button, true);
-                    Thread.Sleep(Math.Max(1, config.PressDurationMs));
+                    Thread.Sleep(Math.Max(1, pressDurationMs));
                     transport.SetButton(button, false);
 
                     if (hasModifier)
@@ -675,7 +681,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                     }
 
                     transport.SetButton(button, true);
-                    Thread.Sleep(1000);
+                    Thread.Sleep(Math.Max(1000, pressDurationMs));
                     transport.SetButton(button, false);
                     if (hasModifier)
                     {

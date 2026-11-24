@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using Fischless.WindowsInput.Gamepad;
 
@@ -113,6 +113,12 @@ public partial class GamepadConfig : ObservableObject
     /// </summary>
     [ObservableProperty]
     private GamepadButton _switchAimingMode = GamepadButton.LeftTrigger;
+
+    /// <summary>
+    /// 瞄准模式（LT）按下保持时间，游戏内需要长按才能进入瞄准
+    /// </summary>
+    [ObservableProperty]
+    private int _aimingPressDurationMs = 800;
 
     /// <summary>
     /// 切换走/跑
@@ -401,7 +407,7 @@ public partial class GamepadConfig : ObservableObject
     /// 快捷轮盘：按住修饰键后拨动右摇杆选择菜单，保持时间（毫秒）
     /// </summary>
     [ObservableProperty]
-    private int _wheelSelectionHoldMs = 180;
+    private int _wheelSelectionHoldMs = 300;
 
     /// <summary>打开地图：轮盘修饰键</summary>
     [ObservableProperty]
