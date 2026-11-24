@@ -1,4 +1,4 @@
-using BetterGenshinImpact.Core.Recognition;
+﻿using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask.AutoFight.Assets;
 using BetterGenshinImpact.GameTask.Common.Element.Assets;
@@ -193,6 +193,16 @@ public static partial class Bv
     /// <returns></returns>
     public static bool IsInBigMapUi(ImageRegion captureRa)
     {
+        // 手柄模式地图 UI：缩放滑块位置/样式与键鼠不同，先识别手柄专用滑块
+        if (GamepadMode.Enabled)
+        {
+            using var controllerScaleRa = captureRa.Find(RecognitionAssets.Get("QuickTeleport", "ControllerMapScaleButton", captureRa));
+            if (controllerScaleRa.IsExist())
+            {
+                return true;
+            }
+        }
+
         using var scaleRa = captureRa.Find(RecognitionAssets.Get("QuickTeleport", "MapScaleButton", captureRa));
         if (scaleRa.IsExist())
         {
@@ -217,7 +227,7 @@ public static partial class Bv
 
     public static double GetBigMapScale(ImageRegion region)
     {
-        using var scaleRa = region.Find(RecognitionAssets.Get("QuickTeleport", "MapScaleButton", region));
+        using var scaleRa = FindMapScaleRegion(region);
         if (scaleRa.IsEmpty())
         {
             throw new Exception("当前未处于大地图界面，不能使用GetBigMapScale方法");
@@ -229,6 +239,22 @@ public static partial class Bv
         var cur = (scaleRa.Y + scaleRa.Height / 2.0) * TaskContext.Instance().SystemInfo.ZoomOutMax1080PRatio; // 转换到1080p坐标系,主要是小于1080p的情况
 
         return (end * 1.0 - cur) / (end - start);
+    }
+
+    private static Region FindMapScaleRegion(ImageRegion region)
+    {
+        if (GamepadMode.Enabled)
+        {
+            var controllerRa = region.Find(RecognitionAssets.Get("QuickTeleport", "ControllerMapScaleButton", region));
+            if (!controllerRa.IsEmpty())
+            {
+                return controllerRa;
+            }
+
+            controllerRa.Dispose();
+        }
+
+        return region.Find(RecognitionAssets.Get("QuickTeleport", "MapScaleButton", region));
     }
 
     public static MotionStatus GetMotionStatus(ImageRegion captureRa)

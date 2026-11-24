@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Core.Recognition.OCR;
+using BetterGenshinImpact.GameTask.Common;
 using BetterGenshinImpact.GameTask.Common.BgiVision;
 using BetterGenshinImpact.GameTask.Model.Area;
 using BetterGenshinImpact.GameTask;
@@ -76,7 +77,7 @@ public static class GamepadIntegrationTestRunner
             {
                 PressWheel(transport, GamepadButton.LeftShoulder, GamepadStickDirection.Down, 350);
                 await Task.Delay(1500, ct);
-                mapOpened = IsBigMapUi();
+                mapOpened = IsBigMapUi(Log);
                 Log(mapOpened ? $"地图已打开（第 {attempt} 次尝试）" : $"第 {attempt} 次打开地图未检测到地图界面，重试…");
             }
 
@@ -142,17 +143,18 @@ public static class GamepadIntegrationTestRunner
         }, ct);
     }
 
-    private static bool IsBigMapUi()
+    private static bool IsBigMapUi(Action<string> log)
     {
         try
         {
-            using var mat = CaptureScreenMat();
-            using var region = new ImageRegion(mat, 0, 0);
-            return Bv.IsInBigMapUi(region);
+            using var region = TaskControl.CaptureToRectArea();
+            var hit = Bv.IsInBigMapUi(region);
+            log($"地图识别：截图 {region.Width}x{region.Height}，结果={hit}");
+            return hit;
         }
         catch (Exception e)
         {
-            WriteLogFile($"[{DateTime.Now:HH:mm:ss.fff}] 地图识别异常：{e.Message}");
+            log($"地图识别异常：{e.Message}");
             return false;
         }
     }
@@ -161,8 +163,7 @@ public static class GamepadIntegrationTestRunner
     {
         try
         {
-            using var mat = CaptureScreenMat();
-            using var region = new ImageRegion(mat, 0, 0);
+            using var region = TaskControl.CaptureToRectArea();
             return Bv.GetBigMapScale(region);
         }
         catch
@@ -175,8 +176,8 @@ public static class GamepadIntegrationTestRunner
     {
         try
         {
-            using var mat = CaptureScreenMat();
-            return OcrFactory.Paddle.Ocr(mat) ?? string.Empty;
+            using var region = TaskControl.CaptureToRectArea();
+            return OcrFactory.Paddle.Ocr(region.SrcMat) ?? string.Empty;
         }
         catch (Exception e)
         {

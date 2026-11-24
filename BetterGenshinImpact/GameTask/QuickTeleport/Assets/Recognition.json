@@ -14,6 +14,13 @@
       "maskColor": "#000000",
       "draw": false
     },
+    "ControllerMapScaleButton": {
+      "type": "TemplateMatch",
+      "template": "controller_map_scale_button.png",
+      "roi": "rect(60 * s, 400 * s, 120 * s, 260 * s)",
+      "use3Channels": true,
+      "draw": true
+    },
     "MapCloseButton": {
       "type": "TemplateMatch",
       "template": "MapCloseButton.png",
