@@ -1,11 +1,11 @@
-# 手柄按键映射明细（feat/xbox-game-input-main）
+﻿# 手柄按键映射明细（feat/xbox-game-input-main）
 
 > 依据游戏内「设置 → 按键 → 手柄」截图与逐项确认整理（2026-11）。
 > 对应代码：`GamepadConfig`、`GamepadActionMap`、`GamepadInputBackend`、`GamepadUiNavigator`。
 > 总体方案见 [gamepad-adaptation-plan.md](./gamepad-adaptation-plan.md)。
 
 > **标记体系（2026-11-24 起）**：⬜ 未确认 → 🔵 已确认待实现 → 🟡 已实现待验证 → 🟢 已验证正确；🚫 无需映射（终态）。
-> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前暂无 🟢 项，实机回归后逐项标记）。
+> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前仅对话判断 View+Menu 一项为 🟢，其余待实机回归）。
 
 ## 1. 游戏内基准布局（截图确认）
 
@@ -85,8 +85,8 @@
 | 列表滚动（上/下） | 左摇杆上下 | `GIActions.ScrollUp/Down` |
 | 多选项选择 | 左摇杆上下 + 确认 | `FocusUp/Down` + `Confirm` |
 | 地图光标移动 / 拖动地图 | 左摇杆 | `GamepadUiNavigator.DragMap()` |
-| 地图放大 | LT | `MapZoomIn=LeftTrigger` |
-| 地图缩小 | RT | `MapZoomOut=RightTrigger` |
+| 地图放大 | RT | `MapZoomIn=RightTrigger` |
+| 地图缩小 | LT | `MapZoomOut=LeftTrigger` |
 | 确认 / 返回 | B / A | `Confirm` / `Cancel` |
 
 焦点与滚动的摇杆保持时间由 `UiNavigationPressMs`（默认 120ms）控制。
@@ -96,8 +96,8 @@
 ```csharp
 GamepadUiNavigator.Focus(GamepadStickDirection.Down);
 GamepadUiNavigator.Scroll(-3);        // 正数向上，负数向下
-GamepadUiNavigator.ZoomIn();          // LT
-GamepadUiNavigator.ZoomOut();         // RT
+GamepadUiNavigator.ZoomIn();          // RT
+GamepadUiNavigator.ZoomOut();         // LT
 GamepadUiNavigator.CameraZoomIn();    // LB + LT（镜头拉近）
 GamepadUiNavigator.CameraZoomOut();   // LB + RT（镜头拉远）
 GamepadUiNavigator.DragMap(1, 0, 300);
@@ -147,7 +147,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（59 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 52 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项（低优先级，2026-11-24 决定） / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 52 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项（低优先级，2026-11-24 决定） / 🚫 无需映射 1 项**（🟢 对话判断 View+Menu 已在 §7.1 标记验证通过）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -222,8 +222,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|---|
 | FocusUp / FocusDown / FocusLeft / FocusRight | 界面焦点移动 | 左摇杆 | 🟡 | `GamepadUiNavigator` |
 | ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | 🟡 | B2：已实现待验证（待实机确认） |
-| MapZoomIn | 地图放大 | LT | 🟡 | |
-| MapZoomOut | 地图缩小 | RT | 🟡 | |
+| MapZoomIn | 地图放大 | RT | 🟡 | |
+| MapZoomOut | 地图缩小 | LT | 🟡 | |
 | CameraZoomIn | 镜头拉近 | LB + LT | 🟡 | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
 | CameraZoomOut | 镜头拉远 | LB + RT | 🟡 | 同上 |
 
@@ -245,7 +245,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 输入 | 手柄 | 状态 | 备注 |
 |---|---|---|---|
 | 鼠标中键（视角回正） | RS（右摇杆按下，`CameraRecenter=RightThumb`） | 🟡 | `GamepadChannel.OnMouseButton` 特判 |
-| `MoveMouseBy`（鼠标相对移动） | 右摇杆 30ms 脉冲 | 🟡 | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
+| `MoveMouseBy`（鼠标相对移动） | 右摇杆脉冲（`RightStickPulseMs`，默认 30ms） | 🟡 | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
 
 ### 5.9 场景级缺失（GIActions 未建模）
 
@@ -258,7 +258,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ### 5.10 键盘反查表（ReverseMappableActions）覆盖说明
 
-`GamepadChannel.ReverseMappableActions` 含 43 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O/Tab/F3），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。另 `MapZoomIn/Out`、`CameraZoomIn/Out` 为手柄专属动作（无键盘键），仅在 `TryGetButton`/`GamepadUiNavigator` 中定义，不进反查表。
+`GamepadChannel.ReverseMappableActions` 含 42 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O/Tab/F3），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。另 `MapZoomIn/Out`、`CameraZoomIn/Out` 为手柄专属动作（无键盘键），仅在 `TryGetButton`/`GamepadUiNavigator` 中定义，不进反查表。
 
 ### 5.11 映射覆盖全量审计（2026-11-24）
 
@@ -359,14 +359,14 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 光标 | 左摇杆移动**选中圈光标**（屏幕上可见的圈，可作视觉伺服特征） | 鼠标自由光标 |
 | 视口移动 | 通过移动选中圈实现 | 按住左键拖拽 |
 | 选点与传送 | 圈对准传送点图标后**单击 B 选中** → 面板弹出后**再次单击 B 确认传送**（两段式，2026-11-24 实测） | 左键点击 + 点传送按钮 |
-| 缩放 | **LT/RT**（放大/缩小方向待确认） | 滚轮 |
+| 缩放 | **RT 放大 / LT 缩小**（2026-11-24 实测） | 滚轮 |
 | 候选列表（同名点待选） | 左摇杆上下选中待选项 → **再次单击 B 确认传送**（2026-11-24 实测） | 左键点击列表项 |
 | 区域列表 | **Y** 打开（默认显示当前区域，屏幕右侧列出全部可选区域）→ 左摇杆上下左右选中 → **B** 跳转该区域默认传送点 → 再 **B** 传送 | 左键点击左上角区域名开列表再点击 |
 
 识别层实证：传送按钮、选项列表、传送点图标**两模式一致**，模板可直接复用；仅确认/取消等按键提示角标（A/B 图标）不同。
 
 **实测结论（2026-11-24，五项全部落地）**：
-① **LT 缩小、RT 放大**（与相机拉近/拉远同义：拉近放大、拉远缩小）——`MapZoomIn`/`MapZoomOut` 走 RT/LT；
+① **LT 缩小、RT 放大**——`MapZoomIn=RightTrigger`、`MapZoomOut=LeftTrigger`（注意：镜头距离调节是 LB+LT 拉近，与本项不是同一语义）；
 ② 单击 B 选中传送点、再次单击 B 确认传送，面板无需导航；
 ③ **TODO（待补充截图）**：选中圈截图，做视觉伺服模板（走外部资源包）；
 ④ **缩放滑块在地图界面缩放时会显示**——`MapScaleButton` 模板可继续用于 zoom 闭环测量；TODO：待补一张手柄模式地图截图（含滑块与选中圈）复核；
