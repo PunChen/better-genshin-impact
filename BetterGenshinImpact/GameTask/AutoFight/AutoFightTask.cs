@@ -594,7 +594,14 @@ public class AutoFightTask : ISoloTask
 
                 for (int attempt = 0; attempt < 6; attempt++)
                 {
-                    InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+                    try
+                    {
+                        await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogWarning(e, "换队拾取：打开队伍配置界面失败（第 {Attempt} 次尝试）", attempt);
+                    }
                     var enterGameAppear = await NewRetry.WaitForElementAppear(
                         ElementRecognition.Get("PartyBtnChooseView"),
                         () => { },
@@ -921,7 +928,7 @@ public class AutoFightTask : ISoloTask
             // Logger.LogInformation("打开编队界面检查战斗是否结束，延时{detectDelayTime}毫秒检查", detectDelayTime);
             Logger.LogInformation("打开编队界面检查战斗是否结束");
             // 最终方案确认战斗结束
-            InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+            await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
 
             if (finishDetectConfig.PaimonEndCheckEnabled)
             {
@@ -960,7 +967,7 @@ public class AutoFightTask : ISoloTask
             {
                 Logger.LogInformation("识别到战斗结束");
                 //取消正在进行的换队
-                InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+                await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
                 return true;
             }
 

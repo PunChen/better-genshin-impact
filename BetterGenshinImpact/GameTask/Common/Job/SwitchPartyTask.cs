@@ -52,7 +52,14 @@ public class SwitchPartyTask
             bool isOpened = false;
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
-                InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+                try
+                {
+                    await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
+                }
+                catch (Exception e)
+                {
+                    Logger.LogWarning(e, "打开队伍配置界面失败（第 {Attempt} 次尝试）", attempt);
+                }
 
                 // 考虑加载时间 2s，共检查 4.2s，如果失败则抛出异常
 

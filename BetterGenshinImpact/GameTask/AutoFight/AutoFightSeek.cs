@@ -13,6 +13,7 @@ using BetterGenshinImpact.GameTask.AutoFight.Assets;
 using System.Linq;
 using System.Collections.Generic;
 using BetterGenshinImpact.GameTask.Common.BgiVision;
+using BetterGenshinImpact.GameTask.Common.Job;
 using BetterGenshinImpact.GameTask.Common.Element.Assets;
 using  OpenCvSharp;
 using BetterGenshinImpact.GameTask.Model.Area;
@@ -321,7 +322,7 @@ namespace BetterGenshinImpact.GameTask.AutoFight
                     await Delay(delayTime,ct);
                     // Logger.LogInformation("打开编队界面检查战斗是否结束，延时{detectDelayTime}毫秒检查", detectDelayTime);
                     Logger.LogInformation("打开编队界面检查战斗是否结束");
-                    InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+                    await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
                     await Delay(detectDelayTime, ct);
                     using var ra3 = CaptureToRectArea();
                     var b33 = ra3.SrcMat.At<Vec3b>(50, 790); // 进度条颜色
@@ -332,7 +333,7 @@ namespace BetterGenshinImpact.GameTask.AutoFight
                         IsYellow(b33.Item2, b33.Item1, b33.Item0))
                     {
                         logger.LogInformation("识别到战斗结束-s");
-                        InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+                        await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
                         return true;
                     }
                 }

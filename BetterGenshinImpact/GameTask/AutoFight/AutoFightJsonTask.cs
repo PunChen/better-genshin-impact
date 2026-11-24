@@ -626,7 +626,14 @@ public class AutoFightJsonTask : ISoloTask
 
                 for (int attempt = 0; attempt < 6; attempt++)
                 {
-                    InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+                    try
+                    {
+                        await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, _ct);
+                    }
+                    catch (Exception e)
+                    {
+                        Logger.LogWarning(e, "换队拾取：打开队伍配置界面失败（第 {Attempt} 次尝试）", attempt);
+                    }
                     var enterGameAppear = await NewRetry.WaitForElementAppear(
                         ElementRecognition.Get("PartyBtnChooseView"),
                         () => { },

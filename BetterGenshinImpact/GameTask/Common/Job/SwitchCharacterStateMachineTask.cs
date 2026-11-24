@@ -1137,7 +1137,7 @@ public sealed class SwitchCharacterStateMachineTask : StateMachineBase<SwitchCha
     private async Task DetectPlayerIndexAndOpenPartyConfig(CancellationToken ct)
     {
         await DetectPlayerIndex(ct);
-        InputHub.Foreground.SimulateAction(GIActions.OpenPartySetupScreen);
+        await PaimonMenuNavigateJob.OpenScreenAsync(GIActions.OpenPartySetupScreen, ct);
         await Delay(2000, ct);
     }
 

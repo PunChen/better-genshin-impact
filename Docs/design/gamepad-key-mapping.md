@@ -116,15 +116,15 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | 编号 | 项目 | 方案 | 状态 |
 |---|---|---|---|
-| A7 | 打开队伍配置 | 菜单 + 文字识别：打开派蒙菜单（Start）→ 文字识别定位「队伍配置」→ 左摇杆上下左右导航锁定该项 → 确认 | 🔵 已确认待实现 |
-| A9 | 打开设置菜单（F6） | 菜单 + 图标识别：打开派蒙菜单（Start）→ 左摇杆上下左右导航锁定齿轮形状图标 → 确认。需采集齿轮图标的图片资源才能识别（仓库禁止新增 `Assets` 目录，模板需走外部资源包流程） | 🔵 已确认待实现（差图标资源） |
+| A7 | 打开队伍配置 | 菜单 + 文字识别：打开派蒙菜单（Start）→ 文字识别定位「队伍配置」→ 左摇杆上下左右导航锁定该项 → 确认。已落地：`PaimonMenuNavigateJob.OpenScreenAsync`（8 个 `OpenPartySetupScreen` 调用点已接入，待验证假设见 §7.3） | 🟡 已实现待验证 |
+| A9 | 打开设置菜单（F6） | 菜单 + 导航：打开派蒙菜单（Start）→ 左摇杆上下左右导航锁定设置入口 → 确认。⚠️ 备注：① 唯一活跃调用点 `EnterAndExitWonderlandJob`（千星奇域入口）的 F6 按游戏内语义为「打开玩法系统界面（尘歌壶猫尾酒馆等特定场景）」，与派蒙菜单「设置」是否同一界面**待实机确认，该调用点未接线**；② 已实现「设置」文字定位导航路径（`PaimonMenuNavigateJob.OpenScreenAsync`），若设置入口旁有文字标签则无需图标资源，待实机确认（原齿轮图标资源方案作废/备用） | 🔵 已确认待实现（F6 语义待确认） |
 | A12 | 切换走/跑 | 采纳建议：不做映射，轻推左摇杆即走。`SwitchToWalkOrRun` 保持 `None` 即为最终状态，无需改动 | 🟡 已实现待验证（需实机确认轻推左摇杆为走而非跑） |
 | A13 | 落下（滑翔/攀爬中） | 实测确认为 **A**（原建议 B 作废）：滑翔状态按 A 触发下落攻击；攀爬状态按 A 取消攀爬。已落地：`Drop` 默认 `A`（与 NormalAttack/Cancel 同键，由游戏按上下文区分语义） | 🟡 已实现待验证 |
 | A14 | 特定玩法交互（T） | 实测确认为 **LB + X**：`InteractionInSomeMode=X`、`InteractionInSomeModeModifier=LeftShoulder`（X 与 PickUpOrInteract 同键，加 LB 修饰区分）。已落地 | 🟡 已实现待验证 |
 | A15 | 中断挑战（P） | 实测确认为 **LS + RS**（两摇杆同时按下）。已落地：`AbandonChallenge=LeftThumb`、`AbandonChallengeModifier=RightThumb`（先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪） | 🟡 已实现待验证 |
 | A16 | 打开多人游戏界面（F2） | 实测确认为 **LB + 十字键→**。已落地：`OpenCoOpScreen=Right`、`OpenCoOpScreenModifier=LeftShoulder` | 🟡 已实现待验证 |
 | A17 | 查看教程详情（G） | 实测确认为 **LB + 十字键↑**。已落地：`CheckTutorialDetails=Up`、`CheckTutorialDetailsModifier=LeftShoulder` | 🟡 已实现待验证 |
-| A18 | 打开好友界面（O） | 使用**派蒙菜单 + 文字识别「好友」+ 左摇杆上下左右导航锁定**（与 A7 同模式，无专用手柄按键）。已加 `OpenFriendsScreen` 配置字段（默认 `None`，可绑定直连键），导航流程待实施 | 🔵 已确认待实现 |
+| A18 | 打开好友界面（O） | 使用**派蒙菜单 + 文字识别「好友」+ 左摇杆上下左右导航锁定**（与 A7 同模式，无专用手柄按键）。已落地：`PaimonMenuNavigateJob.OpenScreenAsync` 支持 `OpenFriendsScreen`（当前无活跃调用方，待任务接入；待验证假设见 §7.3） | 🟡 已实现待验证 |
 | A19 | 呼出快捷轮盘（Tab） | 实测确认为 **LB**（按住呼出，拨右摇杆选方向，与 §2.2 轮盘机制一致）。已落地：`ShortcutWheel=LeftShoulder`，键盘 Tab 反查直通 LB | 🟡 已实现待验证 |
 
 ### 4.2 ⬜ 未确认项
@@ -133,7 +133,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|
 | B2 | 列表滚动 | 左摇杆上下 | 🟡 已实现待验证（`ScrollUp/Down` → 左摇杆，待实机确认） |
 | B3 | 标签页切换 | LB / RB | ⬜ 未确认 |
-| B6 | 运动状态判断（滑翔/攀爬）手柄适配 | `Bv.GetMotionStatus` 依赖键盘按键提示图标（SpaceKey/XKey 模板），手柄模式下游戏显示手柄提示，判断**恒返回 Normal**；20 个调用点受影响（TrapEscaper、SkillBoostHelper、PathExecutor、StopFlyingHandler、UpDownGrabLeafHandler、AutoTrackPathTask）。需采集手柄模式下滑翔/攀爬的按键提示截图并新增模板 | ⬜ 未确认（需实机截图） |
+| B6 | 运动状态判断（滑翔/攀爬）手柄适配 | `Bv.GetMotionStatus` 依赖键盘按键提示图标（SpaceKey/XKey 模板），手柄模式下游戏显示手柄提示，判断**恒返回 Normal**；20 个调用点受影响（TrapEscaper、SkillBoostHelper、PathExecutor、StopFlyingHandler、UpDownGrabLeafHandler、AutoTrackPathTask）。需采集手柄模式下滑翔/攀爬的按键提示截图并新增模板（调查结果详见 §7.2） | ⬜ 未确认（需实机截图） |
 | C1 | 钓鱼：抛竿/收杆/提竿 | 待确认 | ⬜ 未确认 |
 | C2 | 音游按键 | 待确认 | ⬜ 未确认 |
 | C3 | 七圣召唤：选牌/确认/结束回合 | 十字键 + B/A | ⬜ 未确认 |
@@ -145,7 +145,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（59 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 49 项 / 🔵 已确认待实现 3 项 / ⬜ 未确认 6 项 / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 51 项 / 🔵 已确认待实现 1 项 / ⬜ 未确认 6 项 / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -207,11 +207,11 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|---|
 | OpenPaimonMenu | 打开派蒙界面 | Start（☰ Menu） | 🟡 | |
 | OpenChatScreen | 好友聊天 | Back（⧉ View） | 🟡 | |
-| OpenPartySetupScreen | 打开队伍配置 | `None` | 🔵 | 已定方案 A7：派蒙菜单 + 文字识别「队伍配置」+ 左摇杆导航锁定 |
-| OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | 🔵 | 已定方案 A9：派蒙菜单 + 左摇杆导航锁定齿轮图标（需采集图标资源）；唯一活跃调用点 `EnterAndExitWonderlandJob.cs:23` |
+| OpenPartySetupScreen | 打开队伍配置 | `None` | 🟡 | 方案 A7 已落地：`PaimonMenuNavigateJob` 派蒙菜单导航（见 §7.3） |
+| OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | 🔵 | 方案 A9：派蒙菜单导航路径已实现，F6 语义待实机确认（见 §4.1 A9 备注 / §7.3） |
 | OpenCoOpScreen | 打开多人游戏界面 | LB + 十字键→ | 🟡 | 方案 A16：`Right` + 修饰键 `LeftShoulder` |
 | CheckTutorialDetails | 查看教程详情 | LB + 十字键↑ | 🟡 | 方案 A17：`Up` + 修饰键 `LeftShoulder` |
-| OpenFriendsScreen | 打开好友界面 | 无直连键（默认 `None`） | 🔵 | 已定方案 A18：派蒙菜单 + 文字识别「好友」+ 左摇杆导航锁定（与 A7 同模式），待实施 |
+| OpenFriendsScreen | 打开好友界面 | 无直连键（默认 `None`） | 🟡 | 方案 A18 已落地：`PaimonMenuNavigateJob` 派蒙菜单导航（无活跃调用方，见 §7.3） |
 
 ### 5.6 UI 导航原语 — 全部已实现
 
@@ -224,7 +224,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | CameraZoomIn | 镜头拉近 | LB + LT | 🟡 | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
 | CameraZoomOut | 镜头拉远 | LB + RT | 🟡 | 同上 |
 
-### 5.7 ⬜ 未确认与无需映射项（未确认 6 项 + 无需映射 1 项；另 3 项已确认待实现见 §4.1/§5.5）
+### 5.7 ⬜ 未确认与无需映射项（未确认 6 项 + 无需映射 1 项；另 1 项已确认待实现见 §4.1/§5.5）
 
 | GIActions | 功能 | 键鼠默认键 | 状态 | 建议 |
 |---|---|---|---|---|
@@ -261,3 +261,40 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 - 旧版 `User/Config.json` 中手柄绑定可能仍是 `None`，升级后需在「按键绑定设置 → 手柄」点一次**恢复默认**。
 - 手柄模式必须在游戏内和 BGI 内同时开启才会生效。
 - 所有绝对坐标点击仍无法直接映射为手柄；菜单类模块需改用焦点导航 + 确认。
+
+## 7. 游戏界面判断（场景识别）调查结果
+
+> 2026-11-24 审计结论：所需三个场景（**对话界面 / 地图界面 / 大世界画面**）的判断能力**均已具备**，无需新建设施。
+> 代码位置：`GameTask/Common/BgiVision/BvStatus.cs`（`Bv` 静态类）+ `GameTask/TaskTriggerDispatcher.cs`（调度层）。
+
+### 7.1 已具备能力
+
+| 场景 | 判断方法 | 机制 | 状态 |
+|---|---|---|---|
+| 对话界面判断 | `Bv.IsInTalkUi()` | 键鼠模式：DisabledUiButton 模板；**手柄模式特判**：View（双方框）+ Menu（三横杠）两个按钮同时出现才算对话（`GamepadMode.Enabled` 分支，命中时遮罩窗口画红框便于调试） | 🟡 已适配待验证 |
+| 地图界面判断 | `Bv.IsInBigMapUi()` | 地图缩放按钮 / 设置按钮模板匹配（地图固有 UI 元素，与输入模式无关）；另有 `BigMapIsUnderground()`（地下图层）、`GetBigMapScale()`（缩放级别） | 🟡 待验证 |
+| 大世界画面判断 | `Bv.IsInMainUi()` | 派蒙菜单图标 + 复苏提示排除；`WaitForMainUi()` 异步等待 | 🟡 待验证 |
+| 统一入口 | `Bv.WhichGameUi()` | `GameUiCategory { Talk > BigMap > Main > Unknown }` 按优先级分类；`TaskTriggerDispatcher` 每帧计算 `CurrentGameUiCategory`，触发器按 `SupportedGameUiCategory` 过滤（AutoSkip=Talk、QuickTeleport=BigMap、MapMask 含 BigMap 判断） | 🟡 待验证 |
+
+其他可复用判断：`IsInDomain()`（秘境）、`IsInPartyViewUi()`（队伍选择）、`IsInAnyClosableUi()`（任意可关闭 UI）、`IsInPromptDialog()`（提示/确认框）、`IsInBlessingOfTheWelkinMoon()`（空月祝福）。
+
+### 7.2 已知缺口（B6）：运动状态判断手柄失效
+
+`Bv.GetMotionStatus()`（`MotionStatus.Normal/Fly/Climb`，滑翔/攀爬运动状态）依赖**键盘按键提示图标**（`SpaceKey`/`XKey` 模板）：手柄模式下游戏显示手柄按键提示，键盘提示图标不再出现，判断**恒返回 Normal**。受影响调用点 20 处：
+
+- `AutoPathing/TrapEscaper`、`AutoPathing/SkillBoostHelper`（11 处）、`AutoPathing/PathExecutor`
+- `AutoPathing/Handler/UpDownGrabLeafHandler`、`AutoPathing/Handler/StopFlyingHandler`
+- `AutoTrackPath/AutoTrackPathTask`
+
+**修复方案**（⬜ 待实机截图）：采集手柄模式下滑翔/攀爬状态的按键提示截图，新增手柄提示模板（走外部资源包流程），并在 `GetMotionStatus` 增加 `GamepadMode.Enabled` 分支。
+
+### 7.3 派蒙菜单导航落地（A7/A18 已实现，A9 导航路径已实现）
+
+新增 `GameTask/Common/Job/PaimonMenuNavigateJob.cs`（2026-11-24）：打开派蒙菜单（Start）→ OCR 定位目标菜单项（白名单过滤噪音）→ 左摇杆 `FocusDown` 逐项导航 → 确认（B）。`OpenScreenAsync(GIActions, ct)` 模式感知分派：手柄模式走菜单导航，键鼠模式直按绑定键（8 个 `OpenPartySetupScreen` 调用点已接入）。
+
+⚠️ **待实机验证的假设**（若不成立需调整实现）：
+
+1. **初始焦点假设**：打开派蒙菜单后焦点默认在第一项「队伍配置」（A7 场景因此无需导航直接确认）。若实机验证初始焦点不在第一项，需改为高亮检测导航。
+2. **单次脉冲移动一项**：左摇杆 `FocusDown/FocusUp` 单次脉冲在菜单中移动一项（与 B2 列表滚动同一未验证点）。
+3. **「设置」文字标签**：A9 依赖派蒙菜单设置入口有可 OCR 的「设置」文字；若齿轮图标无文字标签，A9 需回退图标识别方案（图标资源走外部资源包）。
+4. **A9 语义待确认**：`OpenTheSettingsMenu`（F6）唯一活跃调用点 `EnterAndExitWonderlandJob`（千星奇域入口）的按键语义为「打开玩法系统界面（尘歌壶猫尾酒馆等特定场景）」，与派蒙菜单「设置」可能不是同一界面，**该调用点未接线**；待实机确认 F6 实际语义后再决定。
