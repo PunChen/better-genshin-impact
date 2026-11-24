@@ -121,10 +121,10 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _switchToWalkOrRun = GamepadButton.None;
 
     /// <summary>
-    /// 落下（滑翔/攀爬/下落攻击场景使用）
+    /// 落下（滑翔中 A 触发下落攻击，攀爬中 A 取消攀爬；默认 A）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _drop = GamepadButton.None;
+    private GamepadButton _drop = GamepadButton.A;
 
     /// <summary>
     /// 切换小队角色1（手柄默认十字键↑）
@@ -163,10 +163,16 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _switchMember5Modifier = GamepadButton.LeftShoulder;
 
     /// <summary>
-    /// 特定玩法内交互操作（T 键，如抓取叶片等）
+    /// 特定玩法内交互操作（T 键，如抓取叶片等；默认 LB + X）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _interactionInSomeMode = GamepadButton.None;
+    private GamepadButton _interactionInSomeMode = GamepadButton.X;
+
+    /// <summary>
+    /// 特定玩法内交互的组合键修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _interactionInSomeModeModifier = GamepadButton.LeftShoulder;
 
     /// <summary>
     /// 快捷使用小道具（默认 LB + B）

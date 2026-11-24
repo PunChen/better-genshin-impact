@@ -112,8 +112,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | A7 | 打开队伍配置 | 菜单 + 文字识别：打开派蒙菜单（Start）→ 文字识别定位「队伍配置」→ 左摇杆上下左右导航锁定该项 → 确认 |
 | A9 | 打开设置菜单（F6） | 菜单 + 图标识别：打开派蒙菜单（Start）→ 左摇杆上下左右导航锁定齿轮形状图标 → 确认。⚠️ 需要采集齿轮图标的图片资源才能识别（仓库禁止新增 `Assets` 目录，模板需走外部资源包流程） |
 | A12 | 切换走/跑 | 采纳建议：不做映射，轻推左摇杆即走。`SwitchToWalkOrRun` 保持 `None` 即为最终状态，无需改动 |
-| A13 | 落下（滑翔/攀爬中） | 实测确认为 **A**（原建议 B 作废）：滑翔状态按 A 触发下落攻击；攀爬状态按 A 取消攀爬。`Drop` 默认值应设为 `A`（与 NormalAttack/Cancel 同键，由游戏按上下文区分语义） |
-| A14 | 特定玩法交互（T） | 实测确认为 **LB + X**：`InteractionInSomeMode=X`、`InteractionInSomeModeModifier=LeftShoulder`（X 与 PickUpOrInteract 同键，加 LB 修饰区分） |
+| A13 | 落下（滑翔/攀爬中） | 实测确认为 **A**（原建议 B 作废）：滑翔状态按 A 触发下落攻击；攀爬状态按 A 取消攀爬。**已落地**：`Drop` 默认 `A`（与 NormalAttack/Cancel 同键，由游戏按上下文区分语义） |
+| A14 | 特定玩法交互（T） | 实测确认为 **LB + X**：`InteractionInSomeMode=X`、`InteractionInSomeModeModifier=LeftShoulder`（X 与 PickUpOrInteract 同键，加 LB 修饰区分）。**已落地** |
 
 ### 4.2 待确认项
 
@@ -132,7 +132,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（57 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 41 项 / ⚠️ 已实现但默认未绑定 3 项 / ❌ 缺失 12 项 / 🚫 无需映射 1 项**。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 43 项 / ⚠️ 已实现但默认未绑定 1 项 / ❌ 缺失 12 项 / 🚫 无需映射 1 项**。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -143,7 +143,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | MoveLeft | 向左移动 | 左摇杆 | ✅ | 反查 A |
 | MoveRight | 向右移动 | 左摇杆 | ✅ | 反查 D |
 
-### 5.2 战斗与角色动作 — 全部已实现（2 项默认未绑定；第 3 项 `OpenPartySetupScreen` 见 §5.5）
+### 5.2 战斗与角色动作 — 全部已实现并已绑定默认值（仅队伍配置 1 项未绑定，见 §5.5）
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
@@ -154,9 +154,9 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | SprintKeyboard / SprintMouse | 冲刺 | RB | ✅ | 两个动作共用 `Sprint` |
 | SwitchAimingMode | 切换瞄准模式 | LT | ✅ | |
 | SwitchToWalkOrRun | 切换走/跑 | 无（轻推左摇杆） | ✅ | 方案 A12：保持 `None` 为最终状态 |
-| Drop | 落下（滑翔/攀爬） | `None` | ⚠️ | 已定方案 A13：确认为 A（滑翔中 A=下落攻击，攀爬中 A=取消攀爬），默认值待改为 `A` |
+| Drop | 落下（滑翔/攀爬） | A | ✅ | 方案 A13：滑翔中 A=下落攻击，攀爬中 A=取消攀爬（与 NormalAttack/Cancel 同键，上下文区分） |
 | PickUpOrInteract | 拾取/交互 | X | ✅ | |
-| InteractionInSomeMode | 特定玩法交互（T） | `None` | ⚠️ | 已定方案 A14：确认为 LB + X（`X` + 修饰键 `LeftShoulder`），默认值待改 |
+| InteractionInSomeMode | 特定玩法交互（T） | LB + X | ✅ | 方案 A14：`X` + 修饰键 `LeftShoulder` |
 | QuickUseGadget | 快捷使用小道具 | LB + B | ✅ | 组合键 |
 | QuestNavigation | 任务追踪 | LS（左摇杆按下） | ✅ | |
 | ElementalSight | 元素视野 | LB + 十字键← | ✅ | 组合键 |

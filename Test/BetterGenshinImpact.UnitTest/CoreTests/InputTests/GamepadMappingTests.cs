@@ -109,11 +109,10 @@ public class GamepadMappingTests
     [Fact]
     public void TaskActions_DefaultToUnbound()
     {
-        // 其余任务类动作默认不绑定，避免未验证过的默认键位误触发游戏内行为
+        // 界面类动作默认不绑定，避免未验证过的默认键位误触发游戏内行为；
+        // Drop（A13=A）与 InteractionInSomeMode（A14=LB+X）已实测确认默认值，见 PartySwitchAndGadget_UseGamepadDefaults
         var config = new GamepadConfig();
 
-        Assert.Equal(GamepadButton.None, config.Drop);
-        Assert.Equal(GamepadButton.None, config.InteractionInSomeMode);
         Assert.Equal(GamepadButton.None, config.OpenCharacterScreen);
         Assert.Equal(GamepadButton.None, config.OpenAdventurerHandbook);
         Assert.Equal(GamepadButton.None, config.OpenPartySetupScreen);
@@ -217,6 +216,11 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.B, config.QuickUseGadget);
         Assert.Equal(GamepadButton.LeftShoulder, config.QuickUseGadgetModifier);
 
+        // 落下 = A（滑翔中下落攻击/攀爬中取消攀爬）；特定玩法交互 = LB + X
+        Assert.Equal(GamepadButton.A, config.Drop);
+        Assert.Equal(GamepadButton.X, config.InteractionInSomeMode);
+        Assert.Equal(GamepadButton.LeftShoulder, config.InteractionInSomeModeModifier);
+
         Assert.Equal(GamepadButton.Back, config.OpenChatScreen);
 
         Assert.Equal(GamepadButton.LeftThumb, config.QuestNavigation);
@@ -239,6 +243,9 @@ public class GamepadMappingTests
 
         Assert.True(GamepadActionMap.TryGetModifier(GIActions.ElementalSight, config, out var sightModifier));
         Assert.Equal(GamepadButton.LeftShoulder, sightModifier);
+
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.InteractionInSomeMode, config, out var interactModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, interactModifier);
 
         Assert.False(GamepadActionMap.TryGetModifier(GIActions.Confirm, config, out _));
     }

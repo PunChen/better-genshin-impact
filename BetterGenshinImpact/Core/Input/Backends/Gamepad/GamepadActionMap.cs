@@ -139,6 +139,9 @@ public static class GamepadActionMap
             case GIActions.ElementalSight:
                 modifier = config.ElementalSightModifier;
                 return true;
+            case GIActions.InteractionInSomeMode:
+                modifier = config.InteractionInSomeModeModifier;
+                return true;
             default:
                 modifier = GamepadButton.None;
                 return false;
