@@ -274,11 +274,11 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 场景 | 判断方法 | 机制 | 状态 |
 |---|---|---|---|
 | 对话界面判断 | `Bv.IsInTalkUi()` | 键鼠模式：DisabledUiButton 模板；**手柄模式特判**：View（双方框）+ Menu（三横杠）两个按钮同时出现才算对话（`GamepadMode.Enabled` 分支，命中时遮罩窗口画红框便于调试） | 🟡 已适配待验证 |
-| 地图界面判断 | `Bv.IsInBigMapUi()` | 地图缩放按钮 / 设置按钮模板匹配（ROI 固定 1080p 坐标）；另有 `BigMapIsUnderground()`（地下图层）、`GetBigMapScale()`（缩放级别） | ⬜ 待实机验证：**模板为键鼠时代资产，手柄模式下游戏整体 UI 布局可能与键鼠不同（非仅按键提示），模板命中率未验证** |
-| 大世界画面判断 | `Bv.IsInMainUi()` | 左上四分之一 ROI 匹配派蒙头像 + 复苏提示排除（黑色确认按钮 + OCR「复苏」）；`WaitForMainUi()` 异步等待 | ⬜ 待实机验证：**假设手柄模式派蒙头像不变，未验证** |
+| 地图界面判断 | `Bv.IsInBigMapUi()` | 地图缩放按钮 / 设置按钮模板匹配（ROI 固定 1080p 坐标）；另有 `BigMapIsUnderground()`（地下图层）、`GetBigMapScale()`（缩放级别） | ⬜ 待实机验证：**缩放控件模板手柄模式下命中率未验证**（手柄模式 UI 布局可能整体不同） |
+| 大世界画面判断 | `Bv.IsInMainUi()` | 左上四分之一 ROI 匹配派蒙头像 + 复苏提示排除；`WaitForMainUi()` 异步等待 | ⬜ 待实机验证，风险分层：**派蒙头像两模式大概率一致（低风险）**；**复苏排除 `IsInRevivePrompt` 高风险**——门禁是 AutoFight 黑色确认按钮模板（键鼠样式），手柄模式复苏弹窗按钮显示手柄按键提示样式，模板可能不命中 → 门禁失败后 OCR「复苏」不执行 → **全队死亡时复苏弹窗检测失效，`IsInMainUi` 误判为大世界**（影响 `WaitForMainUi`/返回主界面等调用方） |
 | 统一入口 | `Bv.WhichGameUi()` | `GameUiCategory { Talk > BigMap > Main > Unknown }` 按优先级分类；`TaskTriggerDispatcher` 每帧计算 `CurrentGameUiCategory`，触发器按 `SupportedGameUiCategory` 过滤（AutoSkip=Talk、QuickTeleport=BigMap、MapMask 含 BigMap 判断） | 🟡 待验证 |
 
-> ⚠️ **核心待验证假设（2026-11-24 修正）**：游戏连接手柄后可能**整体切换为手柄 UI 布局**——不只按键提示图标变化，控件的位置、大小、样式都可能不同。地图/大世界两处判断所用模板（`MapScaleButton`、`MapSettingsButton`、`paimon_menu.png`）均为键鼠模式时代的资产，"界面固有控件不受输入模式影响"**目前只是假设**，必须在手柄模式下实机截图比对、逐项验证模板命中率后才能转 🟢。若命中率不足，需按对话判断的先例补 `GamepadMode.Enabled` 分支 + 手柄模式专用模板（走外部资源包）。
+> ⚠️ **核心待验证假设（2026-11-24 修正）**：游戏连接手柄后可能**整体切换为手柄 UI 布局**——不只按键提示图标变化，控件的位置、大小、样式都可能不同。风险分层：派蒙头像两模式大概率一致（低风险）；**地图缩放控件与复苏确认按钮模板为键鼠样式资产，手柄模式命中率高风险**。必须手柄模式下实机截图比对、逐项验证模板命中率后才能转 🟢。若命中率不足，需按对话判断的先例补 `GamepadMode.Enabled` 分支 + 手柄模式专用模板（走外部资源包）；复苏排除失效的后果是全队死亡时 `IsInMainUi` 误判为大世界。
 
 其他可复用判断：`IsInDomain()`（秘境）、`IsInPartyViewUi()`（队伍选择）、`IsInAnyClosableUi()`（任意可关闭 UI）、`IsInPromptDialog()`（提示/确认框）、`IsInBlessingOfTheWelkinMoon()`（空月祝福）、`DetectChatUi()`（聊天面板状态机：Closed/PanelOpen/InputOpen）。
 
