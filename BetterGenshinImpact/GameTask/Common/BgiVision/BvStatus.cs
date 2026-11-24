@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Recognition;
+using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask.AutoFight.Assets;
 using BetterGenshinImpact.GameTask.Common.Element.Assets;
@@ -259,8 +259,9 @@ public static partial class Bv
 
     public static MotionStatus GetMotionStatus(ImageRegion captureRa)
     {
-        // 手柄模式下游戏 HUD 显示手柄按键提示，改为识别“下落/攀爬”图标：
-        // 两个图标都不出现 = Normal；只出现下落图标 = 滑翔；下落 + 攀爬图标同时出现 = 攀爬。
+        // 手柄模式下游戏 HUD 显示手柄按键提示，改为识别“下箭头/上箭头”图标：
+        // 两个都不出现 = Normal；只出现下箭头 = 滑翔（B 下落）；下箭头 + 上箭头 = 攀爬
+        // （下箭头 A=取消攀爬，上箭头 B=继续往上爬）。
         if (GamepadMode.Enabled)
         {
             using var jumpRa = captureRa.Find(ElementRecognition.Get("ControllerJumpButton", captureRa));

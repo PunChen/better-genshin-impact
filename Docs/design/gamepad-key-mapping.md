@@ -343,6 +343,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | Fly（滑翔） | 出现“下落/人物+下箭头”图标（B 键位） | `ControllerJumpButton` |
 | Climb（攀爬） | 下落图标 + “攀爬/人物+上箭头”图标（A 键位）同时出现 | `ControllerJumpButton` + `ControllerClimbButton` |
 
+> 攀爬按键语义：A = 取消攀爬（下箭头图标），B = 继续往上爬（上箭头图标）；滑翔时下箭头图标对应 B（下落/取消滑翔）。
+
 判定逻辑：
 
 ```csharp
