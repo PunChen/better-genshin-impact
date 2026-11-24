@@ -24,13 +24,13 @@
 
 ### 1.1 三个横切缺口
 
-1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；仍缺 `OpenWishScreen`、`OpenNotificationDetails`、`HideUI` 等低频界面动作。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判且 **View+Menu 双命中已实机稳定验证 🟢** / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7）；⚠️ 地图/大世界模板为键鼠时代资产，游戏连手柄后 UI 可能整体切换布局，命中率待实机验证（详见 §7.1 修正备注，复苏排除 `IsInRevivePrompt` 为高风险项），运动状态判断手柄缺口已登记 B6。
+1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；仍缺 `OpenNotificationDetails`、`HideUI` 等低频界面动作（`OpenWishScreen` 已于 2026-11-24 落地 A20：LB+右摇杆↑，轮盘第 8 向）。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判且 **View+Menu 双命中已实机稳定验证 🟢** / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7）；⚠️ 地图/大世界模板为键鼠时代资产，游戏连手柄后 UI 可能整体切换布局，命中率待实机验证（详见 §7.1 修正备注，复苏排除 `IsInRevivePrompt` 为高风险项），运动状态判断手柄缺口已登记 B6。
 2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 RS）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
 
 ### 1.2 已确认的默认绑定问题
 
-- `QuickUseGadget`、`SwitchMember1-5` 等默认 `GamepadButton.None` → AutoEat/AutoWood/AutoCombo 等模块**默认配置下直接失效**。
+- ~~`QuickUseGadget`、`SwitchMember1-5` 默认未绑定~~ **已过期（2026-11-24 更新）**：`QuickUseGadget` 默认 **LB+B**（A14 实测）、`SwitchMember1-4` 默认十字键、`SwitchMember5` 默认 Y——AutoEat（循环）/AutoWood（主循环）/AutoCombo 默认配置下核心链路可用，弹窗/退出环节仍待适配。
 - `KeyPress(VK_ESCAPE)` 反查为 `Cancel=A`。按游戏内“系统界面”设置，**B=确认、A=取消/返回**，因此 ESC→A 语义正确，无需改成 B；需要逐菜单实测的是“某些菜单里 A 同时承担确认/取消”的上下文差异。
 - 真正同键多义的是 **A = 取消/返回 + 普通攻击 + 跳跃**，对话/战斗/菜单三种上下文下含义不同，需要在模块层按语义调用 `GIActions` 而不是裸按 VK。
 
@@ -57,7 +57,7 @@
 | B1 ESC 语义 | ✅ 已核对 | 游戏内 B=确认、A=取消/返回；ESC→A 正确，不改键，仅保留 `Cancel` 可配置 |
 | B2 中键→RS | ✅ 已实现 | 新增 `GamepadConfig.CameraRecenter`（默认 `RightThumb`），`OnMouseButton(Middle)` 按下并保持 `PressDurationMs` |
 | B3 右摇杆原语 | ✅ 已实现 | 新增 `GamepadInputBackend.SetRightStick(x,y,ms)`、`TurnByAngle(deg)`；`OnMoveBy` 按 `RightStickSensitivity` 比例换算，Y 轴取反修正；新增 `RightStickPulseMs`/`TurnMillisecondsPerDegree` |
-| B4 映射补齐 | ✅ 部分 | 新增纪行/活动/任务追踪/元素视野字段与映射；`QuickUseGadget`、`SwitchMember1-5` 仍默认未绑定，启动时告警提示 |
+| B4 映射补齐 | ✅ 基本完成 | 纪行/活动/任务追踪/元素视野/祈愿（A20）/好友（A18）/队伍配置（A7）字段与映射均已补；`QuickUseGadget`（LB+B，A14）、`SwitchMember1-5`（十字键/Y）已有默认绑定；剩余低频项 `OpenNotificationDetails`/`HideUI` 待定 |
 | B5 焦点/地图控制器 | ⏳ 研究项 | 需先验证焦点高亮/地图光标视觉特征，不进入批次 1 |
 | B6 诊断 | ⏳ 部分 | 已有 `WarnUnsupported` 限频告警；丢弃计数/严格模式待做 |
 
@@ -76,7 +76,7 @@
 | BlessingOfTheWelkinMoonTask | 失效 | 空白双击 → 按 A/B 跳过月卡弹窗 | S |
 | AutoSkip 非对话路径 | 对话已适配 | 黑屏剧情/底部三角/角色弹窗/原石奖励改按确认键；邀约选项改摇杆导航 | M |
 | AutoCook | 部分可用 | 确认弹窗"识别+按键"；验证手柄烹饪模板 | S |
-| AutoEat（循环模式） | 失效 | B4 补 `QuickUseGadget` 默认绑定；指定食物路径手柄下禁用提示 | S |
+| AutoEat（循环模式） | 🟡 核心可用 | `QuickUseGadget` 默认绑定已完成（A14：LB+B）；剩余：指定食物路径手柄下禁用提示 | S |
 | AutoOpenChest | 基本可用 | 中键分支改右摇杆脉冲转身重试 | S |
 | AutoCombo | 基本可用 | 右摇杆索敌参数调优 + 切人键绑定引导 | S |
 | GameLoading | 完全失效 | 进入游戏/适龄/月卡/原石弹窗改按确认键；B服窗口走旁路（B6） | M |
@@ -88,17 +88,17 @@
 | 模块 | 现状 | 改动方案 | 量 |
 |---|---|---|---|
 | ChooseTalkOptionTask | 失效（必经路径） | 手柄对话 A/B/X/Y 直选角标模板 + 按对应键 | M |
-| ClaimMailRewardsTask | 失效 | 手柄 Paimon 菜单模板 + 焦点导航 + A | M |
+| ClaimMailRewardsTask | 失效 | 复用 `PaimonMenuNavigateJob`（Start→OCR→导航→确认，基建 2026-11-24 已就绪）+ 邮件界面内部焦点导航 | M |
 | ClaimEncounterPointsRewardsTask | 失效 | 焦点导航 + A | M |
 | CheckRewardsTask | 失效 | B4 补映射 + 页签导航 | M |
 | ClaimBattlePassRewardsTask | 失效 | B4 补 `OpenBattlePassScreen` 映射 + 焦点导航 + A | M |
 | AutoDomain 主流程 | 战斗可用、领奖卡死 | 单人/开始挑战改按 Confirm；领奖弹窗 A/B 模板；`PressUseResin` 按键化（**一处改造，三模块受益**） | M |
 | AutoBoss | 领奖卡死 | 领奖 A/B 化；树脂预检改 OCR 顶部数字；补充树脂先禁用 | M |
 | AutoLeyLineOutcrop | 领奖/复苏失效 | 复用树脂方案 + 复苏界面按 Confirm + 冒险之证导航 | M-L |
-| SwitchPartyTask | 失效 | 手柄队伍界面方向键导航 + A + OCR 复核翻页 | L |
+| SwitchPartyTask | 🟡 开界面已通 | 打开队伍配置已走 A7 派蒙菜单导航（2026-11-24，8 个调用点接入）；**队伍界面内部导航（队伍卡片选择/确认）仍为点击、继续失效**：方向键导航 + A + OCR 复核翻页 | L |
 | OneKeyExpeditionTask | 失效 | 派遣按钮焦点导航 + A | M |
 | GoToAdventurersGuildTask | 依赖项失败 | 随依赖项适配，自身仅回归验证 | S |
-| AutoWood | 主循环失效 | B4 默认绑定 + ESC 改 `OpenPaimonMenu`(Start) + 退出流程手柄导航 | M |
+| AutoWood | 🟡 主循环可用 | 默认绑定已完成（A14）；剩余：ESC 改 `OpenPaimonMenu`(Start) + 退出流程手柄导航 | M |
 
 ### 批次 3 —— 大地图基建攻坚（自动寻路/传送的底层）
 
