@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Core.Simulator.Extensions;
+using BetterGenshinImpact.GameTask;
 using BetterGenshinImpact.Service;
 using Fischless.WindowsInput.Gamepad;
 using Microsoft.Extensions.Logging;
@@ -54,7 +56,7 @@ public sealed class GamepadInputBackend : IInputBackend
     public void TurnByAngle(double degrees) => _channel.TurnByAngle(degrees);
 
     /// <summary>
-    /// 设置页“测试按键”使用：临时连接虚拟手柄按一次后立即释放
+    /// 设置页“测试按键”使用：聚焦游戏后临时连接虚拟手柄按一次
     /// </summary>
     public static bool TestButton(GamepadButton button, int durationMs, out string? error)
     {
@@ -63,6 +65,8 @@ public sealed class GamepadInputBackend : IInputBackend
             error = "未绑定按键";
             return false;
         }
+
+        FocusGameWindow();
 
         using var transport = new Xbox360Transport();
         if (!transport.TryConnect())
@@ -73,9 +77,12 @@ public sealed class GamepadInputBackend : IInputBackend
 
         try
         {
+            // 新建虚拟手柄后游戏需要一点时间识别设备
+            Thread.Sleep(600);
             transport.SetButton(button, true);
-            Thread.Sleep(Math.Max(1, durationMs));
+            Thread.Sleep(Math.Max(120, durationMs));
             transport.SetButton(button, false);
+            Thread.Sleep(100);
             error = null;
             return true;
         }
@@ -83,6 +90,135 @@ public sealed class GamepadInputBackend : IInputBackend
         {
             error = e.Message;
             return false;
+        }
+    }
+
+    /// <summary>
+    /// 设置页“测试按键”使用：测试组合键（修饰键 + 按键）
+    /// </summary>
+    public static bool TestCombo(GamepadButton modifier, GamepadButton button, int durationMs, out string? error)
+    {
+        if (modifier == GamepadButton.None || button == GamepadButton.None)
+        {
+            error = "未绑定组合键";
+            return false;
+        }
+
+        FocusGameWindow();
+
+        using var transport = new Xbox360Transport();
+        if (!transport.TryConnect())
+        {
+            error = transport.LastError;
+            return false;
+        }
+
+        try
+        {
+            Thread.Sleep(600);
+            transport.SetButton(modifier, true);
+            Thread.Sleep(30);
+            transport.SetButton(button, true);
+            Thread.Sleep(Math.Max(120, durationMs));
+            transport.SetButton(button, false);
+            Thread.Sleep(20);
+            transport.SetButton(modifier, false);
+            Thread.Sleep(100);
+            error = null;
+            return true;
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 设置页“测试按键”使用：测试快捷轮盘（按住修饰键 + 右摇杆方向）
+    /// </summary>
+    public static bool TestWheel(GamepadButton modifier, GamepadStickDirection direction, int holdMs, out string? error)
+    {
+        if (modifier == GamepadButton.None || direction == GamepadStickDirection.None)
+        {
+            error = "未绑定轮盘修饰键或方向";
+            return false;
+        }
+
+        FocusGameWindow();
+
+        using var transport = new Xbox360Transport();
+        if (!transport.TryConnect())
+        {
+            error = transport.LastError;
+            return false;
+        }
+
+        try
+        {
+            Thread.Sleep(600);
+            var (x, y) = direction switch
+            {
+                GamepadStickDirection.Up => ((short)0, short.MaxValue),
+                GamepadStickDirection.Down => ((short)0, (short)-short.MaxValue),
+                GamepadStickDirection.Left => ((short)-short.MaxValue, (short)0),
+                GamepadStickDirection.Right => (short.MaxValue, (short)0),
+                GamepadStickDirection.UpLeft => ((short)(-0.7071 * short.MaxValue), (short)(0.7071 * short.MaxValue)),
+                GamepadStickDirection.UpRight => ((short)(0.7071 * short.MaxValue), (short)(0.7071 * short.MaxValue)),
+                GamepadStickDirection.DownLeft => ((short)(-0.7071 * short.MaxValue), (short)(-0.7071 * short.MaxValue)),
+                GamepadStickDirection.DownRight => ((short)(0.7071 * short.MaxValue), (short)(-0.7071 * short.MaxValue)),
+                _ => ((short)0, (short)0),
+            };
+
+            transport.SetButton(modifier, true);
+            Thread.Sleep(60);
+            transport.SetAxis(GamepadAxis.RightThumbX, x);
+            transport.SetAxis(GamepadAxis.RightThumbY, y);
+            Thread.Sleep(Math.Max(120, holdMs));
+            transport.SetAxis(GamepadAxis.RightThumbX, 0);
+            transport.SetAxis(GamepadAxis.RightThumbY, 0);
+            Thread.Sleep(30);
+            transport.SetButton(modifier, false);
+            Thread.Sleep(100);
+            error = null;
+            return true;
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
+            return false;
+        }
+    }
+
+    private static void FocusGameWindow()
+    {
+        try
+        {
+            var context = TaskContext.Instance();
+            var handle = context.IsInitialized ? context.GameHandle : IntPtr.Zero;
+            if (handle == IntPtr.Zero)
+            {
+                foreach (var processName in new[] { "YuanShen", "GenshinImpact" })
+                {
+                    var process = System.Diagnostics.Process.GetProcessesByName(processName)
+                        .FirstOrDefault(p => p.MainWindowHandle != IntPtr.Zero);
+                    if (process is not null)
+                    {
+                        handle = process.MainWindowHandle;
+                        break;
+                    }
+                }
+            }
+
+            if (handle != IntPtr.Zero)
+            {
+                SystemControl.FocusWindow(handle);
+                Thread.Sleep(300);
+            }
+        }
+        catch
+        {
+            // 聚焦失败不阻止测试，可能只是窗口已在前台
         }
     }
 }

@@ -1,4 +1,4 @@
-<UserControl x:Class="BetterGenshinImpact.View.Pages.KeyBindingsSettingsPage"
+﻿<UserControl x:Class="BetterGenshinImpact.View.Pages.KeyBindingsSettingsPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:b="http://schemas.microsoft.com/xaml/behaviors"
@@ -183,16 +183,21 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="170" />
                                     <ColumnDefinition Width="170" />
+                                    <ColumnDefinition Width="80" />
                                 </Grid.ColumnDefinitions>
                                 <ui:TextBlock Grid.Column="0"
                                               FontTypography="BodyStrong"
                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                               Text="{i18n:T 动作}" />
                                 <ui:TextBlock Grid.Column="1"
-                                              Grid.ColumnSpan="2"
+                                              Grid.ColumnSpan="3"
                                               FontTypography="BodyStrong"
                                               Foreground="{DynamicResource TextFillColorSecondaryBrush}"
                                               Text="{i18n:T 手柄操作}" />
+                                <ui:TextBlock Grid.Column="3"
+                                              FontTypography="BodyStrong"
+                                              Foreground="{DynamicResource TextFillColorSecondaryBrush}"
+                                              Text="{i18n:T 测试}" />
                             </Grid>
 
                             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -236,6 +241,11 @@
                                                                   VerticalContentAlignment="Center"
                                                                   ItemsSource="{Binding DataContext.GamepadDirections, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                   SelectedItem="{Binding Direction, Mode=TwoWay}" />
+                                                        <ui:Button Grid.Column="3"
+                                                                   Padding="8,2"
+                                                                   Content="{i18n:T 测试}"
+                                                                   Command="{Binding DataContext.TestGamepadWheelBindingCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                   CommandParameter="{Binding}" />
                                                     </Grid>
                                                 </Border>
                                                 <DataTemplate.Triggers>
@@ -280,6 +290,11 @@
                                                                   VerticalContentAlignment="Center"
                                                                   ItemsSource="{Binding DataContext.GamepadButtons, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
                                                                   SelectedItem="{Binding ButtonValue, Mode=TwoWay}" />
+                                                        <ui:Button Grid.Column="3"
+                                                                   Padding="8,2"
+                                                                   Content="{i18n:T 测试}"
+                                                                   Command="{Binding DataContext.TestGamepadBindingCommand, RelativeSource={RelativeSource AncestorType={x:Type UserControl}}}"
+                                                                   CommandParameter="{Binding}" />
                                                     </Grid>
                                                 </Border>
                                                 <DataTemplate.Triggers>

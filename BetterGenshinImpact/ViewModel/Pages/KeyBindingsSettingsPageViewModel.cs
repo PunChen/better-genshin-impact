@@ -285,6 +285,93 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     }
 
     /// <summary>
+    /// 单行绑定测试：临时连接虚拟手柄按一次当前行的按键
+    /// </summary>
+    [RelayCommand]
+    private void TestGamepadBinding(GamepadBindingSettingModel? model)
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        if (!_gamepadConfig.Enabled)
+        {
+            GamepadStatus = "请先启用手柄模式";
+            return;
+        }
+
+        var duration = Math.Max(120, _gamepadConfig.PressDurationMs);
+        var (modifier, button) = ResolveGamepadTestCombo(model.ConfigPropertyName, model.ButtonValue);
+        var success = modifier != GamepadButton.None
+            ? GamepadInputBackend.TestCombo(modifier, button, duration, out var error)
+            : GamepadInputBackend.TestButton(button, duration, out error);
+        if (success)
+        {
+            GamepadStatus = modifier != GamepadButton.None
+                ? $"已测试组合键：{model.ActionName} → {modifier}+{button}"
+                : $"已测试：{model.ActionName} → {button}";
+        }
+        else
+        {
+            GamepadStatus = $"测试失败：{error ?? "虚拟手柄未连接，请确认已安装 ViGEmBus 驱动"}";
+        }
+    }
+
+    private (GamepadButton Modifier, GamepadButton Button) ResolveGamepadTestCombo(string propertyName, GamepadButton value)
+    {
+        return propertyName switch
+        {
+            nameof(GamepadConfig.SwitchMember5) => (_gamepadConfig.SwitchMember5Modifier, value),
+            nameof(GamepadConfig.SwitchMember5Modifier) => (value, _gamepadConfig.SwitchMember5),
+            nameof(GamepadConfig.QuickUseGadget) => (_gamepadConfig.QuickUseGadgetModifier, value),
+            nameof(GamepadConfig.QuickUseGadgetModifier) => (value, _gamepadConfig.QuickUseGadget),
+            nameof(GamepadConfig.ElementalSight) => (_gamepadConfig.ElementalSightModifier, value),
+            nameof(GamepadConfig.ElementalSightModifier) => (value, _gamepadConfig.ElementalSight),
+            nameof(GamepadConfig.InteractionInSomeMode) => (_gamepadConfig.InteractionInSomeModeModifier, value),
+            nameof(GamepadConfig.InteractionInSomeModeModifier) => (value, _gamepadConfig.InteractionInSomeMode),
+            nameof(GamepadConfig.AbandonChallenge) => (_gamepadConfig.AbandonChallengeModifier, value),
+            nameof(GamepadConfig.AbandonChallengeModifier) => (value, _gamepadConfig.AbandonChallenge),
+            nameof(GamepadConfig.OpenCoOpScreen) => (_gamepadConfig.OpenCoOpScreenModifier, value),
+            nameof(GamepadConfig.OpenCoOpScreenModifier) => (value, _gamepadConfig.OpenCoOpScreen),
+            nameof(GamepadConfig.CheckTutorialDetails) => (_gamepadConfig.CheckTutorialDetailsModifier, value),
+            nameof(GamepadConfig.CheckTutorialDetailsModifier) => (value, _gamepadConfig.CheckTutorialDetails),
+            nameof(GamepadConfig.CameraZoomIn) => (_gamepadConfig.CameraZoomInModifier, value),
+            nameof(GamepadConfig.CameraZoomInModifier) => (value, _gamepadConfig.CameraZoomIn),
+            nameof(GamepadConfig.CameraZoomOut) => (_gamepadConfig.CameraZoomOutModifier, value),
+            nameof(GamepadConfig.CameraZoomOutModifier) => (value, _gamepadConfig.CameraZoomOut),
+            _ => (GamepadButton.None, value),
+        };
+    }
+
+    /// <summary>
+    /// 快捷轮盘行测试：按住修饰键 + 右摇杆方向
+    /// </summary>
+    [RelayCommand]
+    private void TestGamepadWheelBinding(GamepadWheelBindingSettingModel? model)
+    {
+        if (model is null)
+        {
+            return;
+        }
+
+        if (!_gamepadConfig.Enabled)
+        {
+            GamepadStatus = "请先启用手柄模式";
+            return;
+        }
+
+        if (GamepadInputBackend.TestWheel(model.Modifier, model.Direction, 180, out var error))
+        {
+            GamepadStatus = $"已测试轮盘：{model.ActionName} → {model.Modifier}+{model.Direction}";
+        }
+        else
+        {
+            GamepadStatus = $"测试失败：{error ?? "虚拟手柄未连接，请确认已安装 ViGEmBus 驱动"}";
+        }
+    }
+
+    /// <summary>
     /// 恢复默认手柄按键
     /// </summary>
     [RelayCommand]
