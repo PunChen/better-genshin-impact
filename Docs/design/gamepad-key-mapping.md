@@ -130,7 +130,118 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | D3 | JS 脚本鼠标 API | 启动告警 / 禁用 |
 | D4 | 地图、滑条拖拽 | 不支持 / 摇杆模拟（地图已支持） |
 
-## 5. 注意事项
+## 5. 全量映射清单（57 项 GIActions 状态标记）
+
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 41 项 / ⚠️ 已实现但默认未绑定 3 项 / ❌ 缺失 12 项 / 🚫 无需映射 1 项**。
+
+### 5.1 移动方向（左摇杆）— 全部已实现
+
+| GIActions | 功能 | 手柄 | 状态 | 备注 |
+|---|---|---|---|---|
+| MoveForward | 向前移动 | 左摇杆 | ✅ | 反查 W |
+| MoveBackward | 向后移动 | 左摇杆 | ✅ | 反查 S |
+| MoveLeft | 向左移动 | 左摇杆 | ✅ | 反查 A |
+| MoveRight | 向右移动 | 左摇杆 | ✅ | 反查 D |
+
+### 5.2 战斗与角色动作 — 全部已实现（2 项默认未绑定；第 3 项 `OpenPartySetupScreen` 见 §5.5）
+
+| GIActions | 功能 | 手柄 | 状态 | 备注 |
+|---|---|---|---|---|
+| NormalAttack | 普通攻击 | A | ✅ | |
+| ElementalSkill | 元素战技 | RT | ✅ | |
+| ElementalBurst | 元素爆发 | Y | ✅ | |
+| Jump | 跳跃 | B | ✅ | |
+| SprintKeyboard / SprintMouse | 冲刺 | RB | ✅ | 两个动作共用 `Sprint` |
+| SwitchAimingMode | 切换瞄准模式 | LT | ✅ | |
+| SwitchToWalkOrRun | 切换走/跑 | 无（轻推左摇杆） | ✅ | 方案 A12：保持 `None` 为最终状态 |
+| Drop | 落下（滑翔/攀爬） | `None` | ⚠️ | 待确认项 A13，建议 B |
+| PickUpOrInteract | 拾取/交互 | X | ✅ | |
+| InteractionInSomeMode | 特定玩法交互（T） | `None` | ⚠️ | 待确认项 A14，建议 X |
+| QuickUseGadget | 快捷使用小道具 | LB + B | ✅ | 组合键 |
+| QuestNavigation | 任务追踪 | LS（左摇杆按下） | ✅ | |
+| ElementalSight | 元素视野 | LB + 十字键← | ✅ | 组合键 |
+| SwitchMember1 | 切换角色 1 | 十字键↑ | ✅ | |
+| SwitchMember2 | 切换角色 2 | 十字键→ | ✅ | |
+| SwitchMember3 | 切换角色 3 | 十字键← | ✅ | |
+| SwitchMember4 | 切换角色 4 | 十字键↓ | ✅ | |
+| SwitchMember5 | 切换角色 5 | LB + Y | ✅ | 组合键 |
+
+### 5.3 对话与确认 — 全部已实现
+
+| GIActions | 功能 | 手柄 | 状态 | 备注 |
+|---|---|---|---|---|
+| Confirm | 确认 | B | ✅ | |
+| Cancel | 取消/返回 | A | ✅ | ⚠️ `KeyPress(VK_ESCAPE)` 反查为 A，菜单中语义错位待修（适配方案 B1） |
+| SkipDialog | 跳过/推进对话 | B | ✅ | |
+
+### 5.4 界面打开（快捷轮盘 LB + 右摇杆方向）— 全部已实现
+
+| GIActions | 功能 | 手柄 | 状态 | 备注 |
+|---|---|---|---|---|
+| OpenMap | 打开地图 | LB + 右摇杆↓ | ✅ | |
+| OpenInventory | 打开背包 | LB + 右摇杆→ | ✅ | |
+| OpenQuestMenu | 打开任务菜单 | LB + 右摇杆↙ | ✅ | |
+| OpenCharacterScreen | 打开角色界面 | LB + 右摇杆↘ | ✅ | |
+| OpenBattlePassScreen | 打开纪行 | LB + 右摇杆↖ | ✅ | |
+| OpenTheEventsMenu | 打开活动面板 | LB + 右摇杆← | ✅ | |
+| OpenAdventurerHandbook | 打开冒险之证 | LB + 右摇杆↗ | ✅ | |
+
+### 5.5 界面打开（独立按键 / 已定方案）
+
+| GIActions | 功能 | 手柄 | 状态 | 备注 |
+|---|---|---|---|---|
+| OpenPaimonMenu | 打开派蒙界面 | Start（☰ Menu） | ✅ | |
+| OpenChatScreen | 好友聊天 | Back（⧉ View） | ✅ | |
+| OpenPartySetupScreen | 打开队伍配置 | `None` | ⚠️ | 已定方案 A7：派蒙菜单 + 文字识别「队伍配置」+ 左摇杆导航锁定 |
+| OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | ❌ | 已定方案 A9：派蒙菜单 + 左摇杆导航锁定齿轮图标（需采集图标资源）；唯一活跃调用点 `EnterAndExitWonderlandJob.cs:23` |
+
+### 5.6 UI 导航原语 — 全部已实现
+
+| GIActions | 功能 | 手柄 | 状态 | 备注 |
+|---|---|---|---|---|
+| FocusUp / FocusDown / FocusLeft / FocusRight | 界面焦点移动 | 左摇杆 | ✅ | `GamepadUiNavigator` |
+| ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | ✅ | 待确认项 B2，待实机确认 |
+| MapZoomIn | 地图放大 | LT | ✅ | |
+| MapZoomOut | 地图缩小 | RT | ✅ | |
+
+### 5.7 缺失/无需映射项（11 项缺失 + 1 项无需映射；第 12 项缺失 `OpenTheSettingsMenu` 见 §5.5）
+
+| GIActions | 功能 | 键鼠默认键 | 状态 | 建议 |
+|---|---|---|---|---|
+| AbandonChallenge | 中断挑战 | P | ❌ | **建议补**：游戏有手柄设置项（`AbandonChallengeGamepad=85`），AutoDomain/幽境退出兜底可用 |
+| ShortcutWheel | 呼出快捷轮盘 | Tab | ❌ | 可不补：轮盘已由各 `*Wheel` 动作内部实现（按住 LB + 拨右摇杆） |
+| OpenCoOpScreen | 打开多人游戏界面 | F2 | ❌ | 按需：游戏有手柄设置项（`CoOp=65`） |
+| OpenWishScreen | 打开祈愿界面 | F3 | ❌ | 按需：游戏有手柄设置项（`Wish=73`） |
+| OpenTheFurnishingScreen | 打开摆设界面（尘歌壶） | F7 | ❌ | 按需 |
+| OpenStellarReunion | 打开星之归还 | F8 | ❌ | 可不补（条件触发，无任务使用） |
+| OpenNotificationDetails | 打开通知详情 | Y | ❌ | 可不补 |
+| OpenSpecialEnvironmentInformation | 打开特殊环境说明 | U | ❌ | 可不补 |
+| CheckTutorialDetails | 查看教程详情 | G | ❌ | 可不补 |
+| OpenFriendsScreen | 打开好友界面 | O | ❌ | 按需 |
+| HideUI | 隐藏主界面 | `/` | ❌ | 可不补（拍照场景） |
+| ShowCursor | 呼出鼠标 | Alt | 🚫 | 无需映射：手柄模式无鼠标光标概念，反查表不含 Alt 是正确的 |
+
+### 5.8 非 GIActions 的特殊映射
+
+| 输入 | 手柄 | 状态 | 备注 |
+|---|---|---|---|
+| 鼠标中键（视角回正） | R3（右摇杆按下，`CameraRecenter`） | ✅ | `GamepadChannel.OnMouseButton` 特判 |
+| `MoveMouseBy`（鼠标相对移动） | 右摇杆 30ms 脉冲 | ✅ | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
+
+### 5.9 场景级缺失（GIActions 未建模）
+
+| 场景 | 状态 | 备注 |
+|---|---|---|
+| 音游按键（`MusicNote11-37`、`MusicLeft*` 等游戏设置项） | ❌ 未建模 | AutoMusicGame 适配时需新增专用动作，绕过键盘反查直走 `GamepadChannel` |
+| 钓鱼：抛竿/收杆/提竿 | ⏳ 待确认项 C1 | 待实机确认按键提示 |
+| 七圣召唤：选牌/确认/结束回合 | ⏳ 待确认项 C3 | 建议 十字键 + B/A |
+| 烹饪：确认/取消 | ⏳ 待确认项 C5 | 建议 B/A |
+
+### 5.10 键盘反查表（ReverseMappableActions）覆盖说明
+
+`GamepadChannel.ReverseMappableActions` 含 37 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F2/F3/F6/F7/F8、Alt、`/`）会 warn 丢弃——与 §5.7 缺失项一一对应。
+
+## 6. 注意事项
 
 - 旧版 `User/Config.json` 中手柄绑定可能仍是 `None`，升级后需在「按键绑定设置 → 手柄」点一次**恢复默认**。
 - 手柄模式必须在游戏内和 BGI 内同时开启才会生效。
