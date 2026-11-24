@@ -11,24 +11,23 @@
 
 ### 1.1 基础战斗界面
 
-| 游戏动作 | 手柄 | BGI 配置字段 | 默认值 |
-|---|---|---|---|
-| 普通攻击 | A | `NormalAttack` | `A` |
-| 元素战技 | RT | `ElementalSkill` | `RightTrigger` |
-| 元素爆发 | Y | `ElementalBurst` | `Y` |
-| 冲刺 | RB | `Sprint` | `RightShoulder` |
-| 跳跃 / 特定模式向上 | B | `Jump` | `B` |
-| 拾取 / 交互 | X | `PickUpOrInteract` | `X` |
-| 切换瞄准模式 | LT | `SwitchAimingMode` | `LeftTrigger` |
-| 呼出快捷轮盘 | LB | `ShortcutWheel` | `LeftShoulder`（按住呼出，方向选择见 §2.2） |
-| 打开派蒙界面 | ☰ Menu | `OpenPaimonMenu` | `Start` |
-| 好友聊天 | ⧉ View | `OpenChatScreen` | `Back` |
-| 确认 / 取消 | B / A | `Confirm` / `Cancel` | `B` / `A` |
-| 移动角色 | 左摇杆 | `GIActions.Move*` | 左摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） |
-| 转动视角 | 右摇杆 | `MoveMouseBy` | 右摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） |
-| 镜头拉近 | LB + LT | `CameraZoomIn` | LB + LT（镜头距离调节，手柄专属功能） |
-| 镜头拉远 | LB + RT | `CameraZoomOut` | LB + RT（同） |
-
+| 游戏动作 | 手柄 | BGI 配置字段 | 默认值 | 状态 |
+|---|---|---|---|---|
+| 普通攻击 | A | `NormalAttack` | `A` | 🟢 已验证正确 |
+| 元素战技 | RT | `ElementalSkill` | `RightTrigger` | 🟢 已验证正确 |
+| 元素爆发 | Y | `ElementalBurst` | `Y` | 🟢 已验证正确 |
+| 冲刺 | RB | `Sprint` | `RightShoulder` | 🟢 已验证正确 |
+| 跳跃 / 特定模式向上 | B | `Jump` | `B` | 🟢 已验证正确 |
+| 拾取 / 交互 | X | `PickUpOrInteract` | `X` | 🟢 已验证正确 |
+| 切换瞄准模式 | LT | `SwitchAimingMode` | `LeftTrigger` | 🟢 已验证正确 |
+| 呼出快捷轮盘 | LB | `ShortcutWheel` | `LeftShoulder`（按住呼出，方向选择见 §2.2） | 🟢 已验证正确 |
+| 打开派蒙界面 | ☰ Menu | `OpenPaimonMenu` | `Start` | 🟢 已验证正确 |
+| 好友聊天 | ⧉ View | `OpenChatScreen` | `Back` | 🟢 已验证正确 |
+| 确认 / 取消 | B / A | `Confirm` / `Cancel` | `B` / `A` | 🟢 已验证正确 |
+| 移动角色 | 左摇杆 | `GIActions.Move*` | 左摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） | 🟢 已验证正确 |
+| 转动视角 | 右摇杆 | `MoveMouseBy` | 右摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） | 🟢 已验证正确 |
+| 镜头拉近 | LB + LT | `CameraZoomIn` | LB + LT（镜头距离调节，手柄专属功能） | 🟡 已实现待验证 |
+| 镜头拉远 | LB + RT | `CameraZoomOut` | LB + RT（同） | 🟡 已实现待验证 |
 ### 1.2 第三人称射击（独立布局）
 
 | 游戏动作 | 手柄 |
