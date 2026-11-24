@@ -53,7 +53,7 @@
 | 快捷使用小道具 | **LB + B** | `QuickUseGadget=B`、`QuickUseGadgetModifier=LeftShoulder` |
 | 任务追踪 | **LS（左摇杆按下）** | `QuestNavigation=LeftThumb` |
 | 元素视野 | **LB + 十字键左** | `ElementalSight=Left`、`ElementalSightModifier=LeftShoulder` |
-| 视角回正（鼠标中键） | R3 | `CameraRecenter=RightThumb` |
+| 视角回正（鼠标中键） | RS（右摇杆按下；PS 手柄称 R3） | `CameraRecenter=RightThumb` |
 
 组合键执行顺序：按住修饰键 → 按目标键 → 保持 `PressDurationMs` → 释放目标键 → 释放修饰键。
 
@@ -225,7 +225,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | 输入 | 手柄 | 状态 | 备注 |
 |---|---|---|---|
-| 鼠标中键（视角回正） | R3（右摇杆按下，`CameraRecenter`） | ✅ | `GamepadChannel.OnMouseButton` 特判 |
+| 鼠标中键（视角回正） | RS（右摇杆按下，`CameraRecenter=RightThumb`） | ✅ | `GamepadChannel.OnMouseButton` 特判 |
 | `MoveMouseBy`（鼠标相对移动） | 右摇杆 30ms 脉冲 | ✅ | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
 
 ### 5.9 场景级缺失（GIActions 未建模）

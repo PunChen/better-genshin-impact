@@ -1,4 +1,4 @@
-﻿# 手柄模式鼠标依赖适配方案
+# 手柄模式鼠标依赖适配方案
 
 > 基于 `feat/xbox-game-input-main` 分支对全部 43 个功能模块的只读代码审计（2026-11）。
 > 目标：让所有依赖鼠标点击 UI 的功能在手柄模式下可用。
@@ -13,7 +13,7 @@
 | 输入 API | 手柄模式下的行为 | 代码位置 |
 |---|---|---|
 | `Click`/`ClickTo`/`GameRegionClick`/`GameRegion1080PPosClick`/`LeftButton`/`RightButton`/`VerticalScroll`/`MoveMouseTo`(绝对) | 限频 warn 后**静默丢弃** | `GamepadInputBackend.cs` `OnMouseButton`/`OnMoveTo`/`OnScroll` |
-| `MiddleButton` | 映射为 `CameraRecenter`（默认右摇杆按下 R3），用于视角回正 | `GamepadInputBackend.cs` `OnMouseButton` |
+| `MiddleButton` | 映射为 `CameraRecenter`（默认右摇杆按下 RS），用于视角回正 | `GamepadInputBackend.cs` `OnMouseButton` |
 | `MoveMouseBy` | 按配置灵敏度换算为右摇杆脉冲（默认 30ms，幅度按 `RightStickSensitivity` 缩放） | `GamepadInputBackend.cs` `OnMoveBy` |
 | 键盘 VK | 经 `TryMapKey` 反查 `ReverseMappableActions` → `GIActions` → 手柄按键；未覆盖键丢弃 | `GamepadInputBackend.cs:100-134、437-456` |
 | `SimulateAction(GIActions)` | 经 `GamepadActionMap.TryGetButton` 映射；未映射动作 warn 丢弃 | `GamepadActionMap.cs` |
@@ -25,7 +25,7 @@
 ### 1.1 三个横切缺口
 
 1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；仍缺 `OpenWishScreen`、`OpenCoOpScreen`、`OpenNotificationDetails`、`CheckTutorialDetails`、`HideUI`、`OpenFriendsScreen` 等低频界面动作。
-2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 R3）补齐；其余绝对坐标点击仍无法模拟。
+2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 RS）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
 
 ### 1.2 已确认的默认绑定问题
@@ -41,7 +41,7 @@
 | # | 基建项 | 内容 | 受益模块 |
 |---|---|---|---|
 | B1 | **ESC/返回语义核对** | 游戏内系统键位为 **B=确认、A=取消/返回**，ESC 反查 `Cancel=A` 本身正确；B1 只做逐菜单实测与 `Cancel` 可配置化核对，**不把 ESC 改成 B** | 全部按 ESC 的模块（约 15 处） |
-| B2 | **中键→R3 映射** | 新增 `CameraRecenter` 配置（默认 `RightThumb`），`OnMouseButton(Middle)` 按下/抬起映射到该键 | AutoDomain/AutoFight/AutoLeyLine/索敌等约 10 处 |
+| B2 | **中键→RS 映射** | 新增 `CameraRecenter` 配置（默认 `RightThumb`），`OnMouseButton(Middle)` 按下/抬起映射到该键 | AutoDomain/AutoFight/AutoLeyLine/索敌等约 10 处 |
 | B3 | **右摇杆比例控制原语** | `GamepadInputBackend.SetRightStick(x, y, durationMs)` + `TurnByAngle(degrees)`；`OnMoveBy` 改为按 `RightStickSensitivity` 比例换算，不再固定 ×256 饱和 | 相机类全部模块 |
 | B4 | **映射与默认绑定补齐** | 补 `OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 的配置字段与映射；`QuickUseGadget`/`SwitchMember1-5` **不擅自给默认键**（不同玩家布局差异大），改为未绑定时的启动告警与配置页引导 | AutoEat/AutoWood/幽境危战/纪行/莉奈娅 |
 | B5 | **两个公共控制器（研究项，非基建）** | ① `GamepadFocusNavigator`：截图→识别焦点高亮→十字键/摇杆步进→复核→A 确认；② `GamepadMapCursor`：大地图光标视觉伺服闭环。两者依赖稳定的焦点/光标视觉特征，需先做可行性验证，未验证前不进入批次 1 | 几乎所有 L 级模块 |
@@ -55,7 +55,7 @@
 | 项 | 状态 | 说明 |
 |---|---|---|
 | B1 ESC 语义 | ✅ 已核对 | 游戏内 B=确认、A=取消/返回；ESC→A 正确，不改键，仅保留 `Cancel` 可配置 |
-| B2 中键→R3 | ✅ 已实现 | 新增 `GamepadConfig.CameraRecenter`（默认 `RightThumb`），`OnMouseButton(Middle)` 按下并保持 `PressDurationMs` |
+| B2 中键→RS | ✅ 已实现 | 新增 `GamepadConfig.CameraRecenter`（默认 `RightThumb`），`OnMouseButton(Middle)` 按下并保持 `PressDurationMs` |
 | B3 右摇杆原语 | ✅ 已实现 | 新增 `GamepadInputBackend.SetRightStick(x,y,ms)`、`TurnByAngle(deg)`；`OnMoveBy` 按 `RightStickSensitivity` 比例换算，Y 轴取反修正；新增 `RightStickPulseMs`/`TurnMillisecondsPerDegree` |
 | B4 映射补齐 | ✅ 部分 | 新增纪行/活动/任务追踪/元素视野字段与映射；`QuickUseGadget`、`SwitchMember1-5` 仍默认未绑定，启动时告警提示 |
 | B5 焦点/地图控制器 | ⏳ 研究项 | 需先验证焦点高亮/地图光标视觉特征，不进入批次 1 |
@@ -228,7 +228,7 @@
 
 #### AutoLeyLineOutcrop（地脉衍出）— M-L
 - 调用点：`AutoLeyLineOutcropTask.cs:1391` 中键回正；`:1491/1495` 对准地脉花（→右摇杆，可用）；`:1557` 点"复苏"；`:1837-1900` 激活弹窗/用树脂/20-40 切换；`:2085-2223` 冒险之证导航/追踪/补充树脂
-- 方案：复用 AutoDomain 树脂 A/B 方案；复苏界面按 Confirm；冒险之证手柄导航；中键→R3
+- 方案：复用 AutoDomain 树脂 A/B 方案；复苏界面按 Confirm；冒险之证手柄导航；中键→RS
 
 #### AutoGeniusInvokation（七圣召唤）— L
 - 调用点：`GeniusInvokationControl.cs:352/361/501-504/519/605-617/657-672/699/716-719/735/744/851-857` 全部固定/识别坐标点击与拖拽；`Model/Character.cs:80-111` 角色卡点击；`Model/Duel.cs:238`
@@ -238,7 +238,7 @@
 #### AutoFight（自动战斗）— S-M ⭐
 - **可用部分**（SimulateAction/反查）：`Avatar.cs:528-541` Attack、`:546-598` UseSkill、`:875-890` Dash、`:892-925` Walk、`:932-935` MoveCamera（→右摇杆）、`:375-398` 切人、`:1145` Jump、`:1161-1163` Charge；`AvatarSpecialActions.cs:183/228/290/368` 特化重击旋转（→右摇杆，可用需调优）；`AvatarRecognition.cs:461/493/516` 持续索敌
 - **失效部分**：`Avatar.cs:1200-1215` Click（三键全丢弃）；`:1225-1228` Scroll；`:186/208` 游泳脱困 RightButton（瞄准无实现）；`AvatarRecognition.cs:538`、`AutoFightSeek.cs:304/342` 中键回正；`CombatCommand.cs:224-307` 宏 `mousedown/mouseup/click/scroll` 丢弃、`Aim` 未实现
-- 方案：① B2 中键→R3；② 瞄准改 `SimulateAction(GIActions.SwitchAimingMode)`（LT，`GamepadActionMap.cs:48-50` 已有映射）；③ 策略文本含 click/scroll 宏时启动 warn
+- 方案：① B2 中键→RS；② 瞄准改 `SimulateAction(GIActions.SwitchAimingMode)`（LT，`GamepadActionMap.cs:48-50` 已有映射）；③ 策略文本含 click/scroll 宏时启动 warn
 
 #### AutoArtifactSalvage（圣遗物分解）— M-L
 - 调用点：`AutoArtifactSalvageTask.cs:117/199` 背包 tab 点击；`:236` 分解按钮；`:254/279` 快速选择/星级；`:295-315` 确认链；`:335-457` 筛选与格子选/反选；`GridScroller.cs:50/63/82` 滚轮
@@ -369,7 +369,7 @@ FarmingPlan（纯数据/统计）、MapMask（仅遮罩绘制）、SkillCd（仅
 | `SimulateAction(GIActions)` | 全部经 `InputHub` 的模块自动切换；映射见 `GamepadActionMap` |
 | 裸 VK 反查 | `ReverseMappableActions` 覆盖 WASD、Space、ESC、F、Ctrl、X、V 等常用键；未覆盖键 warn |
 | `MoveMouseBy` | 按 `RightStickSensitivity` 换算右摇杆，替代原来的固定 ×256 饱和 |
-| 鼠标中键 | 映射 `CameraRecenter`（默认 R3） |
+| 鼠标中键 | 映射 `CameraRecenter`（默认 RS） |
 | 手柄对话/拾取 UI | AutoSkip 的 View/Menu 模板、AutoPick 的 X 图标 |
 
 ### 8.4 结论
