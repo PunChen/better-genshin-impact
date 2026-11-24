@@ -11,7 +11,6 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 using BetterGenshinImpact.Core.Simulator.Extensions;
-using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask;
 using Fischless.WindowsInput.Gamepad;
@@ -82,14 +81,6 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     [ObservableProperty]
     private string _gamepadStatus = string.Empty;
 
-    /// <summary>
-    /// 一键集成测试的实时日志
-    /// </summary>
-    [ObservableProperty]
-    private string _gamepadTestLog = string.Empty;
-
-    [ObservableProperty]
-    private bool _isGamepadTestRunning;
 
     public KeyBindingsSettingsPageViewModel(IConfigService configService, ILogger<KeyBindingsSettingsPageViewModel> logger)
     {
@@ -339,56 +330,6 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
         GamepadStatus = "已恢复默认按键";
     }
 
-    /// <summary>
-    /// 一键集成测试：直接驱动虚拟手柄走“打开地图 → 选择蒙德 → 确认传送”流程。
-    /// 日志单独输出到 log/gamepad-integration-test-yyyyMMdd.log，并显示在本页。
-    /// </summary>
-    [RelayCommand]
-    private async Task RunGamepadTeleportTestAsync()
-    {
-        if (IsGamepadTestRunning)
-        {
-            return;
-        }
-
-        if (!_gamepadConfig.Enabled)
-        {
-            GamepadStatus = "请先启用手柄模式";
-            return;
-        }
-
-        IsGamepadTestRunning = true;
-        GamepadTestLog = string.Empty;
-
-        void Append(string line)
-        {
-            var dispatcher = System.Windows.Application.Current?.Dispatcher;
-            if (dispatcher is not null && !dispatcher.CheckAccess())
-            {
-                dispatcher.Invoke(() => Append(line));
-                return;
-            }
-
-            GamepadTestLog += line + Environment.NewLine;
-        }
-
-        try
-        {
-            GamepadStatus = "集成测试运行中…";
-            await GamepadIntegrationTestRunner.RunTeleportToMondstadtAsync(Append);
-            GamepadStatus = "集成测试完成，请查看日志与截图";
-        }
-        catch (Exception e)
-        {
-            Append($"测试失败：{e.Message}");
-            GamepadStatus = $"集成测试失败：{e.Message}";
-            _logger.LogError(e, "手柄一键集成测试失败");
-        }
-        finally
-        {
-            IsGamepadTestRunning = false;
-        }
-    }
 
     /// <inheritdoc />
     public override void OnNavigatedTo()
