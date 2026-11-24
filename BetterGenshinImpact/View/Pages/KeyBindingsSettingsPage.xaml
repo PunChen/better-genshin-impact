@@ -141,6 +141,7 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
@@ -159,6 +160,9 @@
                         <ui:Button Command="{Binding ResetGamepadBindingsCommand}"
                                    Content="{i18n:T 恢复默认}"
                                    Margin="8,0,0,0" />
+                        <ui:Button Command="{Binding RunGamepadTeleportTestCommand}"
+                                   Content="{i18n:T 一键测试：传送到蒙德城}"
+                                   Margin="8,0,0,0" />
                         <ui:TextBlock Margin="12,0,0,0"
                                       VerticalAlignment="Center"
                                       Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
@@ -166,7 +170,21 @@
                                       TextWrapping="Wrap" />
                     </StackPanel>
 
-                    <ui:Border Grid.Row="2"
+                    <StackPanel Grid.Row="2" Margin="0,0,0,8">
+                        <ui:TextBlock Foreground="{ui:ThemeResource TextFillColorSecondaryBrush}"
+                                      Text="{i18n:T 集成测试日志（同时写入 log/gamepad-integration-test-*.log）}"
+                                      TextWrapping="Wrap" />
+                        <TextBox Height="120"
+                                 Margin="0,4,0,0"
+                                 Padding="8"
+                                 IsReadOnly="True"
+                                 AcceptsReturn="True"
+                                 Text="{Binding GamepadTestLog, Mode=OneWay}"
+                                 TextWrapping="Wrap"
+                                 VerticalScrollBarVisibility="Auto" />
+                    </StackPanel>
+
+                    <ui:Border Grid.Row="3"
                                Padding="8"
                                Background="{DynamicResource CardBackground}"
                                BorderBrush="{DynamicResource CardBorderBrush}"
