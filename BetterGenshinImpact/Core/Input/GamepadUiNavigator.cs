@@ -47,12 +47,12 @@ public static class GamepadUiNavigator
     }
 
     /// <summary>
-    /// 地图放大（RT）
+    /// 地图放大（LT）
     /// </summary>
     public static void ZoomIn() => InputHub.Foreground.SimulateAction(GIActions.MapZoomIn);
 
     /// <summary>
-    /// 地图缩小（LT）
+    /// 地图缩小（RT）
     /// </summary>
     public static void ZoomOut() => InputHub.Foreground.SimulateAction(GIActions.MapZoomOut);
 

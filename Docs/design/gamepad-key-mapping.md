@@ -1,4 +1,4 @@
-﻿# 手柄按键映射明细（feat/xbox-game-input-main）
+# 手柄按键映射明细（feat/xbox-game-input-main）
 
 > 依据游戏内「设置 → 按键 → 手柄」截图与逐项确认整理（2026-11）。
 > 对应代码：`GamepadConfig`、`GamepadActionMap`、`GamepadInputBackend`、`GamepadUiNavigator`。
@@ -85,8 +85,8 @@
 | 列表滚动（上/下） | 左摇杆上下 | `GIActions.ScrollUp/Down` |
 | 多选项选择 | 左摇杆上下 + 确认 | `FocusUp/Down` + `Confirm` |
 | 地图光标移动 / 拖动地图 | 左摇杆 | `GamepadUiNavigator.DragMap()` |
-| 地图放大 | RT | `MapZoomIn=RightTrigger` |
-| 地图缩小 | LT | `MapZoomOut=LeftTrigger` |
+| 地图放大 | LT | `MapZoomIn=LeftTrigger` |
+| 地图缩小 | RT | `MapZoomOut=RightTrigger` |
 | 确认 / 返回 | B / A | `Confirm` / `Cancel` |
 
 焦点与滚动的摇杆保持时间由 `UiNavigationPressMs`（默认 120ms）控制。
@@ -96,8 +96,8 @@
 ```csharp
 GamepadUiNavigator.Focus(GamepadStickDirection.Down);
 GamepadUiNavigator.Scroll(-3);        // 正数向上，负数向下
-GamepadUiNavigator.ZoomIn();          // RT
-GamepadUiNavigator.ZoomOut();         // LT
+GamepadUiNavigator.ZoomIn();          // LT
+GamepadUiNavigator.ZoomOut();         // RT
 GamepadUiNavigator.CameraZoomIn();    // LB + LT（镜头拉近）
 GamepadUiNavigator.CameraZoomOut();   // LB + RT（镜头拉远）
 GamepadUiNavigator.DragMap(1, 0, 300);
@@ -135,7 +135,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|
 | B2 | 列表滚动 | 左摇杆上下 | 🟡 已实现待验证（`ScrollUp/Down` → 左摇杆，待实机确认） |
 | B3 | 标签页切换 | LB / RB | ⬜ 未确认 |
-| B6 | 运动状态判断（滑翔/攀爬）手柄适配 | `Bv.GetMotionStatus` 依赖键盘按键提示图标（SpaceKey/XKey 模板），手柄模式下游戏显示手柄提示，判断**恒返回 Normal**；20 个调用点受影响（TrapEscaper、SkillBoostHelper、PathExecutor、StopFlyingHandler、UpDownGrabLeafHandler、AutoTrackPathTask）。需采集手柄模式下滑翔/攀爬的按键提示截图并新增模板（调查结果详见 §7.2） | ⬜ 未确认（需实机截图） |
+| B6 | 运动状态判断（滑翔/攀爬）手柄适配 | 已用 2026-11-25 手柄实机截图制作 `ControllerJumpButton`（下落图标）/`ControllerClimbButton`（攀爬图标）模板，`Bv.GetMotionStatus` 增加 `GamepadMode.Enabled` 分支：仅下落图标=Fly，下落+攀爬=Climb，都没有=Normal（详见 §7.2） | 🟡 已实现待验证 |
 | C1 | 钓鱼：抛竿/收杆/提竿 | 待确认 | ⬜ 未确认 |
 | C2 | 音游按键 | 待确认 | ⬜ 未确认 |
 | C3 | 七圣召唤：选牌/确认/结束回合 | 十字键 + B/A | ⬜ 未确认 |
@@ -222,8 +222,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|---|
 | FocusUp / FocusDown / FocusLeft / FocusRight | 界面焦点移动 | 左摇杆 | 🟡 | `GamepadUiNavigator` |
 | ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | 🟡 | B2：已实现待验证（待实机确认） |
-| MapZoomIn | 地图放大 | RT | 🟡 | |
-| MapZoomOut | 地图缩小 | LT | 🟡 | |
+| MapZoomIn | 地图放大 | LT | 🟡 | |
+| MapZoomOut | 地图缩小 | RT | 🟡 | |
 | CameraZoomIn | 镜头拉近 | LB + LT | 🟡 | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
 | CameraZoomOut | 镜头拉远 | LB + RT | 🟡 | 同上 |
 
@@ -317,25 +317,41 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 > 注：触发器层使用 `WhichGameUiForTriggers`（Talk > BigMap，**不判 Main**——派蒙模板匹配每帧开销大，属性能取舍），因此 `CaptureContent.CurrentGameUiCategory` 永远不会是 `Main`；任务层使用完整版 `WhichGameUi`（含 Main）。目前无触发器声明 `SupportedGameUiCategory=Main`，无实际影响；未来若有「仅主界面」触发器需注意此设计。
 
-### 7.2 已知缺口（B6）：运动状态判断手柄失效
+### 7.2 运动状态判断（B6）：手柄适配已实现
 
-`Bv.GetMotionStatus()`（`MotionStatus.Normal/Fly/Climb`，滑翔/攀爬运动状态）依赖**键盘按键提示图标**（`SpaceKey`/`XKey` 模板）：手柄模式下游戏显示手柄按键提示，键盘提示图标不再出现，判断**恒返回 Normal**。受影响调用点 20 处：
+`Bv.GetMotionStatus()`（`MotionStatus.Normal/Fly/Climb`）原先只识别键鼠 `SpaceKey`/`XKey` 提示，手柄模式下恒返回 Normal。受影响调用点 20 处：
 
 - `AutoPathing/TrapEscaper`、`AutoPathing/SkillBoostHelper`（11 处）、`AutoPathing/PathExecutor`
 - `AutoPathing/Handler/UpDownGrabLeafHandler`、`AutoPathing/Handler/StopFlyingHandler`
 - `AutoTrackPath/AutoTrackPathTask`
 
-**修复方案（推荐，2026-11-24）**：与键鼠逻辑对称——`GetMotionStatus` 增加 `GamepadMode.Enabled` 分支，用**手柄按键提示图标**替代键盘键帽模板（走外部资源包流程）：
+**实现（2026-11-25）**：`Bv.GetMotionStatus` 增加 `GamepadMode.Enabled` 分支，识别右下角技能区的**手柄动作图标**（不是常驻的 A/B 键位角标）：
 
-| 状态 | 键鼠模式 HUD 特征（现行逻辑） | 手柄模式预期特征（待截图确认） |
+| 状态 | 手柄 HUD 特征（实机截图确认） | 识别对象 |
 |---|---|---|
-| Normal | 无 空格/X 提示 | 无 B/A 提示 |
-| Fly（滑翔） | 空格提示出现，无 X 提示 | B 提示出现（跳跃/上升），无 A 提示 |
-| Climb（攀爬） | 空格 + X 提示同时出现 | B + A 提示同时出现（A=取消攀爬，对应 A13） |
+| Normal | 无滑翔/攀爬图标（只有普通攻击剑图标） | — |
+| Fly（滑翔） | 出现“下落/人物+下箭头”图标（B 键位） | `ControllerJumpButton` |
+| Climb（攀爬） | 下落图标 + “攀爬/人物+上箭头”图标（A 键位）同时出现 | `ControllerJumpButton` + `ControllerClimbButton` |
 
-实现骨架：`if (GamepadMode.Enabled)` 分支中模板匹配手柄 B/A 提示图标（`ControllerJumpButton`/`ControllerDropButton`，命名暂定），`bExist ? (aExist ? Climb : Fly) : Normal`。
+判定逻辑：
 
-**需采集的对照截图（TODO，2026-11-24 待补充）**：① 手柄模式滑翔 HUD（右下按键提示区）；② 手柄模式攀爬 HUD；③ 手柄模式游泳/水下 HUD（边界情况：游泳若也显示 B 提示会误判为 Fly——需确认键鼠模式游泳是否同样显示空格提示，若是则手柄保持同构行为即可）；④ 键鼠模式对应三张（顺带复核现行键鼠逻辑的空格/X 组合假设）。
+```csharp
+if (GamepadMode.Enabled)
+{
+    var jump = Find("ControllerJumpButton");
+    if (!jump) return Normal;
+    var climb = Find("ControllerClimbButton");
+    return climb ? Climb : Fly;
+}
+```
+
+资源与 ROI：
+
+- 模板：`GameTask/Common/Element/Assets/1920x1080/controller_jump_button.png`、`controller_climb_button.png`；
+- 识别对象：`Recognition.json` 的 `ControllerJumpButton`/`ControllerClimbButton`，ROI `@motionKeyTip = rect(cw - 300*s, ch - 230*s, 240*s, 170*s)`，`draw=true` 便于调试；
+- 离线 NCC 验证（2730×1536 实机截图）：下落模板命中滑翔 0.995、攀爬 0.975；攀爬模板只命中攀爬 0.996，地图界面均 <0.5。
+
+⚠️ 待实机验证：游泳/水下若也显示下落图标，会被判定为 Fly；需确认键鼠模式游泳是否同样出现空格提示，若是则保持同构即可。
 
 ### 7.3 派蒙菜单导航落地（A7/A18 已实现，A9 导航路径已实现）
 
@@ -359,14 +375,14 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 光标 | 左摇杆移动**选中圈光标**（屏幕上可见的圈，可作视觉伺服特征） | 鼠标自由光标 |
 | 视口移动 | 通过移动选中圈实现 | 按住左键拖拽 |
 | 选点与传送 | 圈对准传送点图标后**单击 B 选中** → 面板弹出后**再次单击 B 确认传送**（两段式，2026-11-24 实测） | 左键点击 + 点传送按钮 |
-| 缩放 | **RT 放大 / LT 缩小**（2026-11-24 实测） | 滚轮 |
+| 缩放 | **LT 放大 / RT 缩小**（2026-11-25 地图实机截图确认） | 滚轮 |
 | 候选列表（同名点待选） | 左摇杆上下选中待选项 → **再次单击 B 确认传送**（2026-11-24 实测） | 左键点击列表项 |
 | 区域列表 | **Y** 打开（默认显示当前区域，屏幕右侧列出全部可选区域）→ 左摇杆上下左右选中 → **B** 跳转该区域默认传送点 → 再 **B** 传送 | 左键点击左上角区域名开列表再点击 |
 
 识别层实证：传送按钮、选项列表、传送点图标**两模式一致**，模板可直接复用；仅确认/取消等按键提示角标（A/B 图标）不同。
 
 **实测结论（2026-11-24，五项全部落地）**：
-① **LT 缩小、RT 放大**——`MapZoomIn=RightTrigger`、`MapZoomOut=LeftTrigger`（注意：镜头距离调节是 LB+LT 拉近，与本项不是同一语义）；
+① **LT 放大、RT 缩小**——`MapZoomIn=LeftTrigger`、`MapZoomOut=RightTrigger`（2026-11-25 地图实机截图：右下角提示 LT 放大 / RT 缩小；镜头距离调节 LB+LT 拉近与本项不同语义）；
 ② 单击 B 选中传送点、再次单击 B 确认传送，面板无需导航；
 ③ **TODO（待补充截图）**：选中圈截图，做视觉伺服模板（走外部资源包）；
 ④ **缩放滑块在地图界面缩放时会显示**——`MapScaleButton` 模板可继续用于 zoom 闭环测量；TODO：待补一张手柄模式地图截图（含滑块与选中圈）复核；

@@ -295,8 +295,8 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.LeftThumb, config.QuestNavigation);
         Assert.Equal(GamepadButton.Left, config.ElementalSight);
         Assert.Equal(GamepadButton.LeftShoulder, config.ElementalSightModifier);
-        Assert.Equal(GamepadButton.RightTrigger, config.MapZoomIn);
-        Assert.Equal(GamepadButton.LeftTrigger, config.MapZoomOut);
+        Assert.Equal(GamepadButton.LeftTrigger, config.MapZoomIn);
+        Assert.Equal(GamepadButton.RightTrigger, config.MapZoomOut);
     }
 
     [Fact]
@@ -334,9 +334,9 @@ public class GamepadMappingTests
 
         var config = new GamepadConfig();
         Assert.True(GamepadActionMap.TryGetButton(GIActions.MapZoomIn, config, out var zoomIn));
-        Assert.Equal(GamepadButton.RightTrigger, zoomIn);
+        Assert.Equal(GamepadButton.LeftTrigger, zoomIn);
         Assert.True(GamepadActionMap.TryGetButton(GIActions.MapZoomOut, config, out var zoomOut));
-        Assert.Equal(GamepadButton.LeftTrigger, zoomOut);
+        Assert.Equal(GamepadButton.RightTrigger, zoomOut);
     }
 
     [Fact]

@@ -233,6 +233,20 @@ public static partial class Bv
 
     public static MotionStatus GetMotionStatus(ImageRegion captureRa)
     {
+        // 手柄模式下游戏 HUD 显示手柄按键提示，改为识别“下落/攀爬”图标：
+        // 两个图标都不出现 = Normal；只出现下落图标 = 滑翔；下落 + 攀爬图标同时出现 = 攀爬。
+        if (GamepadMode.Enabled)
+        {
+            using var jumpRa = captureRa.Find(ElementRecognition.Get("ControllerJumpButton", captureRa));
+            if (!jumpRa.IsExist())
+            {
+                return MotionStatus.Normal;
+            }
+
+            using var climbRa = captureRa.Find(ElementRecognition.Get("ControllerClimbButton", captureRa));
+            return climbRa.IsExist() ? MotionStatus.Climb : MotionStatus.Fly;
+        }
+
         using var spaceRa = captureRa.Find(ElementRecognition.Get("SpaceKey", captureRa));
         var spaceExist = spaceRa.IsExist();
         using var xRa = captureRa.Find(ElementRecognition.Get("XKey", captureRa));

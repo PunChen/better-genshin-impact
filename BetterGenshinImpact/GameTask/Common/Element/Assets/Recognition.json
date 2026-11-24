@@ -7,6 +7,7 @@
     "blueTrack": "rect(300 * s, 0, cw - 600 * s, ch)",
     "uiLeftTopCook": "rect(0, 0, 150 * s, 120 * s)",
     "keyTip": "rect(cw - 350 * s, ch - 70 * s, 200 * s, 70 * s)",
+    "motionKeyTip": "rect(cw - 300 * s, ch - 230 * s, 240 * s, 170 * s)",
     "friendChat": "rect(0, ch - 70 * s, 83 * s, 70 * s)",
     "partyChooseView": "rect(0, ch - 120 * s, cw / 7, 120 * s)",
     "partyDelete": "rect(cw / 4, ch - 120 * s, cw / 2, 120 * s)",
@@ -128,6 +129,20 @@
       "template": "key_x.png",
       "roi": "@keyTip",
       "draw": false
+    },
+    "ControllerJumpButton": {
+      "type": "TemplateMatch",
+      "template": "controller_jump_button.png",
+      "roi": "@motionKeyTip",
+      "use3Channels": true,
+      "draw": true
+    },
+    "ControllerClimbButton": {
+      "type": "TemplateMatch",
+      "template": "controller_climb_button.png",
+      "roi": "@motionKeyTip",
+      "use3Channels": true,
+      "draw": true
     },
     "FriendChat": {
       "type": "TemplateMatch",

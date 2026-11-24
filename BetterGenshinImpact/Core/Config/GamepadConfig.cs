@@ -211,16 +211,16 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _abandonChallengeModifier = GamepadButton.RightThumb;
 
     /// <summary>
-    /// 地图放大（默认 RT，实测 LT 缩小 / RT 放大）
+    /// 地图放大（默认 LT，游戏地图提示为 LT 放大 / RT 缩小）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _mapZoomIn = GamepadButton.RightTrigger;
+    private GamepadButton _mapZoomIn = GamepadButton.LeftTrigger;
 
     /// <summary>
-    /// 地图缩小（默认 LT）
+    /// 地图缩小（默认 RT）
     /// </summary>
     [ObservableProperty]
-    private GamepadButton _mapZoomOut = GamepadButton.LeftTrigger;
+    private GamepadButton _mapZoomOut = GamepadButton.RightTrigger;
 
     /// <summary>
     /// 镜头拉近（默认 LB + LT）
