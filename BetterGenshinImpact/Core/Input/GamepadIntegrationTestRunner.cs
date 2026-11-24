@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -54,6 +54,11 @@ public static class GamepadIntegrationTestRunner
 
             SystemControl.FocusWindow(handle);
             Log($"已聚焦游戏窗口，句柄={handle}");
+            if (!TaskContext.Instance().IsInitialized)
+            {
+                Log("警告：BGI 尚未绑定游戏窗口，地图识别/OCR 可能不可用；建议先在主界面开始一次任务后再测试");
+            }
+
             await Task.Delay(800, ct);
 
             using var transport = new Xbox360Transport();
