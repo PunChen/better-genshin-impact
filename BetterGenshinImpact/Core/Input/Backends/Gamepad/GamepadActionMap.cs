@@ -117,6 +117,15 @@ public static class GamepadActionMap
             case GIActions.MapZoomOut:
                 button = config.MapZoomOut;
                 return true;
+            case GIActions.AbandonChallenge:
+                button = config.AbandonChallenge;
+                return true;
+            case GIActions.OpenCoOpScreen:
+                button = config.OpenCoOpScreen;
+                return true;
+            case GIActions.CheckTutorialDetails:
+                button = config.CheckTutorialDetails;
+                return true;
             default:
                 button = GamepadButton.None;
                 return false;
@@ -141,6 +150,15 @@ public static class GamepadActionMap
                 return true;
             case GIActions.InteractionInSomeMode:
                 modifier = config.InteractionInSomeModeModifier;
+                return true;
+            case GIActions.AbandonChallenge:
+                modifier = config.AbandonChallengeModifier;
+                return true;
+            case GIActions.OpenCoOpScreen:
+                modifier = config.OpenCoOpScreenModifier;
+                return true;
+            case GIActions.CheckTutorialDetails:
+                modifier = config.CheckTutorialDetailsModifier;
                 return true;
             default:
                 modifier = GamepadButton.None;

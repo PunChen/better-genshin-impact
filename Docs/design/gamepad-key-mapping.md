@@ -114,6 +114,9 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | A12 | 切换走/跑 | 采纳建议：不做映射，轻推左摇杆即走。`SwitchToWalkOrRun` 保持 `None` 即为最终状态，无需改动 |
 | A13 | 落下（滑翔/攀爬中） | 实测确认为 **A**（原建议 B 作废）：滑翔状态按 A 触发下落攻击；攀爬状态按 A 取消攀爬。**已落地**：`Drop` 默认 `A`（与 NormalAttack/Cancel 同键，由游戏按上下文区分语义） |
 | A14 | 特定玩法交互（T） | 实测确认为 **LB + X**：`InteractionInSomeMode=X`、`InteractionInSomeModeModifier=LeftShoulder`（X 与 PickUpOrInteract 同键，加 LB 修饰区分）。**已落地** |
+| A15 | 中断挑战（P） | 实测确认为 **LS + RS**（两摇杆同时按下）。**已落地**：`AbandonChallenge=LeftThumb`、`AbandonChallengeModifier=RightThumb`（先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪） |
+| A16 | 打开多人游戏界面（F2） | 实测确认为 **LB + 十字键→**。**已落地**：`OpenCoOpScreen=Right`、`OpenCoOpScreenModifier=LeftShoulder` |
+| A17 | 查看教程详情（G） | 实测确认为 **LB + 十字键↑**。**已落地**：`CheckTutorialDetails=Up`、`CheckTutorialDetailsModifier=LeftShoulder` |
 
 ### 4.2 待确认项
 
@@ -132,7 +135,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（57 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 43 项 / ⚠️ 已实现但默认未绑定 1 项 / ❌ 缺失 12 项 / 🚫 无需映射 1 项**。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照，状态统计：**✅ 已实现 46 项 / ⚠️ 已实现但默认未绑定 1 项 / ❌ 缺失 9 项 / 🚫 无需映射 1 项**。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -160,6 +163,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | QuickUseGadget | 快捷使用小道具 | LB + B | ✅ | 组合键 |
 | QuestNavigation | 任务追踪 | LS（左摇杆按下） | ✅ | |
 | ElementalSight | 元素视野 | LB + 十字键← | ✅ | 组合键 |
+| AbandonChallenge | 中断挑战 | LS + RS | ✅ | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
 | SwitchMember1 | 切换角色 1 | 十字键↑ | ✅ | |
 | SwitchMember2 | 切换角色 2 | 十字键→ | ✅ | |
 | SwitchMember3 | 切换角色 3 | 十字键← | ✅ | |
@@ -194,6 +198,8 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | OpenChatScreen | 好友聊天 | Back（⧉ View） | ✅ | |
 | OpenPartySetupScreen | 打开队伍配置 | `None` | ⚠️ | 已定方案 A7：派蒙菜单 + 文字识别「队伍配置」+ 左摇杆导航锁定 |
 | OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | ❌ | 已定方案 A9：派蒙菜单 + 左摇杆导航锁定齿轮图标（需采集图标资源）；唯一活跃调用点 `EnterAndExitWonderlandJob.cs:23` |
+| OpenCoOpScreen | 打开多人游戏界面 | LB + 十字键→ | ✅ | 方案 A16：`Right` + 修饰键 `LeftShoulder` |
+| CheckTutorialDetails | 查看教程详情 | LB + 十字键↑ | ✅ | 方案 A17：`Up` + 修饰键 `LeftShoulder` |
 
 ### 5.6 UI 导航原语 — 全部已实现
 
@@ -204,19 +210,16 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | MapZoomIn | 地图放大 | LT | ✅ | |
 | MapZoomOut | 地图缩小 | RT | ✅ | |
 
-### 5.7 缺失/无需映射项（11 项缺失 + 1 项无需映射；第 12 项缺失 `OpenTheSettingsMenu` 见 §5.5）
+### 5.7 缺失/无需映射项（8 项缺失 + 1 项无需映射；第 9 项缺失 `OpenTheSettingsMenu` 见 §5.5）
 
 | GIActions | 功能 | 键鼠默认键 | 状态 | 建议 |
 |---|---|---|---|---|
-| AbandonChallenge | 中断挑战 | P | ❌ | **建议补**：游戏有手柄设置项（`AbandonChallengeGamepad=85`），AutoDomain/幽境退出兜底可用 |
 | ShortcutWheel | 呼出快捷轮盘 | Tab | ❌ | 可不补：轮盘已由各 `*Wheel` 动作内部实现（按住 LB + 拨右摇杆） |
-| OpenCoOpScreen | 打开多人游戏界面 | F2 | ❌ | 按需：游戏有手柄设置项（`CoOp=65`） |
 | OpenWishScreen | 打开祈愿界面 | F3 | ❌ | 按需：游戏有手柄设置项（`Wish=73`） |
 | OpenTheFurnishingScreen | 打开摆设界面（尘歌壶） | F7 | ❌ | 按需 |
 | OpenStellarReunion | 打开星之归还 | F8 | ❌ | 可不补（条件触发，无任务使用） |
 | OpenNotificationDetails | 打开通知详情 | Y | ❌ | 可不补 |
 | OpenSpecialEnvironmentInformation | 打开特殊环境说明 | U | ❌ | 可不补 |
-| CheckTutorialDetails | 查看教程详情 | G | ❌ | 可不补 |
 | OpenFriendsScreen | 打开好友界面 | O | ❌ | 按需 |
 | HideUI | 隐藏主界面 | `/` | ❌ | 可不补（拍照场景） |
 | ShowCursor | 呼出鼠标 | Alt | 🚫 | 无需映射：手柄模式无鼠标光标概念，反查表不含 Alt 是正确的 |
@@ -239,7 +242,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ### 5.10 键盘反查表（ReverseMappableActions）覆盖说明
 
-`GamepadChannel.ReverseMappableActions` 含 37 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F2/F3/F6/F7/F8、Alt、`/`）会 warn 丢弃——与 §5.7 缺失项一一对应。
+`GamepadChannel.ReverseMappableActions` 含 40 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。
 
 ## 6. 注意事项
 

@@ -119,6 +119,37 @@ public class GamepadMappingTests
     }
 
     [Fact]
+    public void AbandonChallengeAndInfoScreens_UseGamepadDefaults()
+    {
+        // 2026-11-24 实测确认（gamepad-key-mapping.md §4.1）
+        var config = new GamepadConfig();
+
+        // 中断挑战 = LS + RS（先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪）
+        Assert.Equal(GamepadButton.LeftThumb, config.AbandonChallenge);
+        Assert.Equal(GamepadButton.RightThumb, config.AbandonChallengeModifier);
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.AbandonChallenge, config, out var abandon));
+        Assert.Equal(GamepadButton.LeftThumb, abandon);
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.AbandonChallenge, config, out var abandonModifier));
+        Assert.Equal(GamepadButton.RightThumb, abandonModifier);
+
+        // 多人游戏 = LB + 十字键→
+        Assert.Equal(GamepadButton.Right, config.OpenCoOpScreen);
+        Assert.Equal(GamepadButton.LeftShoulder, config.OpenCoOpScreenModifier);
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.OpenCoOpScreen, config, out var coOp));
+        Assert.Equal(GamepadButton.Right, coOp);
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.OpenCoOpScreen, config, out var coOpModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, coOpModifier);
+
+        // 教程详情 = LB + 十字键↑
+        Assert.Equal(GamepadButton.Up, config.CheckTutorialDetails);
+        Assert.Equal(GamepadButton.LeftShoulder, config.CheckTutorialDetailsModifier);
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.CheckTutorialDetails, config, out var tutorial));
+        Assert.Equal(GamepadButton.Up, tutorial);
+        Assert.True(GamepadActionMap.TryGetModifier(GIActions.CheckTutorialDetails, config, out var tutorialModifier));
+        Assert.Equal(GamepadButton.LeftShoulder, tutorialModifier);
+    }
+
+    [Fact]
     public void SprintKeyboardAndMouse_ShareSameBinding()
     {
         var config = new GamepadConfig { Sprint = GamepadButton.RightTrigger };

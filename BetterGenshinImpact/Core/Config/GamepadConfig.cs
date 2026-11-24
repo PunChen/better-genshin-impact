@@ -193,6 +193,18 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _cameraRecenter = GamepadButton.RightThumb;
 
     /// <summary>
+    /// 中断挑战（默认 LS + RS 同时按下；先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _abandonChallenge = GamepadButton.LeftThumb;
+
+    /// <summary>
+    /// 中断挑战的组合键修饰键（默认 RS）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _abandonChallengeModifier = GamepadButton.RightThumb;
+
+    /// <summary>
     /// 地图放大（默认 LT）
     /// </summary>
     [ObservableProperty]
@@ -273,6 +285,30 @@ public partial class GamepadConfig : ObservableObject
     /// </summary>
     [ObservableProperty]
     private GamepadButton _openTheEventsMenu = GamepadButton.None;
+
+    /// <summary>
+    /// 打开多人游戏界面（默认 LB + 十字键→）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openCoOpScreen = GamepadButton.Right;
+
+    /// <summary>
+    /// 打开多人游戏界面的组合键修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _openCoOpScreenModifier = GamepadButton.LeftShoulder;
+
+    /// <summary>
+    /// 查看教程详情（默认 LB + 十字键↑）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _checkTutorialDetails = GamepadButton.Up;
+
+    /// <summary>
+    /// 查看教程详情的组合键修饰键（默认 LB）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _checkTutorialDetailsModifier = GamepadButton.LeftShoulder;
 
     /// <summary>
     /// 开启任务追踪（默认 LS/左摇杆按下）
