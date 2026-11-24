@@ -87,6 +87,25 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     private ObservableCollection<GamepadComboBindingSettingModel> _gamepadComboBindings = [];
 
     /// <summary>
+    /// 固定摇杆方向项（地图光标/角色移动/视角，不可修改摇杆本身）
+    /// </summary>
+    public IReadOnlyList<GamepadFixedInputSettingModel> GamepadFixedInputs { get; } =
+    [
+        new("地图光标↑", "左摇杆（固定）", false, 0, 1),
+        new("地图光标↓", "左摇杆（固定）", false, 0, -1),
+        new("地图光标←", "左摇杆（固定）", false, -1, 0),
+        new("地图光标→", "左摇杆（固定）", false, 1, 0),
+        new("角色移动↑", "左摇杆（固定）", false, 0, 1),
+        new("角色移动↓", "左摇杆（固定）", false, 0, -1),
+        new("角色移动←", "左摇杆（固定）", false, -1, 0),
+        new("角色移动→", "左摇杆（固定）", false, 1, 0),
+        new("视角↑", "右摇杆（固定）", true, 0, 1),
+        new("视角↓", "右摇杆（固定）", true, 0, -1),
+        new("视角←", "右摇杆（固定）", true, -1, 0),
+        new("视角→", "右摇杆（固定）", true, 1, 0),
+    ];
+
+    /// <summary>
     /// 手柄状态提示文本
     /// </summary>
     [ObservableProperty]
@@ -442,9 +461,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             return;
         }
 
-        var ok = model.IsRightStick
-            ? GamepadInputBackend.TestStick(true, 1, 0, 600, out var error)
-            : GamepadInputBackend.TestStick(false, 0, 1, 600, out error);
+        var ok = GamepadInputBackend.TestStick(model.IsRightStick, model.X, model.Y, 600, out var error);
 
         GamepadStatus = ok
             ? $"已测试固定摇杆：{model.ActionName} → {model.ValueText}"
