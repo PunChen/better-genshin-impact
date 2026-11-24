@@ -208,13 +208,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("地图缩小", nameof(_gamepadConfig.MapZoomOut), _gamepadConfig.MapZoomOut),
             new("镜头拉近（LB+LT 组合键按键）", nameof(_gamepadConfig.CameraZoomIn), _gamepadConfig.CameraZoomIn),
             new("镜头拉远（LB+RT 组合键按键）", nameof(_gamepadConfig.CameraZoomOut), _gamepadConfig.CameraZoomOut),
-            new("打开地图", nameof(_gamepadConfig.OpenMap), _gamepadConfig.OpenMap),
-            new("打开背包", nameof(_gamepadConfig.OpenInventory), _gamepadConfig.OpenInventory),
-            new("打开角色界面", nameof(_gamepadConfig.OpenCharacterScreen), _gamepadConfig.OpenCharacterScreen),
-            new("打开冒险之证界面", nameof(_gamepadConfig.OpenAdventurerHandbook), _gamepadConfig.OpenAdventurerHandbook),
             new("打开队伍配置界面", nameof(_gamepadConfig.OpenPartySetupScreen), _gamepadConfig.OpenPartySetupScreen),
-            new("打开纪行界面", nameof(_gamepadConfig.OpenBattlePassScreen), _gamepadConfig.OpenBattlePassScreen),
-            new("打开活动面板", nameof(_gamepadConfig.OpenTheEventsMenu), _gamepadConfig.OpenTheEventsMenu),
             new("打开多人游戏界面（LB+十字键→ 组合键按键）", nameof(_gamepadConfig.OpenCoOpScreen), _gamepadConfig.OpenCoOpScreen),
             new("查看教程详情（LB+十字键↑ 组合键按键）", nameof(_gamepadConfig.CheckTutorialDetails), _gamepadConfig.CheckTutorialDetails),
             new("打开好友界面", nameof(_gamepadConfig.OpenFriendsScreen), _gamepadConfig.OpenFriendsScreen),
@@ -222,7 +216,6 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("长按打开元素视野", nameof(_gamepadConfig.ElementalSight), _gamepadConfig.ElementalSight),
             new("打开派蒙菜单", nameof(_gamepadConfig.OpenPaimonMenu), _gamepadConfig.OpenPaimonMenu),
             new("打开好友聊天（View）", nameof(_gamepadConfig.OpenChatScreen), _gamepadConfig.OpenChatScreen),
-            new("打开任务菜单", nameof(_gamepadConfig.OpenQuestMenu), _gamepadConfig.OpenQuestMenu),
         ];
     }
 
