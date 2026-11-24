@@ -1,4 +1,4 @@
-using BetterGenshinImpact.View;
+﻿using BetterGenshinImpact.View;
 using BetterGenshinImpact.View.Pages;
 using BetterGenshinImpact.ViewModel.Pages;
 using Microsoft.Extensions.Hosting;
@@ -11,6 +11,10 @@ using BetterGenshinImpact.Core.Script;
 using BetterGenshinImpact.Core.Recognition.ONNX;
 using BetterGenshinImpact.GameTask;
 using BetterGenshinImpact.Helpers;
+using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.GameTask.Runtime;
+using Microsoft.Extensions.Logging;
+using System.IO;
 using BetterGenshinImpact.Service.Instance;
 using Microsoft.Extensions.DependencyInjection;
 using Wpf.Ui;
@@ -152,6 +156,11 @@ public class ApplicationHostService(
                         _ = _navigationWindow.Navigate(typeof(HomePage));
                         // 后续代码在 HomePageViewModel / OnLoaded 中。
                         break;
+
+                    case CommandLineAction.GamepadTest:
+                        _ = _navigationWindow.Navigate(typeof(HomePage));
+                        _ = RunGamepadTestAsync(cmdOptions.GamepadTestFilePath);
+                        break;
                 }
             }
             else
@@ -162,5 +171,43 @@ public class ApplicationHostService(
         }
         //
         await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// 命令行 --gamepad-test：启动截图器后执行外置步骤文件，完成后自动退出。
+    /// </summary>
+    private async Task RunGamepadTestAsync(string? casePath)
+    {
+        var logger = App.GetService<ILogger<ApplicationHostService>>();
+        try
+        {
+            if (string.IsNullOrWhiteSpace(casePath) || !File.Exists(casePath))
+            {
+                throw new FileNotFoundException($"测试步骤文件不存在: {casePath}");
+            }
+
+            var runtimeService = App.GetService<GameRuntimeService>()
+                                 ?? throw new InvalidOperationException("GameRuntimeService 未注册");
+            logger?.LogInformation("手柄集成测试：启动截图器");
+            if (!await runtimeService.StartAsync())
+            {
+                throw new InvalidOperationException("截图器启动失败，请确认游戏已启动");
+            }
+
+            await GamepadIntegrationTestRunner.RunCaseAsync(
+                casePath,
+                line => logger?.LogInformation("[手柄测试] {Line}", line));
+
+            Environment.ExitCode = 0;
+        }
+        catch (Exception e)
+        {
+            logger?.LogError(e, "手柄集成测试失败");
+            Environment.ExitCode = 1;
+        }
+        finally
+        {
+            Application.Current?.Dispatcher.Invoke(() => Application.Current.Shutdown(Environment.ExitCode));
+        }
     }
 }

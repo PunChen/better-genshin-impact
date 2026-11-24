@@ -13,6 +13,7 @@ public class CommandLineOptions
     public const string InstanceArgument = "--instance";
     public const string InstanceNameArgument = "--instance-name";
     public const string RestartFromProcessIdArgument = "--restart-from-pid";
+    public const string GamepadTestArgument = "--gamepad-test";
 
     private static CommandLineOptions? _instance;
 
@@ -39,6 +40,11 @@ public class CommandLineOptions
     /// 应用重启时被替换的旧进程 ID。
     /// </summary>
     public int? RestartFromProcessId { get; }
+
+    /// <summary>
+    /// --gamepad-test 传入的外置测试步骤文件路径
+    /// </summary>
+    public string? GamepadTestFilePath { get; }
 
     /// <summary>
     /// startOneDragon 时可选的配置名称（第 3 个参数）
@@ -88,6 +94,7 @@ public class CommandLineOptions
         var hasExplicitInstanceType = false;
         int? restartFromProcessId = null;
         string? instanceName = null;
+        string? gamepadTestFilePath = null;
         var commandArgs = new List<string>();
 
         for (var index = 0; index < launchArgs.Length; index++)
@@ -117,6 +124,15 @@ public class CommandLineOptions
                 if (TryReadNext(launchArgs, ref index, out var instanceNameValue))
                 {
                     instanceName = instanceNameValue;
+                }
+                continue;
+            }
+
+            if (argument.Equals(GamepadTestArgument, StringComparison.OrdinalIgnoreCase))
+            {
+                if (TryReadNext(launchArgs, ref index, out var testPathValue))
+                {
+                    gamepadTestFilePath = testPathValue;
                 }
                 continue;
             }
@@ -216,4 +232,7 @@ public enum CommandLineAction
 
     /// <summary>--TaskProgress — 启动任务进度</summary>
     TaskProgress,
+
+    /// <summary>--gamepad-test — 启动截图器后运行外置手柄测试步骤</summary>
+    GamepadTest,
 }
