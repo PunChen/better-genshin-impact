@@ -197,7 +197,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
 | Confirm | 确认 | B | 🟢 | |
-| Cancel | 取消/返回 | A | 🟢 | `KeyPress(VK_ESCAPE)` 反查为 A 正确（B1 已确认：游戏内 B=确认、A=取消/返回，语义无误）；BGI 输出待实机回归验证 |
+| Cancel | 取消/返回 | A | 🟢 | `KeyPress(VK_ESCAPE)` 反查为 A 正确（B1 已确认：游戏内 B=确认、A=取消/返回，语义无误） |
 | SkipDialog | 跳过/推进对话 | B | 🟢 | |
 
 ### 5.4 界面打开（快捷轮盘 LB + 右摇杆方向）— 🟢 已验证正确
