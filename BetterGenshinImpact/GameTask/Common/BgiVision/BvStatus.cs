@@ -260,8 +260,8 @@ public static partial class Bv
     public static MotionStatus GetMotionStatus(ImageRegion captureRa)
     {
         // 手柄模式下游戏 HUD 显示手柄按键提示，改为识别“下箭头/上箭头”图标：
-        // 两个都不出现 = Normal；只出现下箭头 = 滑翔（B 下落）；下箭头 + 上箭头 = 攀爬
-        // （下箭头 A=取消攀爬，上箭头 B=继续往上爬）。
+        // 两个都不出现 = Normal；只出现下箭头 = 滑翔（A 下落攻击 / B 取消滑翔）；
+        // 下箭头 + 上箭头 = 攀爬（A 取消攀爬 / B 继续往上爬）。
         if (GamepadMode.Enabled)
         {
             using var jumpRa = captureRa.Find(ElementRecognition.Get("ControllerJumpButton", captureRa));

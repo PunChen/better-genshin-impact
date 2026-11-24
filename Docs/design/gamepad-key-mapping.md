@@ -1,4 +1,4 @@
-﻿# 手柄按键映射明细（feat/xbox-game-input-main）
+# 手柄按键映射明细（feat/xbox-game-input-main）
 
 > 依据游戏内「设置 → 按键 → 手柄」截图与逐项确认整理（2026-11）。
 > 对应代码：`GamepadConfig`、`GamepadActionMap`、`GamepadInputBackend`、`GamepadUiNavigator`。
@@ -340,10 +340,10 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 状态 | 手柄 HUD 特征（实机截图确认） | 识别对象 |
 |---|---|---|
 | Normal | 无滑翔/攀爬图标（只有普通攻击剑图标） | — |
-| Fly（滑翔） | 出现“下落/人物+下箭头”图标（B 键位） | `ControllerJumpButton` |
-| Climb（攀爬） | 下落图标 + “攀爬/人物+上箭头”图标（A 键位）同时出现 | `ControllerJumpButton` + `ControllerClimbButton` |
+| Fly（滑翔） | 出现“人物+下箭头”图标；**A=下落攻击、B=取消滑翔** | `ControllerJumpButton` |
+| Climb（攀爬） | 下箭头 + 上箭头图标同时出现；**A=取消攀爬、B=继续往上爬** | `ControllerJumpButton` + `ControllerClimbButton` |
 
-> 攀爬按键语义：A = 取消攀爬（下箭头图标），B = 继续往上爬（上箭头图标）；滑翔时下箭头图标对应 B（下落/取消滑翔）。
+> 按键语义：滑翔中 **A=下落攻击、B=取消滑翔**；攀爬中 **A=取消攀爬、B=继续往上爬**。
 
 判定逻辑：
 
