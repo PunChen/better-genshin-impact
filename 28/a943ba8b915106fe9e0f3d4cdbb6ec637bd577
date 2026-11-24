@@ -1,0 +1,26 @@
+BetterGenshinImpact/Core/Config/GamepadConfig.cs
+  h_af85ab4e4c7fdb 195-206,289-312
+BetterGenshinImpact/Core/Input/Backends/Gamepad/GamepadActionMap.cs
+  h_af85ab4e4c7fdb 120-128,154-162
+BetterGenshinImpact/Core/Input/Backends/Gamepad/GamepadInputBackend.cs
+  h_af85ab4e4c7fdb 149-151
+BetterGenshinImpact/ViewModel/Pages/KeyBindingsSettingsPageViewModel.cs
+  h_af85ab4e4c7fdb 206-207,217-220
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 27
+Docs/design/gamepad-key-mapping.md
+  h_af85ab4e4c7fdb 117-119,138,166,201-202,213,245
+Test/BetterGenshinImpact.UnitTest/CoreTests/InputTests/GamepadMappingTests.cs
+  h_af85ab4e4c7fdb 121-151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "28a943ba8b915106fe9e0f3d4cdbb6ec637bd577",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
