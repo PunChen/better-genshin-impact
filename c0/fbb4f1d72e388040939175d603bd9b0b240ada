@@ -1,0 +1,16 @@
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 106-107,110-112
+Docs/design/gamepad-key-mapping.md
+  h_af85ab4e4c7fdb 277,319-335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "c0fbb4f1d72e388040939175d603bd9b0b240ada",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
