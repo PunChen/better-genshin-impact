@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -12,6 +12,7 @@ using BetterGenshinImpact.Core.Recognition.OCR;
 using BetterGenshinImpact.GameTask;
 using BetterGenshinImpact.GameTask.Common;
 using BetterGenshinImpact.GameTask.Common.BgiVision;
+using BetterGenshinImpact.GameTask.Runtime;
 using Fischless.WindowsInput.Gamepad;
 using Newtonsoft.Json;
 
@@ -82,6 +83,30 @@ public static class GamepadIntegrationTestRunner
             }
 
             Log("开始手柄测试");
+
+            // 设置页一键测试时 BGI 可能只是打开着、尚未启动截图器；先补启动，保证 Bv/OCR 可用
+            if (!TaskContext.Instance().IsInitialized)
+            {
+                var runtimeService = App.GetService<GameRuntimeService>();
+                if (runtimeService is null)
+                {
+                    throw new InvalidOperationException("截图器未初始化，且 GameRuntimeService 不可用");
+                }
+
+                Log("截图器未启动，正在启动游戏捕获…");
+                if (!await runtimeService.StartAsync())
+                {
+                    throw new InvalidOperationException("截图器启动失败，请确认游戏已启动");
+                }
+
+                Log("游戏捕获已启动");
+            }
+
+            if (!TaskContext.Instance().IsInitialized)
+            {
+                throw new InvalidOperationException("截图器仍未绑定游戏窗口，请确认游戏已启动且分辨率符合要求");
+            }
+
             if (InputHub.Backend is Backends.Gamepad.GamepadInputBackend)
             {
                 throw new InvalidOperationException("当前有任务正在使用手柄后端，请先停止任务后再运行测试");
