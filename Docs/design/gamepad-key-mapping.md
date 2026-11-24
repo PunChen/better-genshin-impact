@@ -5,7 +5,7 @@
 > 总体方案见 [gamepad-adaptation-plan.md](./gamepad-adaptation-plan.md)。
 
 > **标记体系（2026-11-24 起）**：⬜ 未确认 → 🔵 已确认待实现 → 🟡 已实现待验证 → 🟢 已验证正确；🚫 无需映射（终态）。
-> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 36 项映射经实机测试标 🟢，其余待回归）。
+> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 49 项映射经实机测试标 🟢，其余待回归）。
 
 ## 1. 游戏内基准布局（截图确认）
 
@@ -46,7 +46,7 @@
 
 > 该布局与基础战斗不同，AutoFight 枪械模式后续需要独立 profile。
 
-## 2. 已确认并落地的映射（🟡 已实现待验证）
+## 2. 已确认并落地的映射（🟢 已验证正确 / 🟡 无直接按键项待验证）
 
 ### 2.1 切人与道具（组合键）
 
@@ -58,9 +58,9 @@
 | 切换小队角色 4 | 十字键↓ | `SwitchMember4=Down` | 🟢 已验证正确 |
 | 切换小队角色 5 | **LB + Y** | `SwitchMember5=Y`、`SwitchMember5Modifier=LeftShoulder` | 🟢 已验证正确 |
 | 快捷使用小道具 | **LB + B** | `QuickUseGadget=B`、`QuickUseGadgetModifier=LeftShoulder` | 🟢 已验证正确 |
-| 任务追踪 | **LS（左摇杆按下）** | `QuestNavigation=LeftThumb` | 🟡 已实现待验证 |
-| 元素视野 | **LB + 十字键左** | `ElementalSight=Left`、`ElementalSightModifier=LeftShoulder` | 🟡 已实现待验证 |
-| 视角回正（鼠标中键） | RS（右摇杆按下；PS 手柄称 R3） | `CameraRecenter=RightThumb` | 🟡 已实现待验证 |
+| 任务追踪 | **LS（左摇杆按下）** | `QuestNavigation=LeftThumb` | 🟢 已验证正确 |
+| 元素视野 | **LB + 十字键左** | `ElementalSight=Left`、`ElementalSightModifier=LeftShoulder` | 🟢 已验证正确 |
+| 视角回正（鼠标中键） | RS（右摇杆按下；PS 手柄称 R3） | `CameraRecenter=RightThumb` | 🟢 已验证正确 |
 
 > 双键组合在设置页以单行显示：修饰键 + 修饰键按压方式（短/长） + 主键 + 主键按压方式（短/长）。
 > 短按使用 PressDurationMs（默认 60ms，测试至少 120ms），长按使用 LongPressDurationMs（默认 800ms）。
@@ -127,20 +127,20 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | A7 | 打开队伍配置 | 菜单 + 文字识别：打开派蒙菜单（Start）→ 文字识别定位「队伍配置」→ 左摇杆上下左右导航锁定该项 → 确认。已落地：`PaimonMenuNavigateJob.OpenScreenAsync`（8 个 `OpenPartySetupScreen` 调用点已接入，待验证假设见 §7.3） | 🟡 已实现待验证 |
 | A9 | 打开设置菜单（F6） | 菜单 + 导航：打开派蒙菜单（Start）→ 左摇杆上下左右导航锁定设置入口 → 确认。⚠️ 备注：① 唯一活跃调用点 `EnterAndExitWonderlandJob`（千星奇域入口）的 F6 按游戏内语义为「打开玩法系统界面（尘歌壶猫尾酒馆等特定场景）」，与派蒙菜单「设置」是否同一界面**待实机确认，该调用点未接线**；② 已实现「设置」文字定位导航路径（`PaimonMenuNavigateJob.OpenScreenAsync`），若设置入口旁有文字标签则无需图标资源，待实机确认（原齿轮图标资源方案作废/备用） | 🔵 已确认待实现（F6 语义待确认） |
 | A12 | 切换走/跑 | 采纳建议：不做映射，轻推左摇杆即走。`SwitchToWalkOrRun` 保持 `None` 即为最终状态，无需改动 | 🟡 已实现待验证（需实机确认轻推左摇杆为走而非跑） |
-| A13 | 落下（滑翔/攀爬中） | 实测确认为 **A**（原建议 B 作废）：滑翔状态按 A 触发下落攻击；攀爬状态按 A 取消攀爬。已落地：`Drop` 默认 `A`（与 NormalAttack/Cancel 同键，由游戏按上下文区分语义） | 🟡 已实现待验证 |
-| A14 | 特定玩法交互（T） | 实测确认为 **LB + X**：`InteractionInSomeMode=X`、`InteractionInSomeModeModifier=LeftShoulder`（X 与 PickUpOrInteract 同键，加 LB 修饰区分）。已落地 | 🟡 已实现待验证 |
-| A15 | 中断挑战（P） | 实测确认为 **LS + RS**（两摇杆同时按下）。已落地：`AbandonChallenge=LeftThumb`、`AbandonChallengeModifier=RightThumb`（先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪） | 🟡 已实现待验证 |
-| A16 | 打开多人游戏界面（F2） | 实测确认为 **LB + 十字键→**。已落地：`OpenCoOpScreen=Right`、`OpenCoOpScreenModifier=LeftShoulder` | 🟡 已实现待验证 |
-| A17 | 查看教程详情（G） | 实测确认为 **LB + 十字键↑**。已落地：`CheckTutorialDetails=Up`、`CheckTutorialDetailsModifier=LeftShoulder` | 🟡 已实现待验证 |
+| A13 | 落下（滑翔/攀爬中） | 实测确认为 **A**（原建议 B 作废）：滑翔状态按 A 触发下落攻击；攀爬状态按 A 取消攀爬。已落地：`Drop` 默认 `A`（与 NormalAttack/Cancel 同键，由游戏按上下文区分语义） | 🟢 已验证正确 |
+| A14 | 特定玩法交互（T） | 实测确认为 **LB + X**：`InteractionInSomeMode=X`、`InteractionInSomeModeModifier=LeftShoulder`（X 与 PickUpOrInteract 同键，加 LB 修饰区分）。已落地 | 🟢 已验证正确 |
+| A15 | 中断挑战（P） | 实测确认为 **LS + RS**（两摇杆同时按下）。已落地：`AbandonChallenge=LeftThumb`、`AbandonChallengeModifier=RightThumb`（先按住 RS 再按 LS，避免单独按下 LS 误触发任务追踪） | 🟢 已验证正确 |
+| A16 | 打开多人游戏界面（F2） | 实测确认为 **LB + 十字键→**。已落地：`OpenCoOpScreen=Right`、`OpenCoOpScreenModifier=LeftShoulder` | 🟢 已验证正确 |
+| A17 | 查看教程详情（G） | 实测确认为 **LB + 十字键↑**。已落地：`CheckTutorialDetails=Up`、`CheckTutorialDetailsModifier=LeftShoulder` | 🟢 已验证正确 |
 | A18 | 打开好友界面（O） | 使用**派蒙菜单 + 文字识别「好友」+ 左摇杆上下左右导航锁定**（与 A7 同模式，无专用手柄按键）。已落地：`PaimonMenuNavigateJob.OpenScreenAsync` 支持 `OpenFriendsScreen`（当前无活跃调用方，待任务接入；待验证假设见 §7.3） | 🟡 已实现待验证 |
-| A19 | 呼出快捷轮盘（Tab） | 实测确认为 **LB**（按住呼出，拨右摇杆选方向，与 §2.2 轮盘机制一致）。已落地：`ShortcutWheel=LeftShoulder`，键盘 Tab 反查直通 LB | 🟡 已实现待验证 |
-| A20 | 打开祈愿界面（F3） | 实测更正（原误记 LB+十字键↑）：**LB + 右摇杆↑**，轮盘第 8 向（原 7 向中 ↑ 唯一未占用，现 8 向全满）。已落地：`OpenWishScreenWheelModifier=LeftShoulder`、`OpenWishScreenWheelDirection=Up`（走 `TryGetWheel` 轮盘机制），直连键字段 `OpenWishScreen` 保留默认 `None`；键盘 F3 反查直通轮盘 | 🟡 已实现待验证 |
+| A19 | 呼出快捷轮盘（Tab） | 实测确认为 **LB**（按住呼出，拨右摇杆选方向，与 §2.2 轮盘机制一致）。已落地：`ShortcutWheel=LeftShoulder`，键盘 Tab 反查直通 LB | 🟢 已验证正确 |
+| A20 | 打开祈愿界面（F3） | 实测更正（原误记 LB+十字键↑）：**LB + 右摇杆↑**，轮盘第 8 向（原 7 向中 ↑ 唯一未占用，现 8 向全满）。已落地：`OpenWishScreenWheelModifier=LeftShoulder`、`OpenWishScreenWheelDirection=Up`（走 `TryGetWheel` 轮盘机制），直连键字段 `OpenWishScreen` 保留默认 `None`；键盘 F3 反查直通轮盘 | 🟢 已验证正确 |
 
 ### 4.2 ⬜ 未确认项
 
 | 编号 | 项目 | 当前建议 | 状态 |
 |---|---|---|---|
-| B2 | 列表滚动 | 左摇杆上下 | 🟡 已实现待验证（`ScrollUp/Down` → 左摇杆，待实机确认） |
+| B2 | 列表滚动 | 左摇杆上下 | 🟢 已验证正确 |
 | B3 | 标签页切换 | LB / RB | ⬜ 未确认 |
 | B6 | 运动状态判断（滑翔/攀爬）手柄适配 | 已用 2026-11-25 手柄实机截图制作 `ControllerJumpButton`（下落图标）/`ControllerClimbButton`（攀爬图标）模板，`Bv.GetMotionStatus` 增加 `GamepadMode.Enabled` 分支：仅下落图标=Fly，下落+攀爬=Climb，都没有=Normal（详见 §7.2） | 🟡 已实现待验证 |
 | C1 | 钓鱼：抛竿/收杆/提竿 | 待确认 | ⬜ 未确认 |
@@ -157,16 +157,16 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 > **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」以及全部 8 个快捷轮盘方向均已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 36 项 / 🟡 已实现待验证 16 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 49 项 / 🟡 已实现待验证 3 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| MoveForward | 向前移动 | 左摇杆 | 🟡 | 反查 W |
-| MoveBackward | 向后移动 | 左摇杆 | 🟡 | 反查 S |
-| MoveLeft | 向左移动 | 左摇杆 | 🟡 | 反查 A |
-| MoveRight | 向右移动 | 左摇杆 | 🟡 | 反查 D |
+| MoveForward | 向前移动 | 左摇杆 | 🟢 | 反查 W |
+| MoveBackward | 向后移动 | 左摇杆 | 🟢 | 反查 S |
+| MoveLeft | 向左移动 | 左摇杆 | 🟢 | 反查 A |
+| MoveRight | 向右移动 | 左摇杆 | 🟢 | 反查 D |
 
 ### 5.2 战斗与角色动作 — 全部已实现并已绑定默认值（仅队伍配置 1 项未绑定，见 §5.5）
 
@@ -178,14 +178,14 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | Jump | 跳跃 | B | 🟢 | |
 | SprintKeyboard / SprintMouse | 冲刺 | RB | 🟢 | 两个动作共用 `Sprint` |
 | SwitchAimingMode | 切换瞄准模式 | LT | 🟢 | |
-| SwitchToWalkOrRun | 切换走/跑 | 无（轻推左摇杆） | 🟢 | 方案 A12：保持 `None` 为最终状态 |
+| SwitchToWalkOrRun | 切换走/跑 | 无（轻推左摇杆） | 🟡 | 方案 A12：保持 `None` 为最终状态 |
 | Drop | 落下（滑翔/攀爬） | A | 🟢 | 方案 A13：滑翔中 A=下落攻击，攀爬中 A=取消攀爬（与 NormalAttack/Cancel 同键，上下文区分） |
 | PickUpOrInteract | 拾取/交互 | X | 🟢 | |
 | InteractionInSomeMode | 特定玩法交互（T） | LB + X | 🟢 | 方案 A14：`X` + 修饰键 `LeftShoulder` |
 | QuickUseGadget | 快捷使用小道具 | LB + B | 🟢 | 组合键 |
 | ShortcutWheel | 呼出快捷轮盘 | LB（按住） | 🟢 | 方案 A19：按住呼出轮盘，方向选择走 §5.4 轮盘机制 |
 | QuestNavigation | 任务追踪 | LS（左摇杆按下） | 🟢 | |
-| ElementalSight | 元素视野 | LB + 十字键← | 🟡 | 组合键 |
+| ElementalSight | 元素视野 | LB + 十字键← | 🟢 | 组合键 |
 | AbandonChallenge | 中断挑战 | LS + RS | 🟢 | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
 | SwitchMember1 | 切换角色 1 | 十字键↑ | 🟢 | |
 | SwitchMember2 | 切换角色 2 | 十字键→ | 🟢 | |
@@ -222,20 +222,20 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | OpenChatScreen | 好友聊天 | Back（⧉ View） | 🟢 | |
 | OpenPartySetupScreen | 打开队伍配置 | `None` | 🟡 | 方案 A7 已落地：`PaimonMenuNavigateJob` 派蒙菜单导航（见 §7.3） |
 | OpenTheSettingsMenu | 打开玩法系统界面（F6） | — | 🔵 | 方案 A9：派蒙菜单导航路径已实现，F6 语义待实机确认（见 §4.1 A9 备注 / §7.3） |
-| OpenCoOpScreen | 打开多人游戏界面 | LB + 十字键→ | 🟡 | 方案 A16：`Right` + 修饰键 `LeftShoulder` |
-| CheckTutorialDetails | 查看教程详情 | LB + 十字键↑ | 🟡 | 方案 A17：`Up` + 修饰键 `LeftShoulder` |
+| OpenCoOpScreen | 打开多人游戏界面 | LB + 十字键→ | 🟢 | 方案 A16：`Right` + 修饰键 `LeftShoulder` |
+| CheckTutorialDetails | 查看教程详情 | LB + 十字键↑ | 🟢 | 方案 A17：`Up` + 修饰键 `LeftShoulder` |
 | OpenFriendsScreen | 打开好友界面 | 无直连键（默认 `None`） | 🟡 | 方案 A18 已落地：`PaimonMenuNavigateJob` 派蒙菜单导航（无活跃调用方，见 §7.3） |
 
 ### 5.6 UI 导航原语 — 全部已实现
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| FocusUp / FocusDown / FocusLeft / FocusRight | 界面焦点移动 | 左摇杆 | 🟡 | `GamepadUiNavigator` |
-| ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | 🟡 | B2：已实现待验证（待实机确认） |
+| FocusUp / FocusDown / FocusLeft / FocusRight | 界面焦点移动 | 左摇杆 | 🟢 | `GamepadUiNavigator` |
+| ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | 🟢 | B2：已实现待验证（待实机确认） |
 | MapZoomIn | 地图放大 | LT | 🟢 | |
 | MapZoomOut | 地图缩小 | RT | 🟢 | |
-| CameraZoomIn | 镜头拉近 | LB（长按 500ms）+ LT（600ms） | 🟡 | 镜头距离调节为手柄专属功能；需长按 LB 再按 LT |
-| CameraZoomOut | 镜头拉远 | LB（长按 500ms）+ RT（600ms） | 🟡 | 同上 |
+| CameraZoomIn | 镜头拉近 | LB（长按 500ms）+ LT（600ms） | 🟢 | 镜头距离调节为手柄专属功能；需长按 LB 再按 LT |
+| CameraZoomOut | 镜头拉远 | LB（长按 500ms）+ RT（600ms） | 🟢 | 同上 |
 
 ### 5.7 ⏸️ 暂不映射与无需映射项（暂不映射 5 项 + 无需映射 1 项；另 1 项已确认待实现见 §4.1/§5.5）
 
@@ -254,7 +254,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | 输入 | 手柄 | 状态 | 备注 |
 |---|---|---|---|
-| 鼠标中键（视角回正） | RS（右摇杆按下，`CameraRecenter=RightThumb`） | 🟡 | `GamepadChannel.OnMouseButton` 特判 |
+| 鼠标中键（视角回正） | RS（右摇杆按下，`CameraRecenter=RightThumb`） | 🟢 | `GamepadChannel.OnMouseButton` 特判 |
 | `MoveMouseBy`（鼠标相对移动） | 右摇杆脉冲（`RightStickPulseMs`，默认 30ms） | 🟡 | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
 
 ### 5.9 场景级缺失（GIActions 未建模）
