@@ -1,0 +1,24 @@
+BetterGenshinImpact/GameTask/AutoFight/Model/Avatar.cs
+  h_af85ab4e4c7fdb 2,1167-1184,1187,1205,1223,1249
+BetterGenshinImpact/GameTask/AutoSkip/AutoSkipTrigger.cs
+  h_af85ab4e4c7fdb 882-891,1124-1129,1386-1391
+BetterGenshinImpact/GameTask/Common/Job/ChooseTalkOptionTask.cs
+  h_af85ab4e4c7fdb 2-3,40-56,112-121,140-149,201-209
+BetterGenshinImpact/GameTask/QuickTeleport/QuickTeleportTrigger.cs
+  h_af85ab4e4c7fdb 2-3,6,116-125,181-191
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 75,79,93,114
+Docs/design/gamepad-key-mapping.md
+  h_af85ab4e4c7fdb 374-393
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "0ec4f4d2bd4c350966614746ab4c3f8db22458a2",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
