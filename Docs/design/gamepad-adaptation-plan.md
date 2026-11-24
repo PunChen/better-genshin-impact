@@ -76,7 +76,8 @@
 | ReturnMainUiTask | 基本可用 | exitDoor 兜底分支改按键（B1 后自动收益）；`:53` VK_RETURN 无反查（手柄丢弃），建议改 `SimulateAction(Confirm)` | S |
 | SkillCdTrigger | **手柄模式不触发**（2026-11-24 审计发现） | `GetAsyncKeyState(VK_1-4)` 只听物理键盘，手柄玩家十字键切人 BGI 感知不到 → 技能 CD 悬浮窗不显示；需监听虚拟手柄十字键输出（ViGEm 回环/XInput 轮询） | M |
 | BlessingOfTheWelkinMoonTask | 失效 | 空白双击 → 按 A/B 跳过月卡弹窗 | S |
-| AutoSkip 非对话路径 | 对话已适配 | 黑屏剧情/底部三角/角色弹窗/原石奖励改按确认键；邀约选项改摇杆导航 | M |
+| AutoSkip 非对话路径 | 对话已适配 | 黑屏剧情/底部三角/角色弹窗/原石奖励改按确认键；邀约选项改摇杆导航（2026-11-24 复查定位 7 处点击：`AutoSkipTrigger` :704/:882/:1121/:1267/:1378/:1518/:1526/:1538） | M |
+| AutoPick 滚轮场景 | 低频失效 | `AutoPickTrigger:337` VerticalScroll 丢弃——多物品拾取列表滚动场景；待实测手柄对应操作后补 | S |
 | AutoCook | 部分可用 | 确认弹窗"识别+按键"；验证手柄烹饪模板 | S |
 | AutoEat（循环模式） | 🟡 核心可用 | `QuickUseGadget` 默认绑定已完成（A14：LB+B）；剩余：指定食物路径手柄下禁用提示 | S |
 | AutoOpenChest | 基本可用 | 中键分支改右摇杆脉冲转身重试 | S |
@@ -112,6 +113,7 @@
 | TpTask | 完全失效（一切传送的底层） | 按实测语义重构：圈伺服替代拖拽视口与绝对点击（圈对准 + B）；LT/RT 替代滚轮（zoom 档位化闭环重写）；候选列表左摇杆+B；区域切换 Y+左摇杆+B（替代 SwitchArea 点击链） | L |
 | QuickTeleport | 完全失效（日常最高频） | 识别层已实测确认可复用（图标一致）；**传送流程已实测确认两段式（2026-11-24）：B 选中 → 面板弹出 → 再次 B 确认传送，面板无需导航**；传送按钮 `ra.Click()` 改 `SimulateAction(Confirm)`；选项列表：默认高亮待确认（若默认第一项则连按两次 B，否则左摇杆+B） | M |
 | LowerHeadThenWalkToTask | 退化 | B3 比例控制 + 闭环微调 | M |
+| PathExecutor 复苏点击 | 全队死亡不自动复苏 | `PathExecutor:334/:651` `ClickIfInReviveModal` 点击丢弃；改 OCR「复苏」定位 + 按确认（复苏弹窗确认键待实测） | S-M |
 | ScanPickTask | 部分退化 | 同上；回正视角需校准方案 | M |
 | LinneaMiningTask | 完全失效 | B4 补 `ElementalSight` + B3 视觉伺服瞄准 + 射击键 | L |
 
