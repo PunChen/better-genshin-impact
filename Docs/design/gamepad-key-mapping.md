@@ -338,7 +338,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | 状态 | 手柄 HUD 特征（实机截图确认） | 识别对象 |
 |---|---|---|
-| Normal | 无滑翔/攀爬图标（只有普通攻击剑图标） | — |
+| Normal | **上箭头（B 跳跃）常驻**，但下箭头不出现 | — |
 | Fly（滑翔） | 出现“人物+下箭头”图标；**A=下落攻击、B=取消滑翔** | `ControllerJumpButton` |
 | Climb（攀爬） | 下箭头 + 上箭头图标同时出现；**A=取消攀爬、B=继续往上爬** | `ControllerJumpButton` + `ControllerClimbButton` |
 
@@ -360,7 +360,8 @@ if (GamepadMode.Enabled)
 
 - 模板：`GameTask/Common/Element/Assets/1920x1080/controller_jump_button.png`、`controller_climb_button.png`；
 - 识别对象：`Recognition.json` 的 `ControllerJumpButton`/`ControllerClimbButton`，ROI `@motionKeyTip = rect(cw - 300*s, ch - 230*s, 240*s, 170*s)`，`draw=true` 便于调试；
-- 离线 NCC 验证（2730×1536 实机截图）：下落模板命中滑翔 0.995、攀爬 0.975；攀爬模板只命中攀爬 0.996，地图界面均 <0.5。
+- 离线 NCC 验证（2730×1536 实机截图）：下箭头模板命中滑翔 0.995、攀爬 0.975，正常状态仅 0.666（不命中）；上箭头模板命中正常 0.956、攀爬 0.996，滑翔仅 0.490。
+- 因此判定以**下箭头为门禁**：正常状态上箭头（B 跳跃）常驻，不能单独作为运动状态依据。
 
 ⚠️ 待实机验证：游泳/水下若也显示下落图标，会被判定为 Fly；需确认键鼠模式游泳是否同样出现空格提示，若是则保持同构即可。
 
