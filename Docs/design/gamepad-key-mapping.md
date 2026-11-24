@@ -292,7 +292,17 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 - `AutoPathing/Handler/UpDownGrabLeafHandler`、`AutoPathing/Handler/StopFlyingHandler`
 - `AutoTrackPath/AutoTrackPathTask`
 
-**修复方案**（⬜ 待实机截图）：采集手柄模式下滑翔/攀爬状态的按键提示截图，新增手柄提示模板（走外部资源包流程），并在 `GetMotionStatus` 增加 `GamepadMode.Enabled` 分支。
+**修复方案（推荐，2026-11-24）**：与键鼠逻辑对称——`GetMotionStatus` 增加 `GamepadMode.Enabled` 分支，用**手柄按键提示图标**替代键盘键帽模板（走外部资源包流程）：
+
+| 状态 | 键鼠模式 HUD 特征（现行逻辑） | 手柄模式预期特征（待截图确认） |
+|---|---|---|
+| Normal | 无 空格/X 提示 | 无 B/A 提示 |
+| Fly（滑翔） | 空格提示出现，无 X 提示 | B 提示出现（跳跃/上升），无 A 提示 |
+| Climb（攀爬） | 空格 + X 提示同时出现 | B + A 提示同时出现（A=取消攀爬，对应 A13） |
+
+实现骨架：`if (GamepadMode.Enabled)` 分支中模板匹配手柄 B/A 提示图标（`ControllerJumpButton`/`ControllerDropButton`，命名暂定），`bExist ? (aExist ? Climb : Fly) : Normal`。
+
+**需采集的对照截图**（⬜）：① 手柄模式滑翔 HUD（右下按键提示区）；② 手柄模式攀爬 HUD；③ 手柄模式游泳/水下 HUD（边界情况：游泳若也显示 B 提示会误判为 Fly——需确认键鼠模式游泳是否同样显示空格提示，若是则手柄保持同构行为即可）；④ 键鼠模式对应三张（顺带复核现行键鼠逻辑的空格/X 组合假设）。
 
 ### 7.3 派蒙菜单导航落地（A7/A18 已实现，A9 导航路径已实现）
 
