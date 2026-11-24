@@ -5,7 +5,7 @@
 > 总体方案见 [gamepad-adaptation-plan.md](./gamepad-adaptation-plan.md)。
 
 > **标记体系（2026-11-24 起）**：⬜ 未确认 → 🔵 已确认待实现 → 🟡 已实现待验证 → 🟢 已验证正确；🚫 无需映射（终态）。
-> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 45 项映射经实机测试标 🟢，其余待回归）。
+> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 49 项映射经实机测试标 🟢，其余待回归）。
 
 ## 1. 游戏内基准布局（截图确认）
 
@@ -24,8 +24,8 @@
 | 打开派蒙界面 | ☰ Menu | `OpenPaimonMenu` | `Start` | 🟢 已验证正确 |
 | 好友聊天 | ⧉ View | `OpenChatScreen` | `Back` | 🟢 已验证正确 |
 | 确认 / 取消 | B / A | `Confirm` / `Cancel` | `B` / `A` | 🟢 已验证正确 |
-| 移动角色 | 左摇杆 | `GIActions.Move*` | 左摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） | 🟡 已实现待验证 |
-| 转动视角 | 右摇杆 | `MoveMouseBy` | 右摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） | 🟡 已实现待验证 |
+| 移动角色 | 左摇杆 | `GIActions.Move*` | 左摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） | 🟢 已验证正确 |
+| 转动视角 | 右摇杆 | `MoveMouseBy` | 右摇杆（内置默认，开启手柄模式即生效，非独立可绑定按键） | 🟢 已验证正确 |
 | 镜头拉近 | LB + LT | `CameraZoomIn` | LB + LT（镜头距离调节，手柄专属功能） | 🟢 已验证正确 |
 | 镜头拉远 | LB + RT | `CameraZoomOut` | LB + RT（同） | 🟢 已验证正确 |
 ### 1.2 第三人称射击（独立布局）
@@ -85,15 +85,15 @@
 
 ### 2.3 菜单 / 地图 UI 原语
 
-| 功能 | 手柄 | 代码 |
-|---|---|---|
-| 焦点上/下/左/右 | 左摇杆 | `GIActions.FocusUp/Down/Left/Right` |
-| 列表滚动（上/下） | 左摇杆上下 | `GIActions.ScrollUp/Down` |
-| 多选项选择 | 左摇杆上下 + 确认 | `FocusUp/Down` + `Confirm` |
-| 地图光标移动 / 拖动地图 | 左摇杆 | `GamepadUiNavigator.DragMap()` |
-| 地图放大 | LT | `MapZoomIn=LeftTrigger` |
-| 地图缩小 | RT | `MapZoomOut=RightTrigger` |
-| 确认 / 返回 | B / A | `Confirm` / `Cancel` |
+| 功能 | 手柄 | 代码 | 状态 |
+|---|---|---|---|
+| 焦点上/下/左/右 | 左摇杆 | `GIActions.FocusUp/Down/Left/Right` | 🟡 已实现待验证 |
+| 列表滚动（上/下） | 左摇杆上下 | `GIActions.ScrollUp/Down` | 🟡 已实现待验证 |
+| 多选项选择 | 左摇杆上下 + 确认 | `FocusUp/Down` + `Confirm` | 🟡 已实现待验证 |
+| 地图光标移动 / 拖动地图 | 左摇杆 | `GamepadUiNavigator.DragMap()` | 🟢 已验证正确 |
+| 地图放大 | LT | `MapZoomIn=LeftTrigger` | 🟢 已验证正确 |
+| 地图缩小 | RT | `MapZoomOut=RightTrigger` | 🟢 已验证正确 |
+| 确认 / 返回 | B / A | `Confirm` / `Cancel` | 🟢 已验证正确 |
 
 焦点与滚动的摇杆保持时间由 `UiNavigationPressMs`（默认 120ms）控制。
 
@@ -156,16 +156,16 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 > **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」以及全部 8 个快捷轮盘方向均已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 45 项 / 🟡 已实现待验证 7 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 49 项 / 🟡 已实现待验证 3 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| MoveForward | 向前移动 | 左摇杆 | 🟡 | 反查 W |
-| MoveBackward | 向后移动 | 左摇杆 | 🟡 | 反查 S |
-| MoveLeft | 向左移动 | 左摇杆 | 🟡 | 反查 A |
-| MoveRight | 向右移动 | 左摇杆 | 🟡 | 反查 D |
+| MoveForward | 向前移动 | 左摇杆 | 🟢 | 反查 W |
+| MoveBackward | 向后移动 | 左摇杆 | 🟢 | 反查 S |
+| MoveLeft | 向左移动 | 左摇杆 | 🟢 | 反查 A |
+| MoveRight | 向右移动 | 左摇杆 | 🟢 | 反查 D |
 
 ### 5.2 战斗与角色动作 — 全部已实现并已绑定默认值（仅队伍配置 1 项未绑定，见 §5.5）
 
@@ -254,7 +254,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 输入 | 手柄 | 状态 | 备注 |
 |---|---|---|---|
 | 鼠标中键（视角回正） | RS（右摇杆按下，`CameraRecenter=RightThumb`） | 🟢 | `GamepadChannel.OnMouseButton` 特判 |
-| `MoveMouseBy`（鼠标相对移动） | 右摇杆脉冲（`RightStickPulseMs`，默认 30ms） | 🟡 | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
+| `MoveMouseBy`（鼠标相对移动） | 右摇杆脉冲（`RightStickPulseMs`，默认 30ms） | 🟢 | 精度有限；比例控制走 `SetRightStick`/`TurnByAngle` |
 
 ### 5.9 场景级缺失（GIActions 未建模）
 
