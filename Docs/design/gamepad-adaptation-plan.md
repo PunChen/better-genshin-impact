@@ -24,7 +24,7 @@
 
 ### 1.1 三个横切缺口
 
-1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；仍缺 `OpenWishScreen`、`OpenNotificationDetails`、`HideUI` 等低频界面动作。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判 / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7），运动状态判断手柄缺口已登记 B6。
+1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；仍缺 `OpenWishScreen`、`OpenNotificationDetails`、`HideUI` 等低频界面动作。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判 / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7）；⚠️ 地图/大世界模板为键鼠时代资产，游戏连手柄后 UI 可能整体切换布局，命中率待实机验证（详见 §7.1 修正备注），运动状态判断手柄缺口已登记 B6。
 2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 RS）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
 
