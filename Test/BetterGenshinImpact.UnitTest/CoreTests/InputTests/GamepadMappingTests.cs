@@ -276,6 +276,11 @@ public class GamepadMappingTests
         Assert.Equal(GamepadButton.X, config.InteractionInSomeMode);
         Assert.Equal(GamepadButton.LeftShoulder, config.InteractionInSomeModeModifier);
 
+        // 快捷轮盘 = LB（按住呼出，配合右摇杆方向选择）
+        Assert.Equal(GamepadButton.LeftShoulder, config.ShortcutWheel);
+        Assert.True(GamepadActionMap.TryGetButton(GIActions.ShortcutWheel, config, out var wheel));
+        Assert.Equal(GamepadButton.LeftShoulder, wheel);
+
         Assert.Equal(GamepadButton.Back, config.OpenChatScreen);
 
         Assert.Equal(GamepadButton.LeftThumb, config.QuestNavigation);

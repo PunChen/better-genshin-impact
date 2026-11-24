@@ -75,6 +75,9 @@ public static class GamepadActionMap
             case GIActions.QuickUseGadget:
                 button = config.QuickUseGadget;
                 return true;
+            case GIActions.ShortcutWheel:
+                button = config.ShortcutWheel;
+                return true;
             case GIActions.OpenMap:
                 button = config.OpenMap;
                 return true;

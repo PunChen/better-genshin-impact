@@ -123,6 +123,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         GIActions.Jump,
         GIActions.Drop,
         GIActions.QuickUseGadget,
+        GIActions.ShortcutWheel,
         GIActions.SwitchToWalkOrRun,
         GIActions.InteractionInSomeMode,
         GIActions.MoveForward,

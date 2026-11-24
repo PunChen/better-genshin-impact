@@ -20,7 +20,7 @@
 | 跳跃 / 特定模式向上 | B | `Jump` | `B` |
 | 拾取 / 交互 | X | `PickUpOrInteract` | `X` |
 | 切换瞄准模式 | LT | `SwitchAimingMode` | `LeftTrigger` |
-| 呼出快捷轮盘 | LB | 各 `*WheelModifier` | `LeftShoulder` |
+| 呼出快捷轮盘 | LB | `ShortcutWheel` | `LeftShoulder`（按住呼出，方向选择见 §2.2） |
 | 打开派蒙界面 | ☰ Menu | `OpenPaimonMenu` | `Start` |
 | 好友聊天 | ⧉ View | `OpenChatScreen` | `Back` |
 | 确认 / 取消 | B / A | `Confirm` / `Cancel` | `B` / `A` |
@@ -125,6 +125,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | A16 | 打开多人游戏界面（F2） | 实测确认为 **LB + 十字键→**。已落地：`OpenCoOpScreen=Right`、`OpenCoOpScreenModifier=LeftShoulder` | 🟡 已实现待验证 |
 | A17 | 查看教程详情（G） | 实测确认为 **LB + 十字键↑**。已落地：`CheckTutorialDetails=Up`、`CheckTutorialDetailsModifier=LeftShoulder` | 🟡 已实现待验证 |
 | A18 | 打开好友界面（O） | 使用**派蒙菜单 + 文字识别「好友」+ 左摇杆上下左右导航锁定**（与 A7 同模式，无专用手柄按键）。已加 `OpenFriendsScreen` 配置字段（默认 `None`，可绑定直连键），导航流程待实施 | 🔵 已确认待实现 |
+| A19 | 呼出快捷轮盘（Tab） | 实测确认为 **LB**（按住呼出，拨右摇杆选方向，与 §2.2 轮盘机制一致）。已落地：`ShortcutWheel=LeftShoulder`，键盘 Tab 反查直通 LB | 🟡 已实现待验证 |
 
 ### 4.2 ⬜ 未确认项
 
@@ -132,6 +133,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|
 | B2 | 列表滚动 | 左摇杆上下 | 🟡 已实现待验证（`ScrollUp/Down` → 左摇杆，待实机确认） |
 | B3 | 标签页切换 | LB / RB | ⬜ 未确认 |
+| B6 | 运动状态判断（滑翔/攀爬）手柄适配 | `Bv.GetMotionStatus` 依赖键盘按键提示图标（SpaceKey/XKey 模板），手柄模式下游戏显示手柄提示，判断**恒返回 Normal**；20 个调用点受影响（TrapEscaper、SkillBoostHelper、PathExecutor、StopFlyingHandler、UpDownGrabLeafHandler、AutoTrackPathTask）。需采集手柄模式下滑翔/攀爬的按键提示截图并新增模板 | ⬜ 未确认（需实机截图） |
 | C1 | 钓鱼：抛竿/收杆/提竿 | 待确认 | ⬜ 未确认 |
 | C2 | 音游按键 | 待确认 | ⬜ 未确认 |
 | C3 | 七圣召唤：选牌/确认/结束回合 | 十字键 + B/A | ⬜ 未确认 |
@@ -143,7 +145,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（59 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 48 项 / 🔵 已确认待实现 3 项 / ⬜ 未确认 7 项 / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 49 项 / 🔵 已确认待实现 3 项 / ⬜ 未确认 6 项 / 🚫 无需映射 1 项**（暂无 🟢 已验证正确项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -169,6 +171,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | PickUpOrInteract | 拾取/交互 | X | 🟡 | |
 | InteractionInSomeMode | 特定玩法交互（T） | LB + X | 🟡 | 方案 A14：`X` + 修饰键 `LeftShoulder` |
 | QuickUseGadget | 快捷使用小道具 | LB + B | 🟡 | 组合键 |
+| ShortcutWheel | 呼出快捷轮盘 | LB（按住） | 🟡 | 方案 A19：按住呼出轮盘，方向选择走 §5.4 轮盘机制 |
 | QuestNavigation | 任务追踪 | LS（左摇杆按下） | 🟡 | |
 | ElementalSight | 元素视野 | LB + 十字键← | 🟡 | 组合键 |
 | AbandonChallenge | 中断挑战 | LS + RS | 🟡 | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
@@ -221,11 +224,10 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | CameraZoomIn | 镜头拉近 | LB + LT | 🟡 | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
 | CameraZoomOut | 镜头拉远 | LB + RT | 🟡 | 同上 |
 
-### 5.7 ⬜ 未确认与无需映射项（未确认 7 项 + 无需映射 1 项；另 3 项已确认待实现见 §4.1/§5.5）
+### 5.7 ⬜ 未确认与无需映射项（未确认 6 项 + 无需映射 1 项；另 3 项已确认待实现见 §4.1/§5.5）
 
 | GIActions | 功能 | 键鼠默认键 | 状态 | 建议 |
 |---|---|---|---|---|
-| ShortcutWheel | 呼出快捷轮盘 | Tab | ⬜ | 可不补：轮盘已由各 `*Wheel` 动作内部实现（按住 LB + 拨右摇杆） |
 | OpenWishScreen | 打开祈愿界面 | F3 | ⬜ | 按需：游戏有手柄设置项（`Wish=73`） |
 | OpenTheFurnishingScreen | 打开摆设界面（尘歌壶） | F7 | ⬜ | 按需 |
 | OpenStellarReunion | 打开星之归还 | F8 | ⬜ | 可不补（条件触发，无任务使用） |
@@ -252,7 +254,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ### 5.10 键盘反查表（ReverseMappableActions）覆盖说明
 
-`GamepadChannel.ReverseMappableActions` 含 41 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。另 `MapZoomIn/Out`、`CameraZoomIn/Out` 为手柄专属动作（无键盘键），仅在 `TryGetButton`/`GamepadUiNavigator` 中定义，不进反查表。
+`GamepadChannel.ReverseMappableActions` 含 42 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O/Tab），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F3/F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。另 `MapZoomIn/Out`、`CameraZoomIn/Out` 为手柄专属动作（无键盘键），仅在 `TryGetButton`/`GamepadUiNavigator` 中定义，不进反查表。
 
 ## 6. 注意事项
 

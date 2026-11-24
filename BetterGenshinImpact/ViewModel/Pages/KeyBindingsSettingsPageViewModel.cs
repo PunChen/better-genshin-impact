@@ -202,6 +202,7 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("特定玩法内交互 组合键修饰键", nameof(_gamepadConfig.InteractionInSomeModeModifier), _gamepadConfig.InteractionInSomeModeModifier),
             new("快捷使用小道具（组合键按键）", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
             new("快捷使用小道具 组合键修饰键", nameof(_gamepadConfig.QuickUseGadgetModifier), _gamepadConfig.QuickUseGadgetModifier),
+            new("呼出快捷轮盘", nameof(_gamepadConfig.ShortcutWheel), _gamepadConfig.ShortcutWheel),
             new("视角回正（鼠标中键）", nameof(_gamepadConfig.CameraRecenter), _gamepadConfig.CameraRecenter),
             new("中断挑战（LS+RS 组合键按键）", nameof(_gamepadConfig.AbandonChallenge), _gamepadConfig.AbandonChallenge),
             new("中断挑战 组合键修饰键", nameof(_gamepadConfig.AbandonChallengeModifier), _gamepadConfig.AbandonChallengeModifier),

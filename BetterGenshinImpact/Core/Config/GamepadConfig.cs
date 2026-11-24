@@ -187,6 +187,12 @@ public partial class GamepadConfig : ObservableObject
     private GamepadButton _quickUseGadgetModifier = GamepadButton.LeftShoulder;
 
     /// <summary>
+    /// 呼出快捷轮盘（默认按住 LB，配合右摇杆方向选择）
+    /// </summary>
+    [ObservableProperty]
+    private GamepadButton _shortcutWheel = GamepadButton.LeftShoulder;
+
+    /// <summary>
     /// 视角回正（对应鼠标中键/R3）
     /// </summary>
     [ObservableProperty]
