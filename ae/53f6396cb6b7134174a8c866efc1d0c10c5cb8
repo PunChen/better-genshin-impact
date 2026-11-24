@@ -1,0 +1,20 @@
+BetterGenshinImpact/GameTask/Common/BgiVision/BvOcr.cs
+  h_af85ab4e4c7fdb 6,21-26,33-48
+BetterGenshinImpact/GameTask/Common/BgiVision/BvSimpleOperation.cs
+  h_af85ab4e4c7fdb 2,182-187,197-212
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 30,122
+Docs/design/gamepad-key-mapping.md
+  h_af85ab4e4c7fdb 335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "ae53f6396cb6b7134174a8c866efc1d0c10c5cb8",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
