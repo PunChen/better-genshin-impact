@@ -258,6 +258,37 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 `GamepadChannel.ReverseMappableActions` 含 43 项：§5.1–§5.5 已实现的键盘动作全部在内（含 WASD 与 2026-11-24 新增的 P/F2/G/O/Tab/F3），因此**键鼠宏/JS 脚本直按这些键可正确映射到手柄**。不在反查表的按键（如 F6/F7/F8、Alt、`/` 等）会 warn 丢弃——与 §5.7 缺失项一一对应。另 `MapZoomIn/Out`、`CameraZoomIn/Out` 为手柄专属动作（无键盘键），仅在 `TryGetButton`/`GamepadUiNavigator` 中定义，不进反查表。
 
+### 5.11 映射覆盖全量审计（2026-11-24）
+
+**GIActions 59 项覆盖**：52 项有手柄映射路径（`TryGetButton`/`TryGetWheel`/`TryGetModifier`/`TryGetDirection` 四路合计 69 个 case）；**7 项无映射**：
+
+| GIActions | 键盘键 | 状态 | 说明 |
+|---|---|---|---|
+| OpenTheSettingsMenu | F6 | 🔵 | A9：派蒙菜单导航路径已实现，F6 语义待实机确认（`EnterAndExitWonderlandJob:23` VK_F6 直按丢弃） |
+| ShowCursor | Alt | 🚫 | 手柄无鼠标语义，永久不映射 |
+| OpenTheFurnishingScreen | F7 | ⬜ | 尘歌壶摆设界面（壶内），待实测手柄键 |
+| OpenStellarReunion | F8 | ⬜ | 星之归还（回归活动），待实测 |
+| OpenNotificationDetails | Y | ⬜ | 通知详情，待实测 |
+| OpenSpecialEnvironmentInformation | U | ⬜ | 特殊环境说明，待实测 |
+| HideUI | `/` | ⬜ | 隐藏主界面，待实测 |
+
+后 5 项 ⬜ 在 GameTask 内无 `SimulateAction` 调用（仅键盘层定义），空缺暂无直接功能受害者；键盘宏按 F7/F8/Y/U/`/` 在手柄模式丢弃。
+
+**功能点裸 VK 审计**（GameTask 98 处 `VK.VK_*` 使用归类）：
+
+| 裸 VK | 处数 | 反查结果 | 结论 |
+|---|---|---|---|
+| VK_ESCAPE | 30+ | Cancel → A ✓ | 全部可用 |
+| VK_SPACE | 5（ChooseTalkOptionTask ×3、AutoCookTask 等） | 优先 Confirm → B ✓（反查表首项语义处理） | 语义正确 |
+| VK_W/A/S/D | 若干 | Move* → 左摇杆 ✓ | 可用 |
+| VK_X | 1（AutoLeyLineOutcrop:1401） | Drop → A ✓ | 可用 |
+| VK_F | 1（TpTask:2719） | PickUpOrInteract ✓ | 可用 |
+| **VK_RETURN** | 1（ReturnMainUiTask:53 兜底） | **无反查 → 丢弃** | 兜底链手柄模式少一环，建议改 `SimulateAction(Confirm)`（影响小） |
+| VK_F6 | 1（EnterAndExitWonderlandJob:23） | 无映射 | A9 🔵 已知 |
+| **VK_1-4 `GetAsyncKeyState`** | 1（SkillCdTrigger:360） | **不走 InputHub，读物理键盘状态** | **新发现功能缺口**：手柄玩家十字键切人 BGI 感知不到 → **技能 CD 悬浮窗手柄模式不触发**；需监听虚拟手柄十字键（ViGEm 回环/XInput 轮询） |
+| 字母键直发 | AutoMusicGame | A/S/D → 左摇杆（危险） | 批次 5 已知 |
+| VK_LBUTTON 状态读取 | AutoFishing:364 | 鼠标状态检测 | 批次 5 已知 |
+
 ## 6. 注意事项
 
 - 旧版 `User/Config.json` 中手柄绑定可能仍是 `None`，升级后需在「按键绑定设置 → 手柄」点一次**恢复默认**。

@@ -73,7 +73,8 @@
 | 模块 | 现状 | 改动方案 | 量 |
 |---|---|---|---|
 | AutoFight | 核心链路可用 | B2 中键修复 + 瞄准改 `SimulateAction(SwitchAimingMode)`(LT，映射已有) + 宏含 `click/scroll` 启动告警 | S-M |
-| ReturnMainUiTask | 基本可用 | exitDoor 兜底分支改按键（B1 后自动收益） | S |
+| ReturnMainUiTask | 基本可用 | exitDoor 兜底分支改按键（B1 后自动收益）；`:53` VK_RETURN 无反查（手柄丢弃），建议改 `SimulateAction(Confirm)` | S |
+| SkillCdTrigger | **手柄模式不触发**（2026-11-24 审计发现） | `GetAsyncKeyState(VK_1-4)` 只听物理键盘，手柄玩家十字键切人 BGI 感知不到 → 技能 CD 悬浮窗不显示；需监听虚拟手柄十字键输出（ViGEm 回环/XInput 轮询） | M |
 | BlessingOfTheWelkinMoonTask | 失效 | 空白双击 → 按 A/B 跳过月卡弹窗 | S |
 | AutoSkip 非对话路径 | 对话已适配 | 黑屏剧情/底部三角/角色弹窗/原石奖励改按确认键；邀约选项改摇杆导航 | M |
 | AutoCook | 部分可用 | 确认弹窗"识别+按键"；验证手柄烹饪模板 | S |
