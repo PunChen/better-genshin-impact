@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -7,8 +7,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Recognition.OCR;
+using BetterGenshinImpact.GameTask.Common.BgiVision;
+using BetterGenshinImpact.GameTask.Model.Area;
 using BetterGenshinImpact.GameTask;
 using Fischless.WindowsInput.Gamepad;
+using OpenCvSharp;
+using OpenCvSharp.Extensions;
 
 namespace BetterGenshinImpact.Core.Input;
 
@@ -59,20 +64,51 @@ public static class GamepadIntegrationTestRunner
 
             Log("虚拟 Xbox360 手柄已连接");
 
-            // 1. 打开地图：LB + 右摇杆下
-            Log("步骤 1/4：打开地图（LB + 右摇杆↓）");
-            PressWheel(transport, GamepadButton.LeftShoulder, GamepadStickDirection.Down, 180);
-            await Task.Delay(1500, ct);
+            // 1. 打开地图：LB + 右摇杆↓。按住时间过短会选不中轮盘项，这里加长并做视觉复核/重试。
+            Log("步骤 1/5：打开地图（LB + 右摇杆↓，按住 350ms）");
+            var mapOpened = false;
+            for (var attempt = 1; attempt <= 3 && !mapOpened; attempt++)
+            {
+                PressWheel(transport, GamepadButton.LeftShoulder, GamepadStickDirection.Down, 350);
+                await Task.Delay(1500, ct);
+                mapOpened = IsBigMapUi();
+                Log(mapOpened ? $"地图已打开（第 {attempt} 次尝试）" : $"第 {attempt} 次打开地图未检测到地图界面，重试…");
+            }
+
+            if (!mapOpened)
+            {
+                SaveScreenshot("01_map_failed");
+                throw new InvalidOperationException("打开地图失败：连续 3 次未识别到大地图界面");
+            }
+
             SaveScreenshot("01_map");
 
-            // 2. 打开区域列表：Y
-            Log("步骤 2/4：打开区域列表（Y）");
-            Press(transport, GamepadButton.Y, 80);
-            await Task.Delay(800, ct);
-            SaveScreenshot("02_region_list");
+            // 2. 放大到最大：大地图 LT 放大，循环直到缩放级别接近 1
+            Log("步骤 2/5：放大地图到最大（LT）");
+            for (var i = 0; i < 6; i++)
+            {
+                Press(transport, GamepadButton.LeftTrigger, 600);
+                await Task.Delay(400, ct);
+                var scale = TryGetBigMapScale();
+                Log(scale is null ? $"第 {i + 1} 次放大（缩放级别不可用）" : $"第 {i + 1} 次放大，缩放级别={scale:F3}");
+                if (scale >= 0.97)
+                {
+                    break;
+                }
+            }
 
-            // 3. 选择蒙德：左摇杆向上滚到列表顶部，B 确认
-            Log("步骤 3/4：选择蒙德（左摇杆↑ + B）");
+            SaveScreenshot("02_map_max_zoom");
+
+            // 3. 打开区域列表：Y
+            Log("步骤 3/5：打开区域列表（Y）");
+            Press(transport, GamepadButton.Y, 80);
+            await Task.Delay(1000, ct);
+            SaveScreenshot("03_region_list");
+            var listText = TryOcrScreen();
+            Log($"区域列表 OCR：{Shorten(listText)}");
+
+            // 4. 选择蒙德：左摇杆向上滚到列表顶部，B 确认，再用 OCR 确认选中
+            Log("步骤 4/5：选择蒙德（左摇杆↑ + B）");
             for (var i = 0; i < 5; i++)
             {
                 PressStick(transport, GamepadAxis.LeftThumbX, GamepadAxis.LeftThumbY, 0, 1, 150);
@@ -81,17 +117,86 @@ public static class GamepadIntegrationTestRunner
 
             await Task.Delay(300, ct);
             Press(transport, GamepadButton.B, 80);
-            await Task.Delay(1200, ct);
-            SaveScreenshot("03_region_selected");
+            await Task.Delay(1500, ct);
+            SaveScreenshot("04_region_selected");
 
-            // 4. 确认传送：B（两段式：默认传送点 → 传送）
-            Log("步骤 4/4：确认传送（B）");
+            var selectedText = TryOcrScreen();
+            Log($"选区后 OCR：{Shorten(selectedText)}");
+            if (!string.IsNullOrWhiteSpace(selectedText) && !selectedText.Contains("蒙德"))
+            {
+                throw new InvalidOperationException("OCR 未在画面中确认到「蒙德」，可能区域列表未选中蒙德");
+            }
+
+            // 5. 确认传送：B（两段式：默认传送点 → 传送）
+            Log("步骤 5/5：确认传送（B）");
             Press(transport, GamepadButton.B, 80);
             await Task.Delay(3000, ct);
-            SaveScreenshot("04_teleported");
+            SaveScreenshot("05_teleported");
 
-            Log("测试完成：请检查是否已到达蒙德城；若区域列表顺序不同，请按实际顺序调整左摇杆步进");
+            Log("测试完成：请检查是否已到达蒙德城");
         }, ct);
+    }
+
+    private static bool IsBigMapUi()
+    {
+        try
+        {
+            using var mat = CaptureScreenMat();
+            using var region = new ImageRegion(mat, 0, 0);
+            return Bv.IsInBigMapUi(region);
+        }
+        catch (Exception e)
+        {
+            WriteLogFile($"[{DateTime.Now:HH:mm:ss.fff}] 地图识别异常：{e.Message}");
+            return false;
+        }
+    }
+
+    private static double? TryGetBigMapScale()
+    {
+        try
+        {
+            using var mat = CaptureScreenMat();
+            using var region = new ImageRegion(mat, 0, 0);
+            return Bv.GetBigMapScale(region);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    private static string TryOcrScreen()
+    {
+        try
+        {
+            using var mat = CaptureScreenMat();
+            return OcrFactory.Paddle.Ocr(mat) ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            WriteLogFile($"[{DateTime.Now:HH:mm:ss.fff}] OCR 异常：{e.Message}");
+            return string.Empty;
+        }
+    }
+
+    private static string Shorten(string text)
+    {
+        var oneLine = text.Replace('\n', ' ').Replace('\r', ' ').Trim();
+        return oneLine.Length <= 200 ? oneLine : oneLine[..200] + "…";
+    }
+
+    private static Mat CaptureScreenMat()
+    {
+        var width = GetSystemMetrics(0);
+        var height = GetSystemMetrics(1);
+        using var bitmap = new Bitmap(width, height);
+        using (var graphics = Graphics.FromImage(bitmap))
+        {
+            graphics.CopyFromScreen(0, 0, 0, 0, bitmap.Size);
+        }
+
+        return BitmapConverter.ToMat(bitmap);
     }
 
     private static void Press(Xbox360Transport transport, GamepadButton button, int durationMs)
