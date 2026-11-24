@@ -1,0 +1,14 @@
+Docs/design/gamepad-key-mapping.md
+  h_af85ab4e4c7fdb 335
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "6e7ece808c11d12beaa4d32e358979bca94c1b7c",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
