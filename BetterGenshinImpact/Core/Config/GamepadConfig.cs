@@ -127,6 +127,18 @@ public partial class GamepadConfig : ObservableObject
     private int _shortcutWheelPressDurationMs = 800;
 
     /// <summary>
+    /// 镜头距离调节：LB 修饰键先保持的时间（毫秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _cameraZoomModifierHoldMs = 500;
+
+    /// <summary>
+    /// 镜头距离调节：LT/RT 按下保持时间（毫秒）
+    /// </summary>
+    [ObservableProperty]
+    private int _cameraZoomPressDurationMs = 600;
+
+    /// <summary>
     /// 切换走/跑
     /// </summary>
     [ObservableProperty]

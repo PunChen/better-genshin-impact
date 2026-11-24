@@ -96,7 +96,7 @@ public sealed class GamepadInputBackend : IInputBackend
     /// <summary>
     /// 设置页“测试按键”使用：测试组合键（修饰键 + 按键）
     /// </summary>
-    public static bool TestCombo(GamepadButton modifier, GamepadButton button, int durationMs, out string? error)
+    public static bool TestCombo(GamepadButton modifier, GamepadButton button, int durationMs, out string? error, int modifierHoldMs = 30)
     {
         if (modifier == GamepadButton.None || button == GamepadButton.None)
         {
@@ -330,9 +330,13 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
             {
                 GIActions.SwitchAimingMode => config.AimingPressDurationMs,
                 GIActions.ShortcutWheel => config.ShortcutWheelPressDurationMs,
+                GIActions.CameraZoomIn or GIActions.CameraZoomOut => config.CameraZoomPressDurationMs,
                 _ => config.PressDurationMs,
             };
-            SimulateButton(button, modifier, type, config, pressDurationMs);
+            var modifierHoldMs = action is GIActions.CameraZoomIn or GIActions.CameraZoomOut
+                ? config.CameraZoomModifierHoldMs
+                : 30;
+            SimulateButton(button, modifier, type, config, pressDurationMs, modifierHoldMs);
             return this;
         }
 
@@ -579,9 +583,13 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
             {
                 GIActions.SwitchAimingMode => config.AimingPressDurationMs,
                 GIActions.ShortcutWheel => config.ShortcutWheelPressDurationMs,
+                GIActions.CameraZoomIn or GIActions.CameraZoomOut => config.CameraZoomPressDurationMs,
                 _ => config.PressDurationMs,
             };
-            SimulateButton(button, modifier, type, config, pressDurationMs);
+            var modifierHoldMs = action is GIActions.CameraZoomIn or GIActions.CameraZoomOut
+                ? config.CameraZoomModifierHoldMs
+                : 30;
+            SimulateButton(button, modifier, type, config, pressDurationMs, modifierHoldMs);
             return true;
         }
 
@@ -631,7 +639,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         return ((short)(x * short.MaxValue), (short)(y * short.MaxValue));
     }
 
-    private void SimulateButton(GamepadButton button, GamepadButton modifier, KeyType type, GamepadConfig config, int pressDurationMs)
+    private void SimulateButton(GamepadButton button, GamepadButton modifier, KeyType type, GamepadConfig config, int pressDurationMs, int modifierHoldMs)
     {
         lock (_sync)
         {
@@ -648,7 +656,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                     if (hasModifier)
                     {
                         transport.SetButton(modifier, true);
-                        Thread.Sleep(30);
+                        Thread.Sleep(Math.Max(1, modifierHoldMs));
                     }
 
                     transport.SetButton(button, true);
@@ -666,7 +674,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                     if (hasModifier)
                     {
                         transport.SetButton(modifier, true);
-                        Thread.Sleep(30);
+                        Thread.Sleep(Math.Max(1, modifierHoldMs));
                     }
 
                     transport.SetButton(button, true);
@@ -683,7 +691,7 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
                     if (hasModifier)
                     {
                         transport.SetButton(modifier, true);
-                        Thread.Sleep(30);
+                        Thread.Sleep(Math.Max(1, modifierHoldMs));
                     }
 
                     transport.SetButton(button, true);

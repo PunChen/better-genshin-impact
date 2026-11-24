@@ -153,7 +153,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 > **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」这一组直接按键/组合键已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 20 项 / 🟡 已实现待验证 32 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 25 项 / 🟡 已实现待验证 27 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -182,7 +182,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | ShortcutWheel | 呼出快捷轮盘 | LB（按住） | 🟢 | 方案 A19：按住呼出轮盘，方向选择走 §5.4 轮盘机制 |
 | QuestNavigation | 任务追踪 | LS（左摇杆按下） | 🟡 | |
 | ElementalSight | 元素视野 | LB + 十字键← | 🟡 | 组合键 |
-| AbandonChallenge | 中断挑战 | LS + RS | 🟡 | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
+| AbandonChallenge | 中断挑战 | LS + RS | 🟢 | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
 | SwitchMember1 | 切换角色 1 | 十字键↑ | 🟢 | |
 | SwitchMember2 | 切换角色 2 | 十字键→ | 🟢 | |
 | SwitchMember3 | 切换角色 3 | 十字键← | 🟢 | |
@@ -201,7 +201,7 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| OpenMap | 打开地图 | LB + 右摇杆↓ | 🟡 | |
+| OpenMap | 打开地图 | LB + 右摇杆↓ | 🟢 | 2026-11-25 实机测试通过 |
 | OpenInventory | 打开背包 | LB + 右摇杆→ | 🟡 | |
 | OpenQuestMenu | 打开任务菜单 | LB + 右摇杆↙ | 🟡 | |
 | OpenCharacterScreen | 打开角色界面 | LB + 右摇杆↘ | 🟡 | |
@@ -228,10 +228,10 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 |---|---|---|---|---|
 | FocusUp / FocusDown / FocusLeft / FocusRight | 界面焦点移动 | 左摇杆 | 🟡 | `GamepadUiNavigator` |
 | ScrollUp / ScrollDown | 列表滚动 | 左摇杆上下 | 🟡 | B2：已实现待验证（待实机确认） |
-| MapZoomIn | 地图放大 | LT | 🟡 | |
-| MapZoomOut | 地图缩小 | RT | 🟡 | |
-| CameraZoomIn | 镜头拉近 | LB + LT | 🟡 | 镜头距离调节为手柄专属功能，键盘无对应键，不进反查表 |
-| CameraZoomOut | 镜头拉远 | LB + RT | 🟡 | 同上 |
+| MapZoomIn | 地图放大 | LT | 🟢 | |
+| MapZoomOut | 地图缩小 | RT | 🟢 | |
+| CameraZoomIn | 镜头拉近 | LB（长按 500ms）+ LT（600ms） | 🟡 | 镜头距离调节为手柄专属功能；需长按 LB 再按 LT |
+| CameraZoomOut | 镜头拉远 | LB（长按 500ms）+ RT（600ms） | 🟡 | 同上 |
 
 ### 5.7 ⏸️ 暂不映射与无需映射项（暂不映射 5 项 + 无需映射 1 项；另 1 项已确认待实现见 §4.1/§5.5）
 

@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.Model;
 using BetterGenshinImpact.Service.Interface;
 using BetterGenshinImpact.ViewModel;
@@ -198,22 +198,16 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("切换小队角色2", nameof(_gamepadConfig.SwitchMember2), _gamepadConfig.SwitchMember2),
             new("切换小队角色3", nameof(_gamepadConfig.SwitchMember3), _gamepadConfig.SwitchMember3),
             new("切换小队角色4", nameof(_gamepadConfig.SwitchMember4), _gamepadConfig.SwitchMember4),
-            new("切换小队角色5（组合键按键）", nameof(_gamepadConfig.SwitchMember5), _gamepadConfig.SwitchMember5),
-            new("切换小队角色5 组合键修饰键", nameof(_gamepadConfig.SwitchMember5Modifier), _gamepadConfig.SwitchMember5Modifier),
+            new("切换小队角色5（组合键）", nameof(_gamepadConfig.SwitchMember5), _gamepadConfig.SwitchMember5),
             new("特定玩法内交互（T 键，组合键按键）", nameof(_gamepadConfig.InteractionInSomeMode), _gamepadConfig.InteractionInSomeMode),
-            new("特定玩法内交互 组合键修饰键", nameof(_gamepadConfig.InteractionInSomeModeModifier), _gamepadConfig.InteractionInSomeModeModifier),
-            new("快捷使用小道具（组合键按键）", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
-            new("快捷使用小道具 组合键修饰键", nameof(_gamepadConfig.QuickUseGadgetModifier), _gamepadConfig.QuickUseGadgetModifier),
+            new("快捷使用小道具（组合键）", nameof(_gamepadConfig.QuickUseGadget), _gamepadConfig.QuickUseGadget),
             new("呼出快捷轮盘", nameof(_gamepadConfig.ShortcutWheel), _gamepadConfig.ShortcutWheel),
             new("视角回正（鼠标中键）", nameof(_gamepadConfig.CameraRecenter), _gamepadConfig.CameraRecenter),
             new("中断挑战（LS+RS 组合键按键）", nameof(_gamepadConfig.AbandonChallenge), _gamepadConfig.AbandonChallenge),
-            new("中断挑战 组合键修饰键", nameof(_gamepadConfig.AbandonChallengeModifier), _gamepadConfig.AbandonChallengeModifier),
             new("地图放大", nameof(_gamepadConfig.MapZoomIn), _gamepadConfig.MapZoomIn),
             new("地图缩小", nameof(_gamepadConfig.MapZoomOut), _gamepadConfig.MapZoomOut),
             new("镜头拉近（LB+LT 组合键按键）", nameof(_gamepadConfig.CameraZoomIn), _gamepadConfig.CameraZoomIn),
-            new("镜头拉近 组合键修饰键", nameof(_gamepadConfig.CameraZoomInModifier), _gamepadConfig.CameraZoomInModifier),
             new("镜头拉远（LB+RT 组合键按键）", nameof(_gamepadConfig.CameraZoomOut), _gamepadConfig.CameraZoomOut),
-            new("镜头拉远 组合键修饰键", nameof(_gamepadConfig.CameraZoomOutModifier), _gamepadConfig.CameraZoomOutModifier),
             new("打开地图", nameof(_gamepadConfig.OpenMap), _gamepadConfig.OpenMap),
             new("打开背包", nameof(_gamepadConfig.OpenInventory), _gamepadConfig.OpenInventory),
             new("打开角色界面", nameof(_gamepadConfig.OpenCharacterScreen), _gamepadConfig.OpenCharacterScreen),
@@ -222,13 +216,10 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             new("打开纪行界面", nameof(_gamepadConfig.OpenBattlePassScreen), _gamepadConfig.OpenBattlePassScreen),
             new("打开活动面板", nameof(_gamepadConfig.OpenTheEventsMenu), _gamepadConfig.OpenTheEventsMenu),
             new("打开多人游戏界面（LB+十字键→ 组合键按键）", nameof(_gamepadConfig.OpenCoOpScreen), _gamepadConfig.OpenCoOpScreen),
-            new("打开多人游戏界面 组合键修饰键", nameof(_gamepadConfig.OpenCoOpScreenModifier), _gamepadConfig.OpenCoOpScreenModifier),
             new("查看教程详情（LB+十字键↑ 组合键按键）", nameof(_gamepadConfig.CheckTutorialDetails), _gamepadConfig.CheckTutorialDetails),
-            new("查看教程详情 组合键修饰键", nameof(_gamepadConfig.CheckTutorialDetailsModifier), _gamepadConfig.CheckTutorialDetailsModifier),
             new("打开好友界面", nameof(_gamepadConfig.OpenFriendsScreen), _gamepadConfig.OpenFriendsScreen),
             new("开启任务追踪", nameof(_gamepadConfig.QuestNavigation), _gamepadConfig.QuestNavigation),
             new("长按打开元素视野", nameof(_gamepadConfig.ElementalSight), _gamepadConfig.ElementalSight),
-            new("元素视野 组合键修饰键", nameof(_gamepadConfig.ElementalSightModifier), _gamepadConfig.ElementalSightModifier),
             new("打开派蒙菜单", nameof(_gamepadConfig.OpenPaimonMenu), _gamepadConfig.OpenPaimonMenu),
             new("打开好友聊天（View）", nameof(_gamepadConfig.OpenChatScreen), _gamepadConfig.OpenChatScreen),
             new("打开任务菜单", nameof(_gamepadConfig.OpenQuestMenu), _gamepadConfig.OpenQuestMenu),
@@ -303,8 +294,11 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
 
         var duration = GetGamepadTestDuration(model.ConfigPropertyName);
         var (modifier, button) = ResolveGamepadTestCombo(model.ConfigPropertyName, model.ButtonValue);
+        var modifierHoldMs = IsCameraZoomProperty(model.ConfigPropertyName)
+            ? _gamepadConfig.CameraZoomModifierHoldMs
+            : 30;
         var success = modifier != GamepadButton.None
-            ? GamepadInputBackend.TestCombo(modifier, button, duration, out var error)
+            ? GamepadInputBackend.TestCombo(modifier, button, duration, out var error, modifierHoldMs)
             : GamepadInputBackend.TestButton(button, duration, out error);
         if (success)
         {
@@ -327,7 +321,18 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
             return 800;
         }
 
+        if (IsCameraZoomProperty(propertyName))
+        {
+            return _gamepadConfig.CameraZoomPressDurationMs;
+        }
+
         return Math.Max(120, _gamepadConfig.PressDurationMs);
+    }
+
+    private static bool IsCameraZoomProperty(string propertyName)
+    {
+        return propertyName is nameof(GamepadConfig.CameraZoomIn) or nameof(GamepadConfig.CameraZoomInModifier)
+            or nameof(GamepadConfig.CameraZoomOut) or nameof(GamepadConfig.CameraZoomOutModifier);
     }
 
     private (GamepadButton Modifier, GamepadButton Button) ResolveGamepadTestCombo(string propertyName, GamepadButton value)
