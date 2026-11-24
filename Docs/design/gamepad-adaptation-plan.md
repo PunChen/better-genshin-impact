@@ -109,7 +109,7 @@
 |---|---|---|---|
 | GamepadMapCursor 原语（B5） | 不存在 | 选中圈模板匹配定位 + 左摇杆视觉伺服移动圈（实测圈可见，可行性已确认）+ LT/RT 缩放档位闭环 | L |
 | TpTask | 完全失效（一切传送的底层） | 按实测语义重构：圈伺服替代拖拽视口与绝对点击（圈对准 + B）；LT/RT 替代滚轮（zoom 档位化闭环重写）；候选列表左摇杆+B；区域切换 Y+左摇杆+B（替代 SwitchArea 点击链） | L |
-| QuickTeleport | 完全失效（日常最高频） | 识别层已实测确认可复用（图标一致）；传送按钮 `ra.Click()` 改按 B（待实测：面板弹出后 B 是否直接传送）；选项列表改左摇杆+B | M-L |
+| QuickTeleport | 完全失效（日常最高频） | 识别层已实测确认可复用（图标一致）；**传送流程已实测确认两段式（2026-11-24）：B 选中 → 面板弹出 → 再次 B 确认传送，面板无需导航**；传送按钮 `ra.Click()` 改 `SimulateAction(Confirm)`；选项列表：默认高亮待确认（若默认第一项则连按两次 B，否则左摇杆+B） | M |
 | LowerHeadThenWalkToTask | 退化 | B3 比例控制 + 闭环微调 | M |
 | ScanPickTask | 部分退化 | 同上；回正视角需校准方案 | M |
 | LinneaMiningTask | 完全失效 | B4 补 `ElementalSight` + B3 视觉伺服瞄准 + 射击键 | L |
