@@ -121,6 +121,12 @@ public partial class GamepadConfig : ObservableObject
     private int _aimingPressDurationMs = 800;
 
     /// <summary>
+    /// 呼出快捷轮盘（LB）按下保持时间，游戏内需要长按才能呼出
+    /// </summary>
+    [ObservableProperty]
+    private int _shortcutWheelPressDurationMs = 800;
+
+    /// <summary>
     /// 切换走/跑
     /// </summary>
     [ObservableProperty]

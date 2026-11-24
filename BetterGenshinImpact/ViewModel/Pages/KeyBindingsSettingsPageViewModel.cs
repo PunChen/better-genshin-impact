@@ -321,7 +321,8 @@ public partial class KeyBindingsSettingsPageViewModel : ViewModel
     private int GetGamepadTestDuration(string propertyName)
     {
         // 瞄准模式（LT）需要长按才能触发，其他按键保持较短时间
-        if (propertyName == nameof(GamepadConfig.SwitchAimingMode))
+        if (propertyName == nameof(GamepadConfig.SwitchAimingMode)
+            || propertyName == nameof(GamepadConfig.ShortcutWheel))
         {
             return 800;
         }

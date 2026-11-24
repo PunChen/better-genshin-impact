@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -326,9 +326,12 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
-            var pressDurationMs = action == GIActions.SwitchAimingMode
-                ? config.AimingPressDurationMs
-                : config.PressDurationMs;
+            var pressDurationMs = action switch
+            {
+                GIActions.SwitchAimingMode => config.AimingPressDurationMs,
+                GIActions.ShortcutWheel => config.ShortcutWheelPressDurationMs,
+                _ => config.PressDurationMs,
+            };
             SimulateButton(button, modifier, type, config, pressDurationMs);
             return this;
         }
@@ -572,9 +575,12 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         if (GamepadActionMap.TryGetButton(action, config, out var button) && button != GamepadButton.None)
         {
             GamepadActionMap.TryGetModifier(action, config, out var modifier);
-            var pressDurationMs = action == GIActions.SwitchAimingMode
-                ? config.AimingPressDurationMs
-                : config.PressDurationMs;
+            var pressDurationMs = action switch
+            {
+                GIActions.SwitchAimingMode => config.AimingPressDurationMs,
+                GIActions.ShortcutWheel => config.ShortcutWheelPressDurationMs,
+                _ => config.PressDurationMs,
+            };
             SimulateButton(button, modifier, type, config, pressDurationMs);
             return true;
         }

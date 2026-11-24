@@ -5,7 +5,7 @@
 > 总体方案见 [gamepad-adaptation-plan.md](./gamepad-adaptation-plan.md)。
 
 > **标记体系（2026-11-24 起）**：⬜ 未确认 → 🔵 已确认待实现 → 🟡 已实现待验证 → 🟢 已验证正确；🚫 无需映射（终态）。
-> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前仅对话判断 View+Menu 一项为 🟢，其余待实机回归）。
+> 「已确认」= 游戏内手柄按键/方案经实测确认；「已验证」= BGI 手柄输出经实机验证与游戏响应一致（当前已有 20 项映射经实机测试标 🟢，其余待回归）。
 
 ## 1. 游戏内基准布局（截图确认）
 
@@ -42,27 +42,30 @@
 | 切换瞄准模式 | LT |
 | 切换枪械方案 / 榴晶 | 十字键 |
 
+> 2026-11-25 实机：本表除「镜头拉近/拉远」外均已通过单键测试（🟢）；移动/视角为内置摇杆行为。
+
 > 该布局与基础战斗不同，AutoFight 枪械模式后续需要独立 profile。
 
 ## 2. 已确认并落地的映射（🟡 已实现待验证）
 
 ### 2.1 切人与道具（组合键）
 
-| 功能 | 手柄 | 配置字段 |
-|---|---|---|
-| 切换小队角色 1 | 十字键↑ | `SwitchMember1=Up` |
-| 切换小队角色 2 | 十字键→ | `SwitchMember2=Right` |
-| 切换小队角色 3 | 十字键← | `SwitchMember3=Left` |
-| 切换小队角色 4 | 十字键↓ | `SwitchMember4=Down` |
-| 切换小队角色 5 | **LB + Y** | `SwitchMember5=Y`、`SwitchMember5Modifier=LeftShoulder` |
-| 快捷使用小道具 | **LB + B** | `QuickUseGadget=B`、`QuickUseGadgetModifier=LeftShoulder` |
-| 任务追踪 | **LS（左摇杆按下）** | `QuestNavigation=LeftThumb` |
-| 元素视野 | **LB + 十字键左** | `ElementalSight=Left`、`ElementalSightModifier=LeftShoulder` |
-| 视角回正（鼠标中键） | RS（右摇杆按下；PS 手柄称 R3） | `CameraRecenter=RightThumb` |
+| 功能 | 手柄 | 配置字段 | 状态 |
+|---|---|---|---|
+| 切换小队角色 1 | 十字键↑ | `SwitchMember1=Up` | 🟢 已验证正确 |
+| 切换小队角色 2 | 十字键→ | `SwitchMember2=Right` | 🟢 已验证正确 |
+| 切换小队角色 3 | 十字键← | `SwitchMember3=Left` | 🟢 已验证正确 |
+| 切换小队角色 4 | 十字键↓ | `SwitchMember4=Down` | 🟢 已验证正确 |
+| 切换小队角色 5 | **LB + Y** | `SwitchMember5=Y`、`SwitchMember5Modifier=LeftShoulder` | 🟢 已验证正确 |
+| 快捷使用小道具 | **LB + B** | `QuickUseGadget=B`、`QuickUseGadgetModifier=LeftShoulder` | 🟢 已验证正确 |
+| 任务追踪 | **LS（左摇杆按下）** | `QuestNavigation=LeftThumb` | 🟡 已实现待验证 |
+| 元素视野 | **LB + 十字键左** | `ElementalSight=Left`、`ElementalSightModifier=LeftShoulder` | 🟡 已实现待验证 |
+| 视角回正（鼠标中键） | RS（右摇杆按下；PS 手柄称 R3） | `CameraRecenter=RightThumb` | 🟡 已实现待验证 |
 
 组合键执行顺序：按住修饰键 → 按目标键 → 保持 `PressDurationMs` → 释放目标键 → 释放修饰键。
+呼出快捷轮盘（A19）需要长按，使用 `ShortcutWheelPressDurationMs=800`；其他组合键仍用 `PressDurationMs`。
 
-### 2.2 快捷轮盘（LB + 右摇杆方向）
+### 2.2 快捷轮盘（LB + 右摇杆方向）— 🟡 已实现待验证
 
 | 功能 | 手柄 | 配置字段 |
 |---|---|---|
@@ -147,7 +150,10 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 ## 5. 全量映射清单（59 项 GIActions 状态标记）
 
-> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟡 已实现待验证 52 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项（低优先级，2026-11-24 决定） / 🚫 无需映射 1 项**（🟢 对话判断 View+Menu 已在 §7.1 标记验证通过）。
+
+> **2026-11-25 实机测试**：从「确认」到「呼出快捷轮盘」这一组直接按键/组合键已逐个测试通过，状态标为 🟢；快捷轮盘保持时间已调整为 800ms。
+
+> 与 `GIActions` 枚举（`Core/Simulator/Extensions/Enums.cs`）逐项对照（59 项），状态统计：**🟢 已验证正确 20 项 / 🟡 已实现待验证 32 项 / 🔵 已确认待实现 1 项 / ⏸️ 暂不映射 5 项 / 🚫 无需映射 1 项**（共 59 项）。
 
 ### 5.1 移动方向（左摇杆）— 全部已实现
 
@@ -162,34 +168,34 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| NormalAttack | 普通攻击 | A | 🟡 | |
-| ElementalSkill | 元素战技 | RT | 🟡 | |
-| ElementalBurst | 元素爆发 | Y | 🟡 | |
-| Jump | 跳跃 | B | 🟡 | |
-| SprintKeyboard / SprintMouse | 冲刺 | RB | 🟡 | 两个动作共用 `Sprint` |
-| SwitchAimingMode | 切换瞄准模式 | LT | 🟡 | |
-| SwitchToWalkOrRun | 切换走/跑 | 无（轻推左摇杆） | 🟡 | 方案 A12：保持 `None` 为最终状态 |
-| Drop | 落下（滑翔/攀爬） | A | 🟡 | 方案 A13：滑翔中 A=下落攻击，攀爬中 A=取消攀爬（与 NormalAttack/Cancel 同键，上下文区分） |
-| PickUpOrInteract | 拾取/交互 | X | 🟡 | |
-| InteractionInSomeMode | 特定玩法交互（T） | LB + X | 🟡 | 方案 A14：`X` + 修饰键 `LeftShoulder` |
-| QuickUseGadget | 快捷使用小道具 | LB + B | 🟡 | 组合键 |
-| ShortcutWheel | 呼出快捷轮盘 | LB（按住） | 🟡 | 方案 A19：按住呼出轮盘，方向选择走 §5.4 轮盘机制 |
+| NormalAttack | 普通攻击 | A | 🟢 | |
+| ElementalSkill | 元素战技 | RT | 🟢 | |
+| ElementalBurst | 元素爆发 | Y | 🟢 | |
+| Jump | 跳跃 | B | 🟢 | |
+| SprintKeyboard / SprintMouse | 冲刺 | RB | 🟢 | 两个动作共用 `Sprint` |
+| SwitchAimingMode | 切换瞄准模式 | LT | 🟢 | |
+| SwitchToWalkOrRun | 切换走/跑 | 无（轻推左摇杆） | 🟢 | 方案 A12：保持 `None` 为最终状态 |
+| Drop | 落下（滑翔/攀爬） | A | 🟢 | 方案 A13：滑翔中 A=下落攻击，攀爬中 A=取消攀爬（与 NormalAttack/Cancel 同键，上下文区分） |
+| PickUpOrInteract | 拾取/交互 | X | 🟢 | |
+| InteractionInSomeMode | 特定玩法交互（T） | LB + X | 🟢 | 方案 A14：`X` + 修饰键 `LeftShoulder` |
+| QuickUseGadget | 快捷使用小道具 | LB + B | 🟢 | 组合键 |
+| ShortcutWheel | 呼出快捷轮盘 | LB（按住） | 🟢 | 方案 A19：按住呼出轮盘，方向选择走 §5.4 轮盘机制 |
 | QuestNavigation | 任务追踪 | LS（左摇杆按下） | 🟡 | |
 | ElementalSight | 元素视野 | LB + 十字键← | 🟡 | 组合键 |
 | AbandonChallenge | 中断挑战 | LS + RS | 🟡 | 组合键：先按住 RS（视角回正，无害）再按 LS，避免单独 LS 误触发任务追踪（方案 A15） |
-| SwitchMember1 | 切换角色 1 | 十字键↑ | 🟡 | |
-| SwitchMember2 | 切换角色 2 | 十字键→ | 🟡 | |
-| SwitchMember3 | 切换角色 3 | 十字键← | 🟡 | |
-| SwitchMember4 | 切换角色 4 | 十字键↓ | 🟡 | |
-| SwitchMember5 | 切换角色 5 | LB + Y | 🟡 | 组合键 |
+| SwitchMember1 | 切换角色 1 | 十字键↑ | 🟢 | |
+| SwitchMember2 | 切换角色 2 | 十字键→ | 🟢 | |
+| SwitchMember3 | 切换角色 3 | 十字键← | 🟢 | |
+| SwitchMember4 | 切换角色 4 | 十字键↓ | 🟢 | |
+| SwitchMember5 | 切换角色 5 | LB + Y | 🟢 | 组合键 |
 
 ### 5.3 对话与确认 — 全部已实现
 
 | GIActions | 功能 | 手柄 | 状态 | 备注 |
 |---|---|---|---|---|
-| Confirm | 确认 | B | 🟡 | |
-| Cancel | 取消/返回 | A | 🟡 | `KeyPress(VK_ESCAPE)` 反查为 A 正确（B1 已确认：游戏内 B=确认、A=取消/返回，语义无误）；BGI 输出待实机回归验证 |
-| SkipDialog | 跳过/推进对话 | B | 🟡 | |
+| Confirm | 确认 | B | 🟢 | |
+| Cancel | 取消/返回 | A | 🟢 | `KeyPress(VK_ESCAPE)` 反查为 A 正确（B1 已确认：游戏内 B=确认、A=取消/返回，语义无误）；BGI 输出待实机回归验证 |
+| SkipDialog | 跳过/推进对话 | B | 🟢 | |
 
 ### 5.4 界面打开（快捷轮盘 LB + 右摇杆方向）— 全部已实现
 
