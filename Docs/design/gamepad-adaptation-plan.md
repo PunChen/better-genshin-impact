@@ -27,7 +27,7 @@
 1. **缺口①**：`OpenBattlePassScreen`、`OpenTheEventsMenu`、`QuestNavigation`、`ElementalSight` 原先无配置字段/映射，已补；`AbandonChallenge`（LS+RS）、`OpenCoOpScreen`（LB+十字键→）、`CheckTutorialDetails`（LB+十字键↑）已于 2026-11-24 实测补齐；`OpenPartySetupScreen`（A7）与 `OpenFriendsScreen`（A18）已于 2026-11-24 落地派蒙菜单导航（`PaimonMenuNavigateJob`：Start → OCR 定位菜单项 → 左摇杆导航 → 确认，待验证假设见 gamepad-key-mapping.md §7.3）；`OpenTheSettingsMenu`（A9）导航路径已实现但 F6 语义（玩法系统界面 vs 设置菜单）待实机确认、`EnterAndExitWonderlandJob` 未接线；仍缺 `OpenNotificationDetails`、`HideUI` 等低频界面动作（`OpenWishScreen` 已于 2026-11-24 落地 A20：LB+右摇杆↑，轮盘第 8 向）。场景判断审计（2026-11-24）：对话/地图/大世界三场景判断已具备（`Bv.IsInTalkUi` 手柄已特判且 **View+Menu 双命中已实机稳定验证 🟢** / `IsInBigMapUi` / `IsInMainUi`，详见 gamepad-key-mapping.md §7）；⚠️ 地图/大世界模板为键鼠时代资产，游戏连手柄后 UI 可能整体切换布局，命中率待实机验证（详见 §7.1 修正备注，复苏排除 `IsInRevivePrompt` 为高风险项），运动状态判断手柄缺口已登记 B6。
 2. **缺口②**：鼠标中键（视角回正）原无手柄映射，已通过 `CameraRecenter`（默认 RS）补齐；其余绝对坐标点击仍无法模拟。
 3. **缺口③**：点击被静默丢弃后模块卡在重试循环最终抛超时；且游戏连手柄后 UI 为手柄布局，PC 布局模板（如 `BtnWhiteConfirm`）可能不再匹配。
-4. **缺口④**（2026-11-24 深挖传送/尘歌壶链路时发现）：`Bv.FindF`/`Bv.FindFAndPress`/`Bv.FindFKeyText` 系列依赖 AutoPick 的**键鼠 F 图标模板**（`PickRo`），手柄模式下 F 提示显示为 X 图标 → 恒返回 false。影响 **8 个模块 16 处调用**：地脉衍出（接触/地脉之花识别）、幽境危战、快捷尘歌壶（进入/离开尘歌壶）、LowerHeadThenWalkTo、凯瑟琳（冒险家协会）、合成台、尘歌壶找阿圆、钓鱼。修复轻量：`FindF` 加 `GamepadMode.Enabled` 分支换 `ControllerPick` 模板（模板已在 `AutoPick/Assets/Recognition.json` 声明且 AutoPick 在用）；`FindFAndPress` 的按键走 `PickVk`(F) 反查 `PickUpOrInteract` ✓ 已可用。
+4. **缺口④**（2026-11-24 深挖传送/尘歌壶链路时发现）：`Bv.FindF`/`Bv.FindFAndPress`/`Bv.FindFKeyText` 系列依赖 AutoPick 的**键鼠 F 图标模板**（`PickRo`），手柄模式下 F 提示显示为 X 图标 → 恒返回 false。影响 **8 个模块 16 处调用**：地脉衍出（接触/地脉之花识别）、幽境危战、快捷尘歌壶（进入/离开尘歌壶）、LowerHeadThenWalkTo、凯瑟琳（冒险家协会）、合成台、尘歌壶找阿圆、钓鱼。**已于 2026-11-24 修复**：`FindF`/`FindFKeyText` 增加 `GamepadMode.Enabled` 分支换 `ControllerPick` 模板（X 图标较小，按图标中心扩展出与键鼠等价的 40px 几何，后续文字偏移计算不变，与 `AutoPickTrigger` 同一处理方式）；`FindFAndPress` 的按键走 `PickVk`(F) 反查 `PickUpOrInteract` ✓ 已可用。
 
 ### 1.2 已确认的默认绑定问题
 
@@ -119,7 +119,7 @@
 | 模块 | 现状 | 改动方案 | 量 |
 |---|---|---|---|
 | QuickSereniteaPot | 开背包后中断 | 背包 LB/RB 切页签 + 壶图标焦点导航 + A | M |
-| GoToSereniteaPotTask | 完全失效 | 依赖批次 3 原语 + 找阿圆视角闭环 + 洞天百宝导航 | L |
+| GoToSereniteaPotTask | 完全失效 | 依赖批次 3 原语 + 找阿圆视角闭环 + 洞天百宝导航；**出壶方案已实测（2026-11-24）**：① 传送回提瓦特 = 区域切换方式（与地图区域列表 Y+左摇杆+B 同原理）；② 关页面 = A 直接退出，或识别「离开」选项 + B 确认离开；TODO：其他退出方式待补充 | L |
 | QuickBuy | 完全失效 | 手柄商店网格十字键导航 + A，数量加减键 | M |
 | GoToCraftingBenchTask | 合成后失效 | 数量加减改手柄键 + A 确认 | M |
 | CraftMaterialTask | 完全失效 | 手柄合成界面整套：方向键列表导航 + OCR 数量闭环（替代滑块拖拽）+ 模板 | L |

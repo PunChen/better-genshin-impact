@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OCR;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask.AutoPick;
 using BetterGenshinImpact.GameTask.AutoPick.Assets;
 using BetterGenshinImpact.GameTask.Model.Area;
@@ -17,15 +18,34 @@ public static partial class Bv
 {
     public static string FindFKeyText(ImageRegion region)
     {
-        using var foundRectArea = region.Find(AutoPickAssets.Get(region, TaskContext.Instance().Config.AutoPickConfig.PickKey).PickRo);
+        // 手柄模式下拾取提示为 X 图标（与键鼠 F 图标不同），图标较小，
+        // 按图标中心扩展出与键鼠模式等价的几何，使后续文字偏移计算保持一致（与 AutoPickTrigger 同一处理方式）
+        var gamepadMode = GamepadMode.Enabled;
+        using var foundRectArea = region.Find(gamepadMode
+            ? RecognitionAssets.Get("AutoPick", "ControllerPick", region)
+            : AutoPickAssets.Get(region, TaskContext.Instance().Config.AutoPickConfig.PickKey).PickRo);
         if (foundRectArea.IsEmpty())
         {
             return string.Empty;
         }
 
         var scale = TaskContext.Instance().SystemInfo.AssetScale;
-        var textRect = new Rect(foundRectArea.X + (int)(115 * scale), foundRectArea.Y,
-            (int)((400 - 115) * scale), foundRectArea.Height);
+        int textX, textY, textHeight;
+        if (gamepadMode)
+        {
+            textX = (int)(foundRectArea.X + foundRectArea.Width / 2d - 20 * scale);
+            textY = (int)(foundRectArea.Y + foundRectArea.Height / 2d - 20 * scale);
+            textHeight = (int)(40 * scale);
+        }
+        else
+        {
+            textX = foundRectArea.X;
+            textY = foundRectArea.Y;
+            textHeight = foundRectArea.Height;
+        }
+
+        var textRect = new Rect(textX + (int)(115 * scale), textY,
+            (int)((400 - 115) * scale), textHeight);
         if (textRect.X + textRect.Width > region.SrcMat.Width
             || textRect.Y + textRect.Height > region.SrcMat.Height)
         {

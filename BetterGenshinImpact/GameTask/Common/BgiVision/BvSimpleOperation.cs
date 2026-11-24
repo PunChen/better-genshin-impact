@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.GameTask.AutoPick.Assets;
 using BetterGenshinImpact.GameTask.Common.Element.Assets;
@@ -178,7 +179,12 @@ public static partial class Bv
     /// <returns></returns>
     public static bool FindF(ImageRegion captureRa, params string[] text)
     {
-        using var ra = captureRa.Find(AutoPickAssets.Get(captureRa, TaskContext.Instance().Config.AutoPickConfig.PickKey).PickRo);
+        // 手柄模式下拾取提示为 X 图标（与键鼠 F 图标不同），图标较小，
+        // 按图标中心扩展出与键鼠模式等价的几何，使后续文字偏移计算保持一致（与 AutoPickTrigger 同一处理方式）
+        var gamepadMode = GamepadMode.Enabled;
+        using var ra = captureRa.Find(gamepadMode
+            ? RecognitionAssets.Get("AutoPick", "ControllerPick", captureRa)
+            : AutoPickAssets.Get(captureRa, TaskContext.Instance().Config.AutoPickConfig.PickKey).PickRo);
         if (ra.IsExist())
         {
             if (text.Length == 0)
@@ -188,8 +194,22 @@ public static partial class Bv
 
             var scale = TaskContext.Instance().SystemInfo.AssetScale;
             var config = TaskContext.Instance().Config.AutoPickConfig;
-            var textRect = new Rect(ra.X + (int)(config.ItemTextLeftOffset * scale), ra.Y,
-                (int)((config.ItemTextRightOffset - config.ItemTextLeftOffset) * scale), ra.Height);
+            int textX, textY, textHeight;
+            if (gamepadMode)
+            {
+                textX = (int)(ra.X + ra.Width / 2d - 20 * scale);
+                textY = (int)(ra.Y + ra.Height / 2d - 20 * scale);
+                textHeight = (int)(40 * scale);
+            }
+            else
+            {
+                textX = ra.X;
+                textY = ra.Y;
+                textHeight = ra.Height;
+            }
+
+            var textRect = new Rect(textX + (int)(config.ItemTextLeftOffset * scale), textY,
+                (int)((config.ItemTextRightOffset - config.ItemTextLeftOffset) * scale), textHeight);
 
             var textRa = captureRa.DeriveCrop(textRect);
             var list = textRa.FindMulti(RecognitionObject.OcrThis);
