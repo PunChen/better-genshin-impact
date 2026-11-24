@@ -278,7 +278,9 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 | 大世界画面判断 | `Bv.IsInMainUi()` | 派蒙菜单图标 + 复苏提示排除；`WaitForMainUi()` 异步等待 | 🟡 待验证 |
 | 统一入口 | `Bv.WhichGameUi()` | `GameUiCategory { Talk > BigMap > Main > Unknown }` 按优先级分类；`TaskTriggerDispatcher` 每帧计算 `CurrentGameUiCategory`，触发器按 `SupportedGameUiCategory` 过滤（AutoSkip=Talk、QuickTeleport=BigMap、MapMask 含 BigMap 判断） | 🟡 待验证 |
 
-其他可复用判断：`IsInDomain()`（秘境）、`IsInPartyViewUi()`（队伍选择）、`IsInAnyClosableUi()`（任意可关闭 UI）、`IsInPromptDialog()`（提示/确认框）、`IsInBlessingOfTheWelkinMoon()`（空月祝福）。
+其他可复用判断：`IsInDomain()`（秘境）、`IsInPartyViewUi()`（队伍选择）、`IsInAnyClosableUi()`（任意可关闭 UI）、`IsInPromptDialog()`（提示/确认框）、`IsInBlessingOfTheWelkinMoon()`（空月祝福）、`DetectChatUi()`（聊天面板状态机：Closed/PanelOpen/InputOpen）。
+
+> 注：触发器层使用 `WhichGameUiForTriggers`（Talk > BigMap，**不判 Main**——派蒙模板匹配每帧开销大，属性能取舍），因此 `CaptureContent.CurrentGameUiCategory` 永远不会是 `Main`；任务层使用完整版 `WhichGameUi`（含 Main）。目前无触发器声明 `SupportedGameUiCategory=Main`，无实际影响；未来若有「仅主界面」触发器需注意此设计。
 
 ### 7.2 已知缺口（B6）：运动状态判断手柄失效
 
@@ -300,3 +302,5 @@ GamepadUiNavigator.DragMap(1, 0, 300);
 2. **单次脉冲移动一项**：左摇杆 `FocusDown/FocusUp` 单次脉冲在菜单中移动一项（与 B2 列表滚动同一未验证点）。
 3. **「设置」文字标签**：A9 依赖派蒙菜单设置入口有可 OCR 的「设置」文字；若齿轮图标无文字标签，A9 需回退图标识别方案（图标资源走外部资源包）。
 4. **A9 语义待确认**：`OpenTheSettingsMenu`（F6）唯一活跃调用点 `EnterAndExitWonderlandJob`（千星奇域入口）的按键语义为「打开玩法系统界面（尘歌壶猫尾酒馆等特定场景）」，与派蒙菜单「设置」可能不是同一界面，**该调用点未接线**；待实机确认 F6 实际语义后再决定。
+5. **战斗中派蒙菜单**（2026-11-24 检查补充）：AutoFight 战斗结束检测路径（`AutoFightTask` 924/963、`AutoFightSeek` 324/335 已接入 A7 导航）会在**战斗中**按 Start 打开派蒙菜单再导航到队伍配置——单机战斗中暂停菜单应可正常打开（游戏暂停）；联机不暂停但菜单可开。待实机确认。
+6. **手柄模板资源包依赖**（2026-11-24 检查补充）：4 个手柄模板（`ControllerMenuButton`/`ControllerViewButton`/`ControllerChoiceButton`/`ControllerPick`）已在 `GameTask/AutoSkip/Assets/Recognition.json` 与 `GameTask/AutoPick/Assets/Recognition.json` 中声明，PNG 图像需由 BetterGI.Assets 外部资源包提供（仓库禁止新增 `Assets` 目录）——需确认资源包已包含对应图像。
