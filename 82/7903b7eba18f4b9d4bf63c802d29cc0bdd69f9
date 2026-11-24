@@ -1,0 +1,14 @@
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "827903b7eba18f4b9d4bf63c802d29cc0bdd69f9",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
