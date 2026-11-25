@@ -2451,7 +2451,7 @@ public class TpTask
         {
             ct.ThrowIfCancellationRequested();
             using var ra = CaptureToRectArea();
-            var list = FindSwitchAreaCandidates(ra);
+            var list = FindSwitchAreaCandidates(ra, areaName);
             candidatesText = FormatSwitchAreaCandidateTexts(list);
             var matchRect = list
                 .OrderByDescending(r => r.Y)
@@ -2462,11 +2462,16 @@ public class TpTask
                 if (gamepad is not null)
                 {
                     // 手柄模式区域列表是两列网格：先回左上角，再按目标行列下移/右移，B 确认
-                    var (row, col) = GetSwitchAreaGridPosition(list, matchRect, ra.Height);
-                    for (var i = 0; i < 12; i++)
+                    var (row, col, rowCount) = GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height);
+                    for (var i = 0; i < rowCount + 2; i++)
+                    {
+                        gamepad.SetLeftStick(0, 1, 80);
+                        await Delay(40, ct);
+                    }
+
+                    for (var i = 0; i < 3; i++)
                     {
                         gamepad.SetLeftStick(-1, 0, 80);
-                        gamepad.SetLeftStick(0, 1, 80);
                         await Delay(40, ct);
                     }
 
@@ -2520,7 +2525,7 @@ public class TpTask
         {
             ct.ThrowIfCancellationRequested();
             using var capture = CaptureToRectArea();
-            var clickedCandidateStillVisible = FindSwitchAreaCandidates(capture).Any(candidate =>
+            var clickedCandidateStillVisible = FindSwitchAreaCandidates(capture, areaName).Any(candidate =>
                 IsSwitchAreaCandidateMatch(candidate.Text, localizedAreaName, areaName) &&
                 IsSameSwitchAreaCandidatePosition(clickedCandidateRect, candidate));
 
@@ -2558,24 +2563,51 @@ public class TpTask
                Math.Abs(clickedCenterY - candidateCenterY) <= tolerance;
     }
 
-    private List<Region> FindSwitchAreaCandidates(ImageRegion imageRegion)
+    private List<Region> FindSwitchAreaCandidates(ImageRegion imageRegion, string? targetArea = null)
     {
-        return imageRegion.FindMulti(new RecognitionObject
+        // 键鼠模式区域列表在右侧 1/3；手柄模式为右侧两列面板
+        var regionOfInterest = GamepadMode.Enabled
+            ? new Rect((int)(imageRegion.Width * 0.68), 0, (int)(imageRegion.Width * 0.30), (int)(imageRegion.Height * 0.90))
+            : new Rect(imageRegion.Width * 2 / 3, 0, imageRegion.Width / 3, imageRegion.Height);
+
+        var candidates = imageRegion.FindMulti(new RecognitionObject
         {
             RecognitionType = RecognitionTypes.Ocr,
-            RegionOfInterest = new Rect(imageRegion.Width * 2 / 3, 0, imageRegion.Width / 3, imageRegion.Height),
+            RegionOfInterest = regionOfInterest,
             ReplaceDictionary = GetSwitchAreaOcrReplaceDictionary(),
         });
+
+        if (!GamepadMode.Enabled)
+        {
+            return candidates;
+        }
+
+        var countries = MapLazyAssets.Get().CountryPositions.Keys
+            .Select(NormalizeSwitchAreaCandidateText)
+            .Where(text => !string.IsNullOrWhiteSpace(text))
+            .ToList();
+        var targetNormalized = string.IsNullOrWhiteSpace(targetArea)
+            ? null
+            : NormalizeSwitchAreaCandidateText(targetArea);
+
+        return candidates
+            .Where(candidate =>
+            {
+                var normalized = NormalizeSwitchAreaCandidateText(candidate.Text);
+                return countries.Any(country => normalized.Contains(country))
+                       || (targetNormalized is not null && normalized.Contains(targetNormalized));
+            })
+            .ToList();
     }
 
     /// <summary>
     /// 计算手柄区域列表（两列网格）中目标项的行列索引。
     /// </summary>
-    private static (int Row, int Col) GetSwitchAreaGridPosition(List<Region> candidates, Region target, int captureHeight)
+    private static (int Row, int Col, int RowCount) GetSwitchAreaGridPosition(List<Region> candidates, Region target, int captureWidth, int captureHeight)
     {
         if (candidates.Count == 0)
         {
-            return (0, 0);
+            return (0, 0, 1);
         }
 
         var rowTolerance = Math.Max(20, captureHeight * 0.04);
@@ -2600,12 +2632,10 @@ public class TpTask
             }
         }
 
-        var minX = candidates.Min(c => c.X);
-        var maxX = candidates.Max(c => c.X);
-        var middleX = (minX + maxX) / 2.0;
-        var targetCol = target.X > middleX ? 1 : 0;
+        // 两列面板固定分界线约在屏幕宽度 78% 处；不依赖候选数量，单独目标也能判断列
+        var targetCol = target.X > captureWidth * 0.78 ? 1 : 0;
 
-        return (targetRow, targetCol);
+        return (targetRow, targetCol, rowCenters.Count);
     }
 
     private static Dictionary<string, string[]> GetSwitchAreaOcrReplaceDictionary()
