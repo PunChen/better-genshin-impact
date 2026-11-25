@@ -2490,34 +2490,59 @@ public class TpTask
                 var clickedCandidateRect = new Rect(matchRect.X, matchRect.Y, matchRect.Width, matchRect.Height);
                 if (gamepad is not null)
                 {
-                    // 手柄模式区域列表是两列网格：先回左上角，再按目标行列下移/右移，B 确认
-                    var (row, col, rowCount) = GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height);
-                    for (var i = 0; i < rowCount + 2; i++)
+                    // 手柄模式：每一格都重新 OCR，按“当前高亮项 → 目标”逐格移动，避免开环计数错位
+                    for (var step = 0; step < 30; step++)
                     {
-                        gamepad.SetLeftStick(0, 1, 120);
-                        await Delay(60, ct);
-                    }
+                        using var stepRa = CaptureToRectArea();
+                        var stepList = FindSwitchAreaCandidates(stepRa, areaName);
+                        var stepTarget = stepList.FirstOrDefault(candidate =>
+                            IsSwitchAreaCandidateMatch(candidate.Text, minCountryLocalized, areaName));
+                        if (stepTarget is null)
+                        {
+                            break;
+                        }
 
-                    for (var i = 0; i < 3; i++)
-                    {
-                        gamepad.SetLeftStick(-1, 0, 120);
-                        await Delay(60, ct);
-                    }
+                        var selected = FindSwitchAreaSelectedCandidate(stepRa, stepList);
+                        if (selected is null)
+                        {
+                            Logger.LogWarning("区域列表未识别到高亮项，停止手柄导航");
+                            break;
+                        }
 
-                    for (var i = 0; i < row; i++)
-                    {
-                        gamepad.SetLeftStick(0, -1, 120);
-                        await Delay(80, ct);
-                    }
+                        if (IsSwitchAreaCandidateMatch(selected.Text, minCountryLocalized, areaName))
+                        {
+                            gamepad.PressButton(GamepadButton.B, 80);
+                            await Delay(300, ct);
+                            break;
+                        }
 
-                    for (var i = 0; i < col; i++)
-                    {
-                        gamepad.SetLeftStick(1, 0, 120);
-                        await Delay(80, ct);
-                    }
+                        var targetPos = GetSwitchAreaGridPosition(stepList, stepTarget, stepRa.Width, stepRa.Height);
+                        var selectedPos = GetSwitchAreaGridPosition(stepList, selected, stepRa.Width, stepRa.Height);
+                        if (selectedPos.Row < targetPos.Row)
+                        {
+                            gamepad.SetLeftStick(0, -1, 100);
+                        }
+                        else if (selectedPos.Row > targetPos.Row)
+                        {
+                            gamepad.SetLeftStick(0, 1, 100);
+                        }
+                        else if (selectedPos.Col < targetPos.Col)
+                        {
+                            gamepad.SetLeftStick(1, 0, 100);
+                        }
+                        else if (selectedPos.Col > targetPos.Col)
+                        {
+                            gamepad.SetLeftStick(-1, 0, 100);
+                        }
+                        else
+                        {
+                            gamepad.PressButton(GamepadButton.B, 80);
+                            await Delay(300, ct);
+                            break;
+                        }
 
-                    gamepad.PressButton(GamepadButton.B, 80);
-                    await Delay(200, ct);
+                        await Delay(220, ct);
+                    }
                 }
                 else
                 {
@@ -2670,6 +2695,35 @@ public class TpTask
         }
 
         board.Set(new MaskWindowDrawingGroup("SwitchAreaDebug", MaskWindowDrawingKind.Feature), shapes);
+    }
+
+    /// <summary>
+    /// 找出区域列表中当前高亮的项（选中项背景比未选中项亮）。
+    /// </summary>
+    private static Region? FindSwitchAreaSelectedCandidate(ImageRegion imageRegion, List<Region> candidates)
+    {
+        Region? best = null;
+        var bestLuma = double.MinValue;
+        foreach (var candidate in candidates)
+        {
+            var rect = new OpenCvSharp.Rect(candidate.X, candidate.Y, candidate.Width, candidate.Height);
+            rect = rect.Intersect(new OpenCvSharp.Rect(0, 0, imageRegion.SrcMat.Width, imageRegion.SrcMat.Height));
+            if (rect.Width <= 0 || rect.Height <= 0)
+            {
+                continue;
+            }
+
+            using var crop = new Mat(imageRegion.SrcMat, rect);
+            var mean = Cv2.Mean(crop);
+            var luma = (mean.Val0 + mean.Val1 + mean.Val2) / 3d;
+            if (luma > bestLuma)
+            {
+                bestLuma = luma;
+                best = candidate;
+            }
+        }
+
+        return best;
     }
 
     /// <summary>
