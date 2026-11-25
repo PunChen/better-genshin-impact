@@ -2465,26 +2465,26 @@ public class TpTask
                     var (row, col, rowCount) = GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height);
                     for (var i = 0; i < rowCount + 2; i++)
                     {
-                        gamepad.PressButton(GamepadButton.Up, 80);
-                        await Delay(40, ct);
+                        gamepad.SetLeftStick(0, 1, 120);
+                        await Delay(60, ct);
                     }
 
                     for (var i = 0; i < 3; i++)
                     {
-                        gamepad.PressButton(GamepadButton.Left, 80);
-                        await Delay(40, ct);
+                        gamepad.SetLeftStick(-1, 0, 120);
+                        await Delay(60, ct);
                     }
 
                     for (var i = 0; i < row; i++)
                     {
-                        gamepad.PressButton(GamepadButton.Down, 80);
-                        await Delay(70, ct);
+                        gamepad.SetLeftStick(0, -1, 120);
+                        await Delay(80, ct);
                     }
 
                     for (var i = 0; i < col; i++)
                     {
-                        gamepad.PressButton(GamepadButton.Right, 80);
-                        await Delay(70, ct);
+                        gamepad.SetLeftStick(1, 0, 120);
+                        await Delay(80, ct);
                     }
 
                     gamepad.PressButton(GamepadButton.B, 80);
@@ -2588,6 +2588,9 @@ public class TpTask
         {
             return candidates;
         }
+
+        Logger.LogDebug("手柄区域列表 OCR 原始候选：{Text}",
+            string.Join(" / ", candidates.Select(c => NormalizeSwitchAreaCandidateText(c.Text))));
 
         var countries = MapLazyAssets.Get().CountryPositions.Keys
             .Select(NormalizeSwitchAreaCandidateText)
