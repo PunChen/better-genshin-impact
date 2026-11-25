@@ -1,4 +1,4 @@
-using BetterGenshinImpact.Core.Input;
+﻿using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Mask;
 using Fischless.WindowsInput.Gamepad;
@@ -2520,8 +2520,10 @@ public class TpTask
                         await Delay(140, ct);
                     }
 
-                    gamepad.PressButton(GamepadButton.B, 80);
-                    await Delay(200, ct);
+                    await Delay(400, ct);
+                    Logger.LogInformation("手柄区域导航：已到达目标，发送 B 确认");
+                    gamepad.PressButton(GamepadButton.B, 150);
+                    await Delay(500, ct);
                 }
                 else
                 {
