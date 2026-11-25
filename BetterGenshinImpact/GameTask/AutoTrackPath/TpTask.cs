@@ -1,4 +1,4 @@
-using BetterGenshinImpact.Core.Input;
+﻿using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
