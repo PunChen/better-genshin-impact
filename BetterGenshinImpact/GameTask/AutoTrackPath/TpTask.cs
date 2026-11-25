@@ -1,4 +1,6 @@
-using BetterGenshinImpact.Core.Input;
+﻿using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
+using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
 using BetterGenshinImpact.Core.Script.Dependence;
@@ -2425,8 +2427,18 @@ public class TpTask
 
     private async Task<bool> TrySwitchArea(string areaName)
     {
-        GameCaptureRegion.GameRegionClick((rect, scale) => (rect.Width - 160 * scale, rect.Height - 60 * scale));
-        await Delay(50, ct);
+        var gamepad = GamepadMode.Enabled ? InputHub.Backend as GamepadInputBackend : null;
+        if (gamepad is not null)
+        {
+            // 手柄模式：Y 打开地图右下角的区域列表（鼠标点击会被 GamepadChannel 丢弃）
+            gamepad.PressButton(GamepadButton.Y, 80);
+            await Delay(400, ct);
+        }
+        else
+        {
+            GameCaptureRegion.GameRegionClick((rect, scale) => (rect.Width - 160 * scale, rect.Height - 60 * scale));
+            await Delay(50, ct);
+        }
         var minCountryLocalized = this.stringLocalizer.WithCultureGet(this.cultureInfo, areaName);
         var candidatesText = "";
         for (var attempt = 0; attempt < 19; attempt++)
@@ -2441,8 +2453,32 @@ public class TpTask
             if (matchRect != null)
             {
                 var clickedCandidateRect = new Rect(matchRect.X, matchRect.Y, matchRect.Width, matchRect.Height);
-                matchRect.Click();
-                await Delay(50, ct);
+                if (gamepad is not null)
+                {
+                    // 手柄模式：OCR 候选按 Y 排序，先回到列表顶部，再下移 index 项，B 确认
+                    var ordered = list.OrderByDescending(r => r.Y).ToList();
+                    var index = Math.Max(0, ordered.IndexOf(matchRect));
+                    for (var i = 0; i < 12; i++)
+                    {
+                        gamepad.SetLeftStick(0, 1, 80);
+                        await Delay(60, ct);
+                    }
+
+                    for (var i = 0; i < index; i++)
+                    {
+                        gamepad.SetLeftStick(0, -1, 80);
+                        await Delay(60, ct);
+                    }
+
+                    gamepad.PressButton(GamepadButton.B, 80);
+                    await Delay(200, ct);
+                }
+                else
+                {
+                    matchRect.Click();
+                    await Delay(50, ct);
+                }
+
                 await WaitForAreaSelectionApplied(areaName, minCountryLocalized, clickedCandidateRect);
                 RememberAreaSwitchCenterPoint(areaName);
                 Logger.LogInformation("切换到区域：{Country}", areaName);

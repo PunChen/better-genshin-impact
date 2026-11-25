@@ -41,6 +41,11 @@ public sealed class GamepadInputBackend : IInputBackend
     public string? LastError => _channel.LastError;
 
     /// <summary>
+    /// 使用当前任务的手柄通道按一次指定按键（供 TpTask 等需要固定键位的场景使用）
+    /// </summary>
+    public void PressButton(GamepadButton button, int durationMs = 80) => _channel.PressButton(button, durationMs);
+
+    /// <summary>
     /// 设置右摇杆并保持指定时间后归零（x/y 归一化到 -1..1）
     /// </summary>
     public void SetRightStick(double x, double y, int durationMs) => _channel.SetRightStick(x, y, durationMs);
@@ -493,6 +498,21 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
         var y = (short)Math.Clamp(-dy * sensitivity, short.MinValue, short.MaxValue);
 
         SetRightStickRaw(x, y, Math.Max(1, config.RightStickPulseMs));
+    }
+
+    public void PressButton(GamepadButton button, int durationMs)
+    {
+        if (!EnsureTransport())
+        {
+            return;
+        }
+
+        lock (_sync)
+        {
+            _transport!.SetButton(button, true);
+            Thread.Sleep(Math.Max(1, durationMs));
+            _transport.SetButton(button, false);
+        }
     }
 
     /// <summary>
