@@ -525,15 +525,22 @@ public class TpTask
 
         var screenText = TryOcrGamepadScreenText();
         Logger.LogInformation("手柄传送：候选/区域范围 OCR={Text}", Shorten(screenText));
-        if (screenText.Contains("传送锚点"))
+
+        // 两段确认：B 选中「传送锚点」条目 → 再在区域范围内确认「传送锚点」并按 B 传送
+        for (var phase = 0; phase < 2; phase++)
         {
-            Logger.LogInformation("手柄传送：识别到「传送锚点」，按 B 确认传送");
+            if (!screenText.Contains("传送锚点"))
+            {
+                Logger.LogInformation("手柄传送：第 {Phase} 段未识别到「传送锚点」，不再发送 B", phase + 1);
+                break;
+            }
+
+            Logger.LogInformation("手柄传送：第 {Phase} 段识别到「传送锚点」，按 B", phase + 1);
             gamepad.PressButton(GamepadButton.B, 150);
             await Delay(1000, ct);
-        }
-        else
-        {
-            Logger.LogInformation("手柄传送：未识别到「传送锚点」，不再发送 B");
+
+            screenText = TryOcrGamepadScreenText();
+            Logger.LogInformation("手柄传送：第 {Phase} 段后 OCR={Text}", phase + 1, Shorten(screenText));
         }
 
         await WaitForTeleportCompletion();
