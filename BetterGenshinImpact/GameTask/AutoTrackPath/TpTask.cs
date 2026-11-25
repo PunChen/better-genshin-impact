@@ -2490,59 +2490,38 @@ public class TpTask
                 var clickedCandidateRect = new Rect(matchRect.X, matchRect.Y, matchRect.Width, matchRect.Height);
                 if (gamepad is not null)
                 {
-                    // 手柄模式：每一格都重新 OCR，按“当前高亮项 → 目标”逐格移动，避免开环计数错位
-                    for (var step = 0; step < 30; step++)
+                    // 手柄模式：固定网格位置。先回到左上角“蒙德”，再按行列偏移移动
+                    var fixedPos = GetFixedSwitchAreaGridPosition(areaName, minCountryLocalized);
+                    var targetRow = fixedPos?.Row ?? GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height).Row;
+                    var targetCol = fixedPos?.Col ?? GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height).Col;
+                    Logger.LogInformation("手柄区域导航（固定网格）：{Area} → 行 {Row}、列 {Col}", areaName, targetRow, targetCol);
+
+                    for (var i = 0; i < 12; i++)
                     {
-                        using var stepRa = CaptureToRectArea();
-                        var stepList = FindSwitchAreaCandidates(stepRa, areaName);
-                        var stepTarget = stepList.FirstOrDefault(candidate =>
-                            IsSwitchAreaCandidateMatch(candidate.Text, minCountryLocalized, areaName));
-                        if (stepTarget is null)
-                        {
-                            break;
-                        }
-
-                        var selected = FindSwitchAreaSelectedCandidate(stepRa, stepList);
-                        if (selected is null)
-                        {
-                            Logger.LogWarning("区域列表未识别到高亮项，停止手柄导航");
-                            break;
-                        }
-
-                        if (IsSwitchAreaCandidateMatch(selected.Text, minCountryLocalized, areaName))
-                        {
-                            gamepad.PressButton(GamepadButton.B, 80);
-                            await Delay(300, ct);
-                            break;
-                        }
-
-                        var targetPos = GetSwitchAreaGridPosition(stepList, stepTarget, stepRa.Width, stepRa.Height);
-                        var selectedPos = GetSwitchAreaGridPosition(stepList, selected, stepRa.Width, stepRa.Height);
-                        if (selectedPos.Row < targetPos.Row)
-                        {
-                            gamepad.SetLeftStick(0, -1, 100);
-                        }
-                        else if (selectedPos.Row > targetPos.Row)
-                        {
-                            gamepad.SetLeftStick(0, 1, 100);
-                        }
-                        else if (selectedPos.Col < targetPos.Col)
-                        {
-                            gamepad.SetLeftStick(1, 0, 100);
-                        }
-                        else if (selectedPos.Col > targetPos.Col)
-                        {
-                            gamepad.SetLeftStick(-1, 0, 100);
-                        }
-                        else
-                        {
-                            gamepad.PressButton(GamepadButton.B, 80);
-                            await Delay(300, ct);
-                            break;
-                        }
-
-                        await Delay(220, ct);
+                        gamepad.SetLeftStick(0, 1, 60);
+                        await Delay(140, ct);
                     }
+
+                    for (var i = 0; i < 3; i++)
+                    {
+                        gamepad.SetLeftStick(-1, 0, 60);
+                        await Delay(140, ct);
+                    }
+
+                    for (var i = 0; i < targetRow; i++)
+                    {
+                        gamepad.SetLeftStick(0, -1, 60);
+                        await Delay(140, ct);
+                    }
+
+                    for (var i = 0; i < targetCol; i++)
+                    {
+                        gamepad.SetLeftStick(1, 0, 60);
+                        await Delay(140, ct);
+                    }
+
+                    gamepad.PressButton(GamepadButton.B, 80);
+                    await Delay(200, ct);
                 }
                 else
                 {
@@ -2665,6 +2644,41 @@ public class TpTask
                        || (targetNormalized is not null && normalized.Contains(targetNormalized));
             })
             .ToList();
+    }
+
+    private static readonly string[,] SwitchAreaGrid =
+    {
+        { "蒙德", "璃月" },
+        { "稻妻", "须弥" },
+        { "枫丹", "纳塔" },
+        { "挪德卡莱", "至冬" },
+        { "渊下宫", "层岩巨渊" },
+        { "旧日之海", "远古圣山" },
+        { "空之神殿", "霜月" },
+        { "尘歌壶", "千星奇域" },
+    };
+
+    /// <summary>
+    /// 手柄区域列表的固定两列网格位置。
+    /// </summary>
+    private static (int Row, int Col)? GetFixedSwitchAreaGridPosition(string areaName, string localizedAreaName)
+    {
+        var normalizedArea = NormalizeSwitchAreaCandidateText(areaName);
+        var normalizedLocalized = NormalizeSwitchAreaCandidateText(localizedAreaName);
+        for (var row = 0; row < SwitchAreaGrid.GetLength(0); row++)
+        {
+            for (var col = 0; col < SwitchAreaGrid.GetLength(1); col++)
+            {
+                var name = NormalizeSwitchAreaCandidateText(SwitchAreaGrid[row, col]);
+                if (normalizedArea.Contains(name) || name.Contains(normalizedArea) ||
+                    normalizedLocalized.Contains(name) || name.Contains(normalizedLocalized))
+                {
+                    return (row, col);
+                }
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
