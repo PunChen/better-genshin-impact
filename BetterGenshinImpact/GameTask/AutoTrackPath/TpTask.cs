@@ -4,6 +4,7 @@ using BetterGenshinImpact.Core.Mask;
 using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
+using BetterGenshinImpact.Core.Recognition.OCR;
 using BetterGenshinImpact.Core.Script.Dependence;
 using BetterGenshinImpact.Core.Simulator.Extensions;
 using BetterGenshinImpact.GameTask.AutoGeniusInvokation.Exception;
@@ -406,6 +407,9 @@ public class TpTask
         if (GamepadMode.Enabled)
         {
             await OpenBigMapUi(2, target.MapName);
+            await GamepadTeleportByDefaultPointAsync(target, ct);
+            s_lastSuccessfulTeleportMapName = target.MapName;
+            return (target.X, target.Y);
         }
 
         var clickView = await PrepareTeleportClickView(target);
@@ -504,6 +508,55 @@ public class TpTask
     private static string GetMapDisplayName(string mapName)
     {
         return MapTypesExtensions.ParseFromName(mapName).GetDescription();
+    }
+
+    /// <summary>
+    /// 手柄模式传送：B 选默认传送点 → B 确认传送；若出现“传送锚点”列表再按 B。
+    /// </summary>
+    private async Task GamepadTeleportByDefaultPointAsync(TeleportTargetContext target, CancellationToken ct)
+    {
+        var gamepad = InputHub.Backend as GamepadInputBackend
+                      ?? throw new InvalidOperationException("手柄后端不可用");
+
+        await Delay(600, ct);
+        Logger.LogInformation("手柄传送：B 选择默认传送点");
+        gamepad.PressButton(GamepadButton.B, 150);
+        await Delay(900, ct);
+
+        var screenText = TryOcrGamepadScreenText();
+        Logger.LogInformation("手柄传送：候选/区域范围 OCR={Text}", Shorten(screenText));
+        if (screenText.Contains("传送锚点"))
+        {
+            Logger.LogInformation("手柄传送：识别到「传送锚点」，按 B 确认传送");
+            gamepad.PressButton(GamepadButton.B, 150);
+            await Delay(1000, ct);
+        }
+        else
+        {
+            Logger.LogInformation("手柄传送：未识别到「传送锚点」，不再发送 B");
+        }
+
+        await WaitForTeleportCompletion();
+    }
+
+    private string TryOcrGamepadScreenText()
+    {
+        try
+        {
+            using var ra = CaptureToRectArea();
+            return OcrFactory.Paddle.Ocr(ra.SrcMat) ?? string.Empty;
+        }
+        catch (Exception e)
+        {
+            Logger.LogWarning(e, "手柄传送 OCR 失败");
+            return string.Empty;
+        }
+    }
+
+    private static string Shorten(string text)
+    {
+        var oneLine = text.Replace('\n', ' ').Replace('\r', ' ').Trim();
+        return oneLine.Length <= 160 ? oneLine : oneLine[..160] + "…";
     }
 
     private async Task SwitchToTeleportTargetMap(TeleportTargetContext target)
