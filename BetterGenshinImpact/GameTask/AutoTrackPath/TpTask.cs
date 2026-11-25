@@ -1,6 +1,5 @@
 using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
-using BetterGenshinImpact.Core.Mask;
 using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
@@ -2675,8 +2674,6 @@ public class TpTask
             ? new Rect((int)(imageRegion.Width * 0.68), 0, (int)(imageRegion.Width * 0.30), (int)(imageRegion.Height * 0.90))
             : new Rect(imageRegion.Width * 2 / 3, 0, imageRegion.Width / 3, imageRegion.Height);
 
-        DrawSwitchAreaDebugBoxes(imageRegion, regionOfInterest, null);
-
         var candidates = imageRegion.FindMulti(new RecognitionObject
         {
             RecognitionType = RecognitionTypes.Ocr,
@@ -2691,7 +2688,6 @@ public class TpTask
 
         Logger.LogInformation("手柄区域列表 OCR 原始候选：{Text}",
             string.Join(" / ", candidates.Select(c => NormalizeSwitchAreaCandidateText(c.Text))));
-        DrawSwitchAreaDebugBoxes(imageRegion, regionOfInterest, candidates);
 
         var countries = MapLazyAssets.Get().CountryPositions.Keys
             .Select(NormalizeSwitchAreaCandidateText)
@@ -2744,65 +2740,6 @@ public class TpTask
         }
 
         return null;
-    }
-
-    /// <summary>
-    /// 在遮罩窗口画出区域列表 OCR 范围（红框）与候选文字框（绿框），便于调试。
-    /// </summary>
-    private static void DrawSwitchAreaDebugBoxes(ImageRegion imageRegion, OpenCvSharp.Rect roi, List<Region>? candidates)
-    {
-        var board = TaskContext.Instance().Runtime?.MaskWindowDrawingBoard;
-        if (board is null)
-        {
-            return;
-        }
-
-        // OCR 坐标以 1920 为基准；遮罩绘制使用捕获物理像素
-        var scale = TaskContext.Instance().SystemInfo.GameScreenSize.Width / 1920.0;
-        var shapes = new List<MaskWindowDrawingShape>
-        {
-            new MaskWindowDrawingRect(
-                new System.Windows.Rect(roi.X * scale, roi.Y * scale, roi.Width * scale, roi.Height * scale),
-                new MaskWindowDrawingStroke(System.Windows.Media.Colors.Red, 3)),
-        };
-
-        if (candidates is not null)
-        {
-            shapes.AddRange(candidates.Select(c => new MaskWindowDrawingRect(
-                new System.Windows.Rect(c.X * scale, c.Y * scale, c.Width * scale, c.Height * scale),
-                new MaskWindowDrawingStroke(System.Windows.Media.Colors.Lime, 2))));
-        }
-
-        board.Set(new MaskWindowDrawingGroup("SwitchAreaDebug", MaskWindowDrawingKind.Feature), shapes);
-    }
-
-    /// <summary>
-    /// 找出区域列表中当前高亮的项（选中项背景比未选中项亮）。
-    /// </summary>
-    private static Region? FindSwitchAreaSelectedCandidate(ImageRegion imageRegion, List<Region> candidates)
-    {
-        Region? best = null;
-        var bestLuma = double.MinValue;
-        foreach (var candidate in candidates)
-        {
-            var rect = new OpenCvSharp.Rect(candidate.X, candidate.Y, candidate.Width, candidate.Height);
-            rect = rect.Intersect(new OpenCvSharp.Rect(0, 0, imageRegion.SrcMat.Width, imageRegion.SrcMat.Height));
-            if (rect.Width <= 0 || rect.Height <= 0)
-            {
-                continue;
-            }
-
-            using var crop = new Mat(imageRegion.SrcMat, rect);
-            var mean = Cv2.Mean(crop);
-            var luma = (mean.Val0 + mean.Val1 + mean.Val2) / 3d;
-            if (luma > bestLuma)
-            {
-                bestLuma = luma;
-                best = candidate;
-            }
-        }
-
-        return best;
     }
 
     /// <summary>
