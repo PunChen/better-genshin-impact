@@ -1720,12 +1720,29 @@ public class TpTask
         GameCaptureRegion.GameRegionMove((rect, scale) => (rect.Width / 2d, rect.Height / 2d));
         await Delay(GetTeleportOperationDelay(20), ct);
         var singleWheelNotch = Math.Sign(wheelNotches);
-        for (var i = 0; i < Math.Abs(wheelNotches); i++)
+        var gamepad = GamepadMode.Enabled ? InputHub.Backend as GamepadInputBackend : null;
+        if (gamepad is not null)
         {
-            InputHub.Foreground.Mouse.VerticalScroll(singleWheelNotch);
-            if (i + 1 < Math.Abs(wheelNotches))
+            // 手柄地图缩放：LT 放大（wheelNotches<0），RT 缩小
+            var zoomButton = singleWheelNotch < 0 ? GamepadButton.LeftTrigger : GamepadButton.RightTrigger;
+            for (var i = 0; i < Math.Abs(wheelNotches); i++)
             {
-                await Delay(GetTeleportOperationDelay(MapZoomWheelBurstIntervalMs), ct);
+                gamepad.PressButton(zoomButton, 120);
+                if (i + 1 < Math.Abs(wheelNotches))
+                {
+                    await Delay(GetTeleportOperationDelay(MapZoomWheelBurstIntervalMs), ct);
+                }
+            }
+        }
+        else
+        {
+            for (var i = 0; i < Math.Abs(wheelNotches); i++)
+            {
+                InputHub.Foreground.Mouse.VerticalScroll(singleWheelNotch);
+                if (i + 1 < Math.Abs(wheelNotches))
+                {
+                    await Delay(GetTeleportOperationDelay(MapZoomWheelBurstIntervalMs), ct);
+                }
             }
         }
 
@@ -1977,6 +1994,17 @@ public class TpTask
             {
                 GameCaptureRegion.GameRegionMove((_, scale) => (startX + movedX * scale, startY + movedY * scale));
             }
+        }
+
+        var moveGamepad = GamepadMode.Enabled ? InputHub.Backend as GamepadInputBackend : null;
+        if (moveGamepad is not null)
+        {
+            // 手柄地图：左摇杆等价拖动地图；按位移方向推杆，持续时间随位移增大
+            var stickX = Math.Sign(sentDeltaX);
+            var stickY = -Math.Sign(sentDeltaY);
+            var duration = Math.Clamp((Math.Abs(sentDeltaX) + Math.Abs(sentDeltaY)) * 2, 200, 1200);
+            moveGamepad.SetLeftStick(stickX, stickY, duration);
+            return (sentDeltaX, sentDeltaY, steps, startX, startY, endX, endY, sentDeltaX, sentDeltaY);
         }
 
         await Delay(60, ct);
@@ -2499,8 +2527,8 @@ public class TpTask
                 await WaitForAreaSelectionApplied(areaName, minCountryLocalized, clickedCandidateRect);
                 if (gamepad is not null)
                 {
-                    // B 确认区域后地图可能被关闭，切换完成前先重新打开大地图
-                    await Delay(500, ct);
+                    // B 确认区域后可能先播放跳转动画并关闭地图，等待稳定后重新打开
+                    await Delay(1500, ct);
                     await OpenBigMapUi(2, null);
                 }
 
