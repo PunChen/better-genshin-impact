@@ -2465,25 +2465,25 @@ public class TpTask
                     var (row, col, rowCount) = GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height);
                     for (var i = 0; i < rowCount + 2; i++)
                     {
-                        gamepad.SetLeftStick(0, 1, 80);
+                        gamepad.PressButton(GamepadButton.Up, 80);
                         await Delay(40, ct);
                     }
 
                     for (var i = 0; i < 3; i++)
                     {
-                        gamepad.SetLeftStick(-1, 0, 80);
+                        gamepad.PressButton(GamepadButton.Left, 80);
                         await Delay(40, ct);
                     }
 
                     for (var i = 0; i < row; i++)
                     {
-                        gamepad.SetLeftStick(0, -1, 100);
+                        gamepad.PressButton(GamepadButton.Down, 80);
                         await Delay(70, ct);
                     }
 
                     for (var i = 0; i < col; i++)
                     {
-                        gamepad.SetLeftStick(1, 0, 100);
+                        gamepad.PressButton(GamepadButton.Right, 80);
                         await Delay(70, ct);
                     }
 
@@ -2497,6 +2497,13 @@ public class TpTask
                 }
 
                 await WaitForAreaSelectionApplied(areaName, minCountryLocalized, clickedCandidateRect);
+                if (gamepad is not null)
+                {
+                    // B 确认区域后地图可能被关闭，切换完成前先重新打开大地图
+                    await Delay(500, ct);
+                    await OpenBigMapUi(2, null);
+                }
+
                 RememberAreaSwitchCenterPoint(areaName);
                 Logger.LogInformation("切换到区域：{Country}", areaName);
                 return true;
