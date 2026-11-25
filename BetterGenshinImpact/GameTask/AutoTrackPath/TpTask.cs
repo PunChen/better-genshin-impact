@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Mask;
 using Fischless.WindowsInput.Gamepad;
@@ -2527,7 +2527,22 @@ public class TpTask
         {
             // 手柄模式：Y 打开地图右下角的区域列表（鼠标点击会被 GamepadChannel 丢弃）
             gamepad.PressButton(GamepadButton.Y, 80);
-            await Delay(400, ct);
+            await Delay(500, ct);
+
+            // 先把列表滚到左上角（蒙德），确保第一行可见后再 OCR
+            for (var i = 0; i < 12; i++)
+            {
+                gamepad.SetLeftStick(0, 1, 60);
+                await Delay(120, ct);
+            }
+
+            for (var i = 0; i < 3; i++)
+            {
+                gamepad.SetLeftStick(-1, 0, 60);
+                await Delay(120, ct);
+            }
+
+            await Delay(200, ct);
         }
         else
         {
@@ -2555,18 +2570,6 @@ public class TpTask
                     var targetRow = fixedPos?.Row ?? GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height).Row;
                     var targetCol = fixedPos?.Col ?? GetSwitchAreaGridPosition(list, matchRect, ra.Width, ra.Height).Col;
                     Logger.LogInformation("手柄区域导航（固定网格）：{Area} → 行 {Row}、列 {Col}", areaName, targetRow, targetCol);
-
-                    for (var i = 0; i < 12; i++)
-                    {
-                        gamepad.SetLeftStick(0, 1, 60);
-                        await Delay(140, ct);
-                    }
-
-                    for (var i = 0; i < 3; i++)
-                    {
-                        gamepad.SetLeftStick(-1, 0, 60);
-                        await Delay(140, ct);
-                    }
 
                     for (var i = 0; i < targetRow; i++)
                     {
