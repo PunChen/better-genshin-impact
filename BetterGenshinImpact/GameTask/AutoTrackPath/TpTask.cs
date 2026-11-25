@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
@@ -2461,19 +2461,25 @@ public class TpTask
                 var clickedCandidateRect = new Rect(matchRect.X, matchRect.Y, matchRect.Width, matchRect.Height);
                 if (gamepad is not null)
                 {
-                    // 手柄模式：OCR 候选按 Y 排序，先回到列表顶部，再下移 index 项，B 确认
-                    var ordered = list.OrderByDescending(r => r.Y).ToList();
-                    var index = Math.Max(0, ordered.IndexOf(matchRect));
+                    // 手柄模式区域列表是两列网格：先回左上角，再按目标行列下移/右移，B 确认
+                    var (row, col) = GetSwitchAreaGridPosition(list, matchRect, ra.Height);
                     for (var i = 0; i < 12; i++)
                     {
+                        gamepad.SetLeftStick(-1, 0, 80);
                         gamepad.SetLeftStick(0, 1, 80);
-                        await Delay(60, ct);
+                        await Delay(40, ct);
                     }
 
-                    for (var i = 0; i < index; i++)
+                    for (var i = 0; i < row; i++)
                     {
-                        gamepad.SetLeftStick(0, -1, 80);
-                        await Delay(60, ct);
+                        gamepad.SetLeftStick(0, -1, 100);
+                        await Delay(70, ct);
+                    }
+
+                    for (var i = 0; i < col; i++)
+                    {
+                        gamepad.SetLeftStick(1, 0, 100);
+                        await Delay(70, ct);
                     }
 
                     gamepad.PressButton(GamepadButton.B, 80);
@@ -2560,6 +2566,46 @@ public class TpTask
             RegionOfInterest = new Rect(imageRegion.Width * 2 / 3, 0, imageRegion.Width / 3, imageRegion.Height),
             ReplaceDictionary = GetSwitchAreaOcrReplaceDictionary(),
         });
+    }
+
+    /// <summary>
+    /// 计算手柄区域列表（两列网格）中目标项的行列索引。
+    /// </summary>
+    private static (int Row, int Col) GetSwitchAreaGridPosition(List<Region> candidates, Region target, int captureHeight)
+    {
+        if (candidates.Count == 0)
+        {
+            return (0, 0);
+        }
+
+        var rowTolerance = Math.Max(20, captureHeight * 0.04);
+        var rowCenters = new List<double>();
+        foreach (var candidate in candidates.OrderBy(c => c.Y))
+        {
+            if (rowCenters.Count == 0 || Math.Abs(candidate.Y - rowCenters[^1]) > rowTolerance)
+            {
+                rowCenters.Add(candidate.Y);
+            }
+        }
+
+        var targetRow = 0;
+        var minRowDistance = double.MaxValue;
+        for (var i = 0; i < rowCenters.Count; i++)
+        {
+            var distance = Math.Abs(target.Y - rowCenters[i]);
+            if (distance < minRowDistance)
+            {
+                minRowDistance = distance;
+                targetRow = i;
+            }
+        }
+
+        var minX = candidates.Min(c => c.X);
+        var maxX = candidates.Max(c => c.X);
+        var middleX = (minX + maxX) / 2.0;
+        var targetCol = target.X > middleX ? 1 : 0;
+
+        return (targetRow, targetCol);
     }
 
     private static Dictionary<string, string[]> GetSwitchAreaOcrReplaceDictionary()
