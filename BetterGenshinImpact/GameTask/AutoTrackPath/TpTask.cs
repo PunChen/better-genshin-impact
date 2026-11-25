@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
@@ -400,6 +400,12 @@ public class TpTask
         var target = ResolveTeleportTarget(tpX, tpY, mapName, force);
         LogTeleportTarget(target);
         await SwitchToTeleportTargetMap(target);
+
+        // 手柄模式选择区域后地图可能被关闭（B 确认会退出区域列表/地图），重新确保在大地图
+        if (GamepadMode.Enabled)
+        {
+            await OpenBigMapUi(2, target.MapName);
+        }
 
         var clickView = await PrepareTeleportClickView(target);
         var fallbackCandidate = ClickTeleportTargetMapPoint(target, clickView);
