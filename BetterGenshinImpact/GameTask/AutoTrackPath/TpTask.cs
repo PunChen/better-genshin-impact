@@ -1,5 +1,6 @@
-﻿using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
+using BetterGenshinImpact.Core.Mask;
 using Fischless.WindowsInput.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
@@ -2605,6 +2606,8 @@ public class TpTask
             ? new Rect((int)(imageRegion.Width * 0.68), 0, (int)(imageRegion.Width * 0.30), (int)(imageRegion.Height * 0.90))
             : new Rect(imageRegion.Width * 2 / 3, 0, imageRegion.Width / 3, imageRegion.Height);
 
+        DrawSwitchAreaDebugBoxes(imageRegion, regionOfInterest, null);
+
         var candidates = imageRegion.FindMulti(new RecognitionObject
         {
             RecognitionType = RecognitionTypes.Ocr,
@@ -2617,8 +2620,9 @@ public class TpTask
             return candidates;
         }
 
-        Logger.LogDebug("手柄区域列表 OCR 原始候选：{Text}",
+        Logger.LogInformation("手柄区域列表 OCR 原始候选：{Text}",
             string.Join(" / ", candidates.Select(c => NormalizeSwitchAreaCandidateText(c.Text))));
+        DrawSwitchAreaDebugBoxes(imageRegion, regionOfInterest, candidates);
 
         var countries = MapLazyAssets.Get().CountryPositions.Keys
             .Select(NormalizeSwitchAreaCandidateText)
@@ -2636,6 +2640,34 @@ public class TpTask
                        || (targetNormalized is not null && normalized.Contains(targetNormalized));
             })
             .ToList();
+    }
+
+    /// <summary>
+    /// 在遮罩窗口画出区域列表 OCR 范围（红框）与候选文字框（绿框），便于调试。
+    /// </summary>
+    private static void DrawSwitchAreaDebugBoxes(ImageRegion imageRegion, OpenCvSharp.Rect roi, List<Region>? candidates)
+    {
+        var board = TaskContext.Instance().Runtime?.MaskWindowDrawingBoard;
+        if (board is null)
+        {
+            return;
+        }
+
+        var shapes = new List<MaskWindowDrawingShape>
+        {
+            new MaskWindowDrawingRect(
+                new System.Windows.Rect(roi.X, roi.Y, roi.Width, roi.Height),
+                new MaskWindowDrawingStroke(System.Windows.Media.Colors.Red, 3)),
+        };
+
+        if (candidates is not null)
+        {
+            shapes.AddRange(candidates.Select(c => new MaskWindowDrawingRect(
+                new System.Windows.Rect(c.X, c.Y, c.Width, c.Height),
+                new MaskWindowDrawingStroke(System.Windows.Media.Colors.Lime, 2))));
+        }
+
+        board.Set(new MaskWindowDrawingGroup("SwitchAreaDebug", MaskWindowDrawingKind.Feature), shapes);
     }
 
     /// <summary>
