@@ -2653,17 +2653,19 @@ public class TpTask
             return;
         }
 
+        // OCR 坐标以 1920 为基准；遮罩绘制使用捕获物理像素
+        var scale = TaskContext.Instance().SystemInfo.GameScreenSize.Width / 1920.0;
         var shapes = new List<MaskWindowDrawingShape>
         {
             new MaskWindowDrawingRect(
-                new System.Windows.Rect(roi.X, roi.Y, roi.Width, roi.Height),
+                new System.Windows.Rect(roi.X * scale, roi.Y * scale, roi.Width * scale, roi.Height * scale),
                 new MaskWindowDrawingStroke(System.Windows.Media.Colors.Red, 3)),
         };
 
         if (candidates is not null)
         {
             shapes.AddRange(candidates.Select(c => new MaskWindowDrawingRect(
-                new System.Windows.Rect(c.X, c.Y, c.Width, c.Height),
+                new System.Windows.Rect(c.X * scale, c.Y * scale, c.Width * scale, c.Height * scale),
                 new MaskWindowDrawingStroke(System.Windows.Media.Colors.Lime, 2))));
         }
 
