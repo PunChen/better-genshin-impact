@@ -406,6 +406,10 @@ public class TpTask
         if (GamepadMode.Enabled)
         {
             await OpenBigMapUi(2, target.MapName);
+            // 打开地图后放大到与键鼠路径一致的最终点击缩放级别，
+            // 避免区域切换后停留在默认缩小视图就按 B 选点
+            // （LT 放大 / RT 缩小的闭环在 ScrollMapZoomAndMeasure 内实现；受 MapZoomEnabled 配置控制）
+            await AdjustTeleportZoomLevelTo(target.FinalClickZoomLevel);
             await GamepadTeleportByDefaultPointAsync(target, ct);
             s_lastSuccessfulTeleportMapName = target.MapName;
             return (target.X, target.Y);
