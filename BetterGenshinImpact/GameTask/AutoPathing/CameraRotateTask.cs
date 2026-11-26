@@ -1,4 +1,4 @@
-using BetterGenshinImpact.Core.Input;
+﻿using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask.Common.Map;
 using BetterGenshinImpact.GameTask.Model.Area;
