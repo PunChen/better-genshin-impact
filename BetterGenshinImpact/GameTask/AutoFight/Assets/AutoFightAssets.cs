@@ -1,9 +1,11 @@
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.GameTask.Model.Assets;
 using OpenCvSharp;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using BetterGenshinImpact.GameTask.AutoGeniusInvokation.Model;
 using BetterGenshinImpact.GameTask.Common;
 using Microsoft.Extensions.Logging;
@@ -59,6 +61,30 @@ public sealed class AutoFightAssets
     }
 #pragma warning restore CS8618 // 在退出构造函数时，不可为 null 的字段必须包含非 null 值。请考虑添加 "required" 修饰符或声明为可为 null。
 
+    /// <summary>
+    /// 手柄 HUD 队伍头像槽位：1920x1080 基准下以十字键中心向左 46px 为头像中心，边长 54；
+    /// 其他捕获分辨率按 captureWidth/1920 等比缩放。
+    /// </summary>
+    public static IReadOnlyList<Rect> BuildGamepadAvatarSideRects(int captureWidth)
+    {
+        var scale = captureWidth / 1920.0;
+        (int X, int Y)[] dpadCenters =
+        [
+            (1781, 331),
+            (1777, 406),
+            (1778, 475),
+            (1779, 556),
+        ];
+
+        return dpadCenters
+            .Select(center => new Rect(
+                (int)Math.Round((center.X - 46 - 27) * scale),
+                (int)Math.Round((center.Y - 27) * scale),
+                (int)Math.Round(54 * scale),
+                (int)Math.Round(54 * scale)))
+            .ToList();
+    }
+
     private void Initialization()
     {
         TeamRectNoIndex = new Rect(CaptureRect.Width - (int)(355 * AssetScale), (int)(220 * AssetScale),
@@ -109,6 +135,16 @@ public sealed class AutoFightAssets
             new Rect(CaptureRect.Width - (int)(155 * AssetScale), (int)(410 * AssetScale), (int)(76 * AssetScale), (int)(76 * AssetScale)),
             new Rect(CaptureRect.Width - (int)(155 * AssetScale), (int)(500 * AssetScale), (int)(76 * AssetScale), (int)(76 * AssetScale)),
         ];
+
+        // 手柄 HUD 队伍栏没有键鼠的白色编号块，头像位置也不同：
+        // 以十字键中心向左 46px 为头像中心，54x54，按捕获宽度相对 1920 等比缩放。
+        if (GamepadMode.Enabled)
+        {
+            var gamepadSideRects = BuildGamepadAvatarSideRects(CaptureRect.Width);
+            AvatarSideIconRectList = gamepadSideRects;
+            // 手柄 HUD 没有编号块，出战判断后续单独处理，这里先复用头像槽位避免空引用。
+            AvatarIndexRectList = gamepadSideRects;
+        }
 
         AvatarCostumeMap = new Dictionary<string, string>
         {

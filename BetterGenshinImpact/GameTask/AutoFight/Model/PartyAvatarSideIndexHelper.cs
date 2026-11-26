@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OpenCv;
 using BetterGenshinImpact.GameTask.AutoFight.Assets;
@@ -119,6 +120,14 @@ public class PartyAvatarSideIndexHelper
 
     public static (List<Rect>, List<Rect>) GetAllIndexRects(ImageRegion imageRegion, MultiGameStatus multiGameStatus, ILogger logger, ISystemInfo systemInfo)
     {
+        // 手柄 HUD 没有键鼠的数字编号块，直接使用 AutoFightAssets 中按十字键位置换算好的固定槽位。
+        if (GamepadMode.Enabled && !multiGameStatus.IsInMultiGame)
+        {
+            var gamepadAssets = AutoFightAssets.Get(imageRegion);
+            return (new List<Rect>(gamepadAssets.AvatarIndexRectList),
+                new List<Rect>(gamepadAssets.AvatarSideIconRectList));
+        }
+
         try
         {
             // 新的动态获取角色编号位置逻辑
