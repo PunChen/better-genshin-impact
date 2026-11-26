@@ -113,6 +113,8 @@ public class CombatScenes : IDisposable
         }
 
         AssertUtils.CheckGameResolution();
+        _logger.LogInformation("队伍识别截图：{Width}x{Height}，素材缩放 {Scale:F2}",
+            imageRegion.Width, imageRegion.Height, _systemInfo.AssetScale);
         // 优先取配置
         if (!string.IsNullOrEmpty(autoFightConfig.TeamNames))
         {
