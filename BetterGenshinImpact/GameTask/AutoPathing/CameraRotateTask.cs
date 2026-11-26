@@ -1,4 +1,4 @@
-﻿using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input;
 using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask.Common.Map;
 using BetterGenshinImpact.GameTask.Model.Area;
@@ -52,7 +52,10 @@ public class CameraRotateTask(CancellationToken ct)
             // 手柄模式：鼠标移动会被忽略，改用右摇杆按角度转动视角
             Logger.LogDebug("手柄视角：当前 {Cao:F1}°，目标 {Target:F1}°，diff {Diff:F1}°",
                 cao, targetOrientation, diff);
-            gamepad.TurnByAngle(-diff);
+            // 半推短脉冲：满推一次会转过约 180°，改为小步闭环修正
+            var turn = -diff;
+            var duration = Math.Clamp((int)(Math.Abs(turn) * 0.6), 20, 80);
+            gamepad.SetRightStick(Math.Sign(turn) * 0.35, 0, duration);
             return diff;
         }
 
