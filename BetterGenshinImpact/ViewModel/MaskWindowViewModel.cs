@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Config;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Mask;
 using BetterGenshinImpact.GameTask;
 using BetterGenshinImpact.Helpers;
@@ -153,11 +154,14 @@ namespace BetterGenshinImpact.ViewModel
             ? $"{VisibleMapPointCount}/{MapPointTotalCount}"
             : "0/0";
 
-        public double MiniMapOverlayLeftRatio => MapAssets.MimiMapRect1080P.X / 1920d;
+        private static OpenCvSharp.Rect CurrentMiniMapRect1080P =>
+            GamepadMode.Enabled ? MapAssets.MimiMapRectGamepad1080P : MapAssets.MimiMapRect1080P;
 
-        public double MiniMapOverlayTopRatio => MapAssets.MimiMapRect1080P.Y / 1080d;
+        public double MiniMapOverlayLeftRatio => CurrentMiniMapRect1080P.X / 1920d;
 
-        public double MiniMapOverlaySizeRatio => MapAssets.MimiMapRect1080P.Width / 1080d;
+        public double MiniMapOverlayTopRatio => CurrentMiniMapRect1080P.Y / 1080d;
+
+        public double MiniMapOverlaySizeRatio => CurrentMiniMapRect1080P.Width / 1080d;
 
         public sealed record MapPointApiProviderOption(MapPointApiProvider Provider, string DisplayName);
 
