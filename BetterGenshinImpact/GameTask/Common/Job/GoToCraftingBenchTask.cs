@@ -235,6 +235,8 @@ public class GoToCraftingBenchTask
             throw new Exception("地图追踪文件加载失败");
         }
 
+        Logger.LogInformation("加载合成台路径：{Country}，路径点 {Count}", country, task.Positions.Count);
+
         var pathingTask = new PathExecutor(ct)
         {
             PartyConfig = new PathingPartyConfig

@@ -50,6 +50,8 @@ public class CameraRotateTask(CancellationToken ct)
         if (gamepad is not null)
         {
             // 手柄模式：鼠标移动会被忽略，改用右摇杆按角度转动视角
+            Logger.LogDebug("手柄视角：当前 {Cao:F1}°，目标 {Target:F1}°，diff {Diff:F1}°",
+                cao, targetOrientation, diff);
             gamepad.TurnByAngle(-diff);
             return diff;
         }

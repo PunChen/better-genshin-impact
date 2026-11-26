@@ -812,6 +812,11 @@ public partial class PathExecutor
                  additionalTimeInMs = additionalTimeInMs + 1000;//当做起步补偿
              }
             var distance = Navigation.GetDistance(waypoint, position);
+            if (num % 20 == 1)
+            {
+                Logger.LogInformation("寻路中：位置({X:F1},{Y:F1})，目标({TX:F1},{TY:F1})，距离 {Distance:F1}",
+                    position.X, position.Y, waypoint.GameX, waypoint.GameY, distance);
+            }
             Debug.WriteLine($"接近目标点中，距离为{distance}");
             if (distance < 4)
             {
