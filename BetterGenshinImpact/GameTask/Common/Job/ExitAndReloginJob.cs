@@ -3,6 +3,7 @@ using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Recognition;
 using BetterGenshinImpact.Core.Recognition.OCR;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BetterGenshinImpact.GameTask.AutoGeniusInvokation.Exception;
@@ -42,7 +43,8 @@ public class ExitAndReloginJob
         if (GamepadMode.Enabled)
         {
             // 手柄模式：鼠标点击会被 GamepadChannel 丢弃，走长按 X 的手柄退出流程
-            await ExitToLoginByGamepadAsync(ct);
+            // 目标「退出至登录界面」（X=1），与原键鼠流程一致：回登录界面→等「进入游戏」按钮→重登
+            await ExitByGamepadAsync(1, ct);
         }
         else
         {
@@ -142,12 +144,14 @@ public class ExitAndReloginJob
     }
 
     /// <summary>
-    /// 手柄模式退出至登录界面：派蒙菜单内长按 X 呼出三选项确认框
-    /// （继续游戏 / 返回登录界面 / 退出到桌面），左摇杆下移选中「返回登录界面」后按 B 确认。
-    /// 假设（未实测，见 gamepad-adaptation-plan.md T11）：确认框默认聚焦第一项「继续游戏」，
-    /// 单次摇杆下移聚焦一项；聚焦态的高亮特征待实测后补充锁定校验。
+    /// 手柄模式退出：派蒙菜单内长按 X 呼出三选项确认框（继续游戏 / 退出至登录界面 / 退出至桌面），
+    /// 先持续上移到第一项，再按单列上下顺序下移 optionIndex 次选中目标，最后按 B 确认。
+    /// optionIndex：继续游戏=0 / 退出至登录界面=1 / 退出至桌面=2。
+    /// 导航复用 TpTask 区域切换同款左摇杆脉冲节奏（60ms 脉冲 + 140ms 间隔）。
+    /// 假设（未实测，见 gamepad-adaptation-plan.md T11）：对话框不循环滚动（顶部再上移保持第一项）、
+    /// 单次脉冲移动一项、长按阈值 ≤1500ms、OCR 可读出选项文字（中文界面）。
     /// </summary>
-    private async Task ExitToLoginByGamepadAsync(CancellationToken ct)
+    private async Task ExitByGamepadAsync(int optionIndex, CancellationToken ct)
     {
         var gamepad = InputHub.Backend as GamepadInputBackend
                       ?? throw new InvalidOperationException("手柄后端不可用");
@@ -159,28 +163,47 @@ public class ExitAndReloginJob
             gamepad.PressButton(GamepadButton.X, 1500);
             await Delay(800, ct);
 
-            // OCR 确认三选项框出现（此处为中文界面文案，非中文语种的匹配待实测后处理）
+            // OCR 验证三选项框出现（此处为中文界面文案，非中文语种的匹配待实测后处理）
             var dialogText = TryOcrScreenText();
             Logger.LogInformation("手柄退出：确认框 OCR={Text}", Shorten(dialogText));
-            if (dialogText.Contains("返回登录界面"))
+            var matched = ExitDialogOptions.Where(t => dialogText.Contains(t)).ToList();
+            if (matched.Count == 0)
             {
-                // 假设默认聚焦第一项「继续游戏」，下移一项到「返回登录界面」
-                gamepad.SetLeftStick(0, -1, 60);
-                await Delay(400, ct);
-
-                var afterNavText = TryOcrScreenText();
-                Logger.LogInformation("手柄退出：导航后 OCR={Text}（聚焦高亮特征待实测，当前按次数导航）", Shorten(afterNavText));
-
-                Logger.LogInformation("手柄退出：按 B 确认返回登录界面");
-                gamepad.PressButton(GamepadButton.B, 150);
-                return;
+                Logger.LogWarning("手柄退出：未识别到退出确认框文字，重试长按 X");
+                continue;
             }
 
-            Logger.LogWarning("手柄退出：未识别到退出确认框，重试长按 X");
+            Logger.LogInformation("手柄退出：确认框命中选项 {Options}，目标「{Target}」（X={Index}）",
+                string.Join("/", matched), ExitDialogOptions[optionIndex], optionIndex);
+
+            // 先持续向上移动到第一项（不循环滚动时顶部再上移保持第一项），
+            // 与 TpTask 区域切换“先把列表滚到左上角”同款脉冲节奏
+            for (var i = 0; i < 4; i++)
+            {
+                gamepad.SetLeftStick(0, 1, 60);
+                await Delay(140, ct);
+            }
+
+            // 单列从上往下按次数下移：继续游戏=0 / 退出至登录界面=1 / 退出至桌面=2
+            for (var i = 0; i < optionIndex; i++)
+            {
+                gamepad.SetLeftStick(0, -1, 60);
+                await Delay(140, ct);
+            }
+
+            await Delay(400, ct);
+            Logger.LogInformation("手柄退出：按 B 确认「{Target}」", ExitDialogOptions[optionIndex]);
+            gamepad.PressButton(GamepadButton.B, 150);
+            return;
         }
 
         throw new RetryException("手柄模式未能呼出退出确认框，退出失败");
     }
+
+    /// <summary>
+    /// 退出确认框的三个选项，数组顺序即界面单列从上到下的顺序（X=0/1/2）
+    /// </summary>
+    private static readonly string[] ExitDialogOptions = ["继续游戏", "退出至登录界面", "退出至桌面"];
 
     private static string TryOcrScreenText()
     {
