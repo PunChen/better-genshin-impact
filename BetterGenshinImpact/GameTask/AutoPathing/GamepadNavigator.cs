@@ -50,26 +50,33 @@ public static class GamepadNavigator
         var gamepad = InputHub.Backend as GamepadInputBackend;
         var rotateTask = new CameraRotateTask(ct);
         var startTime = DateTime.UtcNow;
-        var leftStickHeld = false;
 
         try
         {
             for (var i = 0; i < 600 && !ct.IsCancellationRequested; i++)
             {
+                // 每次移动前先停下，确保基于最新识别到的坐标计算距离
+                if (gamepad is not null)
+                {
+                    gamepad.ReleaseLeftStick();
+                }
+                else
+                {
+                    InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyUp);
+                }
+
                 using var ra = TaskControl.CaptureToRectArea();
                 var position = Navigation.GetPositionStable(ra, mapName, mapMatchMethod);
                 if (position == default)
                 {
-                    await TaskControl.Delay(100, ct);
+                    Logger.LogWarning("手柄移动：当前位置识别失败，暂停移动等待重新识别");
+                    await TaskControl.Delay(150, ct);
                     continue;
                 }
 
                 var distance = Navigation.GetDistance(imageWaypoint, position);
-                if (i % 10 == 0)
-                {
-                    Logger.LogInformation("手柄移动：位置({X:F1},{Y:F1})，目标({TX:F1},{TY:F1})，距离 {Distance:F1}",
-                        position.X, position.Y, imageWaypoint.X, imageWaypoint.Y, distance);
-                }
+                Logger.LogInformation("手柄移动：识别到位置({X:F1},{Y:F1})，目标({TX:F1},{TY:F1})，距离 {Distance:F1}",
+                    position.X, position.Y, imageWaypoint.X, imageWaypoint.Y, distance);
 
                 if (distance < arriveDistance)
                 {
@@ -87,31 +94,36 @@ public static class GamepadNavigator
                 var cameraOrientation = CameraOrientation.Compute(ra.SrcMat);
                 var relativeAngle = NormalizeAngle(targetOrientation - cameraOrientation);
 
-                // 2. 角度偏差较大时，先用右摇杆转到目标角度（转向前先松开左摇杆）
+                // 2. 角度偏差较大时，先用右摇杆转到目标角度
                 if (Math.Abs(relativeAngle) > 8)
                 {
-                    if (leftStickHeld && gamepad is not null)
-                    {
-                        gamepad.ReleaseLeftStick();
-                        leftStickHeld = false;
-                    }
-
                     await rotateTask.WaitUntilRotatedTo(targetOrientation, 5, 10);
                 }
 
-                // 3. 角度对齐后左摇杆持续前推，一路走过去
+                // 3. 识别完成后再推杆走一小段，下一轮重新识别，避免盲走
                 var magnitude = distance > heavyPushDistance ? 1.0 : 0.45;
+                var moveDurationMs = (int)Math.Clamp(distance * 15, 150, 400);
                 if (gamepad is not null)
                 {
                     gamepad.HoldLeftStick(0, magnitude);
-                    leftStickHeld = true;
                 }
                 else
                 {
                     InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyDown);
                 }
 
-                await TaskControl.Delay(100, ct);
+                await TaskControl.Delay(moveDurationMs, ct);
+
+                if (gamepad is not null)
+                {
+                    gamepad.ReleaseLeftStick();
+                }
+                else
+                {
+                    InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyUp);
+                }
+
+                await TaskControl.Delay(80, ct);
             }
         }
         finally
