@@ -1,0 +1,14 @@
+BetterGenshinImpact/GameTask/AutoTrackPath/TpTask.cs
+  h_af85ab4e4c7fdb 409-412
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "b9feea3c4f84f4b7da2de2fd672714e556696599",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
