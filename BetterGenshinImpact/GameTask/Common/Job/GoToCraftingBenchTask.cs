@@ -3,10 +3,15 @@ using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.GameTask.AutoPathing;
 using BetterGenshinImpact.GameTask.AutoPathing.Model;
+using BetterGenshinImpact.GameTask.AutoTrackPath;
+using BetterGenshinImpact.GameTask.Common.Map.Maps;
+using BetterGenshinImpact.GameTask.Model.Area;
+using OpenCvSharp;
 using BetterGenshinImpact.GameTask.Common.BgiVision;
 using BetterGenshinImpact.GameTask.Common.Element.Assets;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BetterGenshinImpact.Core.Simulator.Extensions;
@@ -125,7 +130,7 @@ public class GoToCraftingBenchTask
                 },ct,3,200); 
                 if (!condensed)
                 {
-                    InputHub.Foreground.Keyboard.KeyPress(User32.VK.VK_ESCAPE);
+                    ExitCraftingUi();
                     await new ReturnMainUiTask().Start(ct);
                     throw new Exception($"识别浓缩树脂数量失败: {condensedResinCount}");
                 }
@@ -153,22 +158,22 @@ public class GoToCraftingBenchTask
                 {
                     for (int i = 0; i < 5; i++)
                     {
-                        Bv.ClickReduceButton(ra);
+                        AdjustCraftQuantity(ra, false);
                         await Delay(150, ct);
                     }
                     await Delay(300, ct);
                     for (int i = 0; i < craftsNeeded-1; i++)
                     {
-                        Bv.ClickAddButton(ra);
+                        AdjustCraftQuantity(ra, true);
                         await Delay(150, ct);
                     }
                     await Delay(200, ct);
                     //await Delay(100000, ct);//调试延时=========
-                    Bv.ClickWhiteConfirmButton(ra);
+                    ConfirmCraft(ra);
                     Logger.LogInformation("合成{Text}", "浓缩树脂");
                     await Delay(300, ct);
                     using var confirmCapture = CaptureToRectArea();
-                    Bv.ClickBlackConfirmButton(confirmCapture);
+                    ConfirmCraftDialog(confirmCapture);
                 }
                 else
                 {
@@ -178,15 +183,15 @@ public class GoToCraftingBenchTask
             else
             {
                 //await Delay(100000, ct);//调试延时=========
-                Bv.ClickWhiteConfirmButton(ra);
+                ConfirmCraft(ra);
                 Logger.LogInformation("合成{Text}", "浓缩树脂");
                 await Delay(300, ct);
                 using var confirmCapture = CaptureToRectArea();
-                Bv.ClickBlackConfirmButton(confirmCapture);
+                ConfirmCraftDialog(confirmCapture);
             }
             await Delay(1300, ct);
             // 直接ESC退出即可
-            InputHub.Foreground.Keyboard.KeyPress(User32.VK.VK_ESCAPE);
+            ExitCraftingUi();
         }
         else
         {
@@ -228,6 +233,151 @@ public class GoToCraftingBenchTask
         Logger.LogInformation("→ {Name} 结束", Name);
     }
 
+    /// <summary>
+    /// 手柄模式：按合成台 JSON 先传送，再移动到最后一个路径点，最后按 X 交互。
+    /// </summary>
+    private async Task GoToCraftingBenchByGamepad(PathingTask task, CancellationToken ct)
+    {
+        var teleport = task.Positions.FirstOrDefault(position => position.Type == "teleport");
+        if (teleport != null)
+        {
+            Logger.LogInformation("手柄模式：传送到合成台路径起点 ({X:F1},{Y:F1})", teleport.X, teleport.Y);
+            var tpTask = new TpTask(ct);
+            await tpTask.Tp(teleport.X, teleport.Y, task.Info.MapName);
+            await Delay(1000, ct);
+        }
+
+        var pathPoints = task.Positions.Where(position => position.Type != "teleport").ToList();
+        foreach (var point in pathPoints)
+        {
+            await MoveToGamepadTarget(point, task, ct);
+            await Delay(300, ct);
+
+            using var ra = CaptureToRectArea();
+            if (Bv.FindFAndPress(ra, text: this.craftLocalizedString))
+            {
+                Logger.LogInformation("手柄模式：已在路径点 ({X:F1},{Y:F1}) 打开合成台", point.X, point.Y);
+                await Delay(1000, ct);
+                return;
+            }
+        }
+
+        Logger.LogWarning("手柄模式：走完合成台路径仍未识别到交互按钮");
+    }
+
+    /// <summary>
+    /// 手柄模式逐段靠近目标点：小地图定位 → 右摇杆转向 → 左摇杆短推。
+    /// </summary>
+    private async Task MoveToGamepadTarget(Waypoint target, PathingTask task, CancellationToken ct)
+    {
+        var map = MapManager.GetMap(task.Info.MapName, task.Info.MapMatchMethod);
+        var imagePoint = map.ConvertGenshinMapCoordinatesToImageCoordinates(new Point2f((float)target.X, (float)target.Y));
+        var imageWaypoint = new Waypoint { X = imagePoint.X, Y = imagePoint.Y };
+        var rotateTask = new CameraRotateTask(ct);
+        var startTime = DateTime.UtcNow;
+
+        for (var i = 0; i < 400 && !ct.IsCancellationRequested; i++)
+        {
+            using var ra = CaptureToRectArea();
+            var position = Navigation.GetPositionStable(ra, task.Info.MapName, task.Info.MapMatchMethod);
+            if (position == default)
+            {
+                await Delay(120, ct);
+                continue;
+            }
+
+            var distance = Navigation.GetDistance(imageWaypoint, position);
+            if (i % 10 == 0)
+            {
+                Logger.LogInformation("手柄移动：位置({X:F1},{Y:F1})，目标({TX:F1},{TY:F1})，距离 {Distance:F1}",
+                    position.X, position.Y, imageWaypoint.X, imageWaypoint.Y, distance);
+            }
+
+            if (distance < 3)
+            {
+                Logger.LogInformation("手柄移动：已到达合成台附近，距离 {Distance:F1}", distance);
+                return;
+            }
+
+            if ((DateTime.UtcNow - startTime).TotalSeconds > 120)
+            {
+                throw new Exception("手柄模式：移动到合成台超时");
+            }
+
+            var orientation = Navigation.GetTargetOrientation(imageWaypoint, position);
+            await rotateTask.WaitUntilRotatedTo(orientation, 5, 8);
+
+            InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyDown);
+            await Delay(180, ct);
+            InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyUp);
+            await Delay(120, ct);
+        }
+    }
+
+    /// <summary>
+    /// 合成界面确认（键鼠点白色按钮 / 手柄按确认键）
+    /// </summary>
+    private static void ConfirmCraft(ImageRegion ra)
+    {
+        if (GamepadMode.Enabled)
+        {
+            InputHub.Foreground.SimulateAction(GIActions.Confirm);
+        }
+        else
+        {
+            Bv.ClickWhiteConfirmButton(ra);
+        }
+    }
+
+    /// <summary>
+    /// 二次确认弹窗
+    /// </summary>
+    private static void ConfirmCraftDialog(ImageRegion ra)
+    {
+        if (GamepadMode.Enabled)
+        {
+            InputHub.Foreground.SimulateAction(GIActions.Confirm);
+        }
+        else
+        {
+            Bv.ClickBlackConfirmButton(ra);
+        }
+    }
+
+    /// <summary>
+    /// 调整合成数量（键鼠点 +/- / 手柄左右方向）
+    /// </summary>
+    private static void AdjustCraftQuantity(ImageRegion ra, bool add)
+    {
+        if (GamepadMode.Enabled)
+        {
+            InputHub.Foreground.SimulateAction(add ? GIActions.FocusRight : GIActions.FocusLeft);
+        }
+        else if (add)
+        {
+            Bv.ClickAddButton(ra);
+        }
+        else
+        {
+            Bv.ClickReduceButton(ra);
+        }
+    }
+
+    /// <summary>
+    /// 退出合成界面
+    /// </summary>
+    private static void ExitCraftingUi()
+    {
+        if (GamepadMode.Enabled)
+        {
+            InputHub.Foreground.SimulateAction(GIActions.Cancel);
+        }
+        else
+        {
+            InputHub.Foreground.Keyboard.KeyPress(User32.VK.VK_ESCAPE);
+        }
+    }
+
     public async Task GoToCraftingBenchOnce(string country, CancellationToken ct)
     {
         var task = PathingTask.BuildFromFilePath(Global.Absolute(@$"GameTask\Common\Element\Assets\Json\合成台_{country}.json"));
@@ -238,25 +388,24 @@ public class GoToCraftingBenchTask
 
         Logger.LogInformation("加载合成台路径：{Country}，路径点 {Count}", country, task.Positions.Count);
 
-        // 手柄模式：暂时移除传送后的自动移动逻辑，角色保持在传送点，
-        // 后续依据合成台 JSON 的路径点重新实现手柄移动。
         if (GamepadMode.Enabled)
         {
-            Logger.LogInformation("手柄模式：已跳过合成台路径移动，角色保持在传送点");
-            return;
+            await GoToCraftingBenchByGamepad(task, ct);
         }
-
-        var pathingTask = new PathExecutor(ct)
+        else
         {
-            PartyConfig = new PathingPartyConfig
+            var pathingTask = new PathExecutor(ct)
             {
-                Enabled = true,
-                AutoSkipEnabled = true,
-                AutoRunEnabled = country != "枫丹",
-            },
-            EndAction = region => Bv.FindFAndPress(region, text: this.craftLocalizedString)
-        };
-        await pathingTask.Pathing(task);
+                PartyConfig = new PathingPartyConfig
+                {
+                    Enabled = true,
+                    AutoSkipEnabled = true,
+                    AutoRunEnabled = country != "枫丹",
+                },
+                EndAction = region => Bv.FindFAndPress(region, text: this.craftLocalizedString)
+            };
+            await pathingTask.Pathing(task);
+        }
 
         await Delay(700, ct);
         
