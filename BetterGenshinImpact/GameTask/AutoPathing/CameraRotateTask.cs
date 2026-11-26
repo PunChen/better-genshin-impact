@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.GameTask.Common.Map;
 using BetterGenshinImpact.GameTask.Model.Area;
 using System;
@@ -43,6 +44,14 @@ public class CameraRotateTask(CancellationToken ct)
         else if (Math.Abs(diff) > 5)
         {
             controlRatio = 2;
+        }
+
+        var gamepad = GamepadMode.Enabled ? InputHub.Backend as GamepadInputBackend : null;
+        if (gamepad is not null)
+        {
+            // 手柄模式：鼠标移动会被忽略，改用右摇杆按角度转动视角
+            gamepad.TurnByAngle(-diff);
+            return diff;
         }
 
         InputHub.Foreground.Mouse.MoveMouseBy((int)Math.Round(-controlRatio * diff * _dpi), 0);
