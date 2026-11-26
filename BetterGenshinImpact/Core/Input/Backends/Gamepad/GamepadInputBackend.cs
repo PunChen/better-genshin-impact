@@ -56,6 +56,16 @@ public sealed class GamepadInputBackend : IInputBackend
     public void SetLeftStick(double x, double y, int durationMs) => _channel.SetLeftStick(x, y, durationMs);
 
     /// <summary>
+    /// 持续保持左摇杆不归零（用于角色持续移动）
+    /// </summary>
+    public void HoldLeftStick(double x, double y) => _channel.HoldLeftStick(x, y);
+
+    /// <summary>
+    /// 释放左摇杆（归零）
+    /// </summary>
+    public void ReleaseLeftStick() => _channel.ReleaseLeftStick();
+
+    /// <summary>
     /// 向右（正角度）/向左（负角度）转动视角指定角度
     /// </summary>
     public void TurnByAngle(double degrees) => _channel.TurnByAngle(degrees);
@@ -512,6 +522,37 @@ internal sealed class GamepadChannel : InputChannelBase, IDisposable
             _transport!.SetButton(button, true);
             Thread.Sleep(Math.Max(1, durationMs));
             _transport.SetButton(button, false);
+        }
+    }
+
+    /// <summary>
+    /// 持续保持左摇杆不归零（用于角色持续移动）
+    /// </summary>
+    public void HoldLeftStick(double x, double y)
+    {
+        if (!EnsureTransport())
+        {
+            return;
+        }
+
+        var nx = (short)Math.Clamp(x * short.MaxValue, short.MinValue, short.MaxValue);
+        var ny = (short)Math.Clamp(y * short.MaxValue, short.MinValue, short.MaxValue);
+        lock (_sync)
+        {
+            _transport!.SetAxis(GamepadAxis.LeftThumbX, nx);
+            _transport.SetAxis(GamepadAxis.LeftThumbY, ny);
+        }
+    }
+
+    /// <summary>
+    /// 释放左摇杆（归零）
+    /// </summary>
+    public void ReleaseLeftStick()
+    {
+        lock (_sync)
+        {
+            _transport?.SetAxis(GamepadAxis.LeftThumbX, 0);
+            _transport?.SetAxis(GamepadAxis.LeftThumbY, 0);
         }
     }
 

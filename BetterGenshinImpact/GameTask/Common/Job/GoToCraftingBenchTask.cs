@@ -266,7 +266,8 @@ public class GoToCraftingBenchTask
     }
 
     /// <summary>
-    /// 手柄模式逐段靠近目标点：小地图定位 → 右摇杆转向 → 左摇杆短推。
+    /// 手柄模式逐段靠近目标点：小地图定位 → 右摇杆转向 → 左摇杆持续推送。
+    /// 距离远时重推（跑），距离近时轻推（走）。
     /// </summary>
     private async Task MoveToGamepadTarget(Waypoint target, PathingTask task, CancellationToken ct)
     {
@@ -274,43 +275,89 @@ public class GoToCraftingBenchTask
         var imagePoint = map.ConvertGenshinMapCoordinatesToImageCoordinates(new Point2f((float)target.X, (float)target.Y));
         var imageWaypoint = new Waypoint { X = imagePoint.X, Y = imagePoint.Y };
         var rotateTask = new CameraRotateTask(ct);
+        var gamepad = InputHub.Backend as GamepadInputBackend;
         var startTime = DateTime.UtcNow;
+        var lastPosition = new Point2f();
+        var stuckCount = 0;
 
-        for (var i = 0; i < 400 && !ct.IsCancellationRequested; i++)
+        try
         {
-            using var ra = CaptureToRectArea();
-            var position = Navigation.GetPositionStable(ra, task.Info.MapName, task.Info.MapMatchMethod);
-            if (position == default)
+            for (var i = 0; i < 600 && !ct.IsCancellationRequested; i++)
             {
-                await Delay(120, ct);
-                continue;
-            }
+                using var ra = CaptureToRectArea();
+                var position = Navigation.GetPositionStable(ra, task.Info.MapName, task.Info.MapMatchMethod);
+                if (position == default)
+                {
+                    await Delay(100, ct);
+                    continue;
+                }
 
-            var distance = Navigation.GetDistance(imageWaypoint, position);
-            if (i % 10 == 0)
+                var distance = Navigation.GetDistance(imageWaypoint, position);
+                if (i % 10 == 0)
+                {
+                    Logger.LogInformation("手柄移动：位置({X:F1},{Y:F1})，目标({TX:F1},{TY:F1})，距离 {Distance:F1}",
+                        position.X, position.Y, imageWaypoint.X, imageWaypoint.Y, distance);
+                }
+
+                if (distance < 3)
+                {
+                    Logger.LogInformation("手柄移动：已到达合成台附近，距离 {Distance:F1}", distance);
+                    break;
+                }
+
+                if ((DateTime.UtcNow - startTime).TotalSeconds > 120)
+                {
+                    throw new Exception("手柄模式：移动到合成台超时");
+                }
+
+                var orientation = Navigation.GetTargetOrientation(imageWaypoint, position);
+                await rotateTask.WaitUntilRotatedTo(orientation, 5, 8);
+
+                // 远距离重推跑动，近距离轻推走位
+                var heavyPush = distance > 10;
+                if (gamepad is not null)
+                {
+                    gamepad.HoldLeftStick(0, heavyPush ? 1.0 : 0.45);
+                }
+                else
+                {
+                    InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyDown);
+                }
+
+                // 卡住检测：连续多帧位置不变时松开再重推
+                if (i > 0 &&
+                    Math.Abs(position.X - lastPosition.X) < 1 &&
+                    Math.Abs(position.Y - lastPosition.Y) < 1)
+                {
+                    stuckCount++;
+                    if (stuckCount > 30 && gamepad is not null)
+                    {
+                        Logger.LogWarning("手柄移动：位置长时间未变化，松开左摇杆后重推");
+                        gamepad.ReleaseLeftStick();
+                        await Delay(200, ct);
+                        gamepad.HoldLeftStick(0, 1.0);
+                        stuckCount = 0;
+                    }
+                }
+                else
+                {
+                    stuckCount = 0;
+                }
+
+                lastPosition = position;
+                await Delay(80, ct);
+            }
+        }
+        finally
+        {
+            if (gamepad is not null)
             {
-                Logger.LogInformation("手柄移动：位置({X:F1},{Y:F1})，目标({TX:F1},{TY:F1})，距离 {Distance:F1}",
-                    position.X, position.Y, imageWaypoint.X, imageWaypoint.Y, distance);
+                gamepad.ReleaseLeftStick();
             }
-
-            if (distance < 3)
+            else
             {
-                Logger.LogInformation("手柄移动：已到达合成台附近，距离 {Distance:F1}", distance);
-                return;
+                InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyUp);
             }
-
-            if ((DateTime.UtcNow - startTime).TotalSeconds > 120)
-            {
-                throw new Exception("手柄模式：移动到合成台超时");
-            }
-
-            var orientation = Navigation.GetTargetOrientation(imageWaypoint, position);
-            await rotateTask.WaitUntilRotatedTo(orientation, 5, 8);
-
-            InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyDown);
-            await Delay(180, ct);
-            InputHub.Foreground.SimulateAction(GIActions.MoveForward, KeyType.KeyUp);
-            await Delay(120, ct);
         }
     }
 
