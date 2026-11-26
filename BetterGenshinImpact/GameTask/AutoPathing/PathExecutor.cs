@@ -1278,7 +1278,9 @@ public partial class PathExecutor
     private async Task<(Point2f point,int additionalTimeInMs)> GetPositionAndTime(ImageRegion imageRegion, WaypointForTrack waypoint)
     {
         
-        var position = Navigation.GetPosition(imageRegion, waypoint.MapName, waypoint.MapMatchMethod);
+        // 局部匹配失败（例如手柄传送到默认锚点、实际位置与路径点有偏差）时回退全局匹配，
+        // 避免位置一直是 (0,0) 导致距离过远、一直转视角。
+        var position = Navigation.GetPositionStable(imageRegion, waypoint.MapName, waypoint.MapMatchMethod);
         int time = 0;
         if (position == new Point2f())
         {
