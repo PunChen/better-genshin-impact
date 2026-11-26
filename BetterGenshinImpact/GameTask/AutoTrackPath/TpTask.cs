@@ -2522,7 +2522,7 @@ public class TpTask
         return false;
     }
 
-    internal async Task SwitchArea(string areaName)
+    public async Task SwitchArea(string areaName)
     {
         if (await TrySwitchArea(areaName))
         {
@@ -2532,7 +2532,7 @@ public class TpTask
         throw new Exception($"切换区域[{areaName}]失败");
     }
 
-    private async Task<bool> TrySwitchArea(string areaName)
+    public async Task<bool> TrySwitchArea(string areaName)
     {
         var gamepad = GamepadMode.Enabled ? InputHub.Backend as GamepadInputBackend : null;
         if (gamepad is not null)
