@@ -546,7 +546,16 @@ public class TpTask
             Logger.LogInformation("手柄传送：第 {Phase} 段后 OCR={Text}", phase + 1, Shorten(screenText));
         }
 
-        await WaitForTeleportCompletion();
+        // 手柄模式的主界面识别依赖 PaimonMenu 模板，教程弹窗/手柄 HUD 会遮挡它，
+        // 不能沿用 60 秒的 WaitForTeleportCompletion，否则传送完成后仍会超时。
+        await Delay(2000, ct);
+        using (var mapCheck = CaptureToRectArea())
+        {
+            if (Bv.IsInBigMapUi(mapCheck))
+            {
+                Logger.LogWarning("手柄传送：确认后仍在大地图，可能未完成传送");
+            }
+        }
     }
 
     private string TryOcrGamepadScreenText()
