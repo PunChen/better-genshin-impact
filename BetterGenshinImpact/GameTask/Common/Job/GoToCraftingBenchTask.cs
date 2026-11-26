@@ -1,4 +1,5 @@
 using BetterGenshinImpact.Core.Input;
+using BetterGenshinImpact.Core.Input.Backends.Gamepad;
 using BetterGenshinImpact.Core.Config;
 using BetterGenshinImpact.GameTask.AutoPathing;
 using BetterGenshinImpact.GameTask.AutoPathing.Model;
@@ -236,6 +237,14 @@ public class GoToCraftingBenchTask
         }
 
         Logger.LogInformation("加载合成台路径：{Country}，路径点 {Count}", country, task.Positions.Count);
+
+        // 手柄模式：暂时移除传送后的自动移动逻辑，角色保持在传送点，
+        // 后续依据合成台 JSON 的路径点重新实现手柄移动。
+        if (GamepadMode.Enabled)
+        {
+            Logger.LogInformation("手柄模式：已跳过合成台路径移动，角色保持在传送点");
+            return;
+        }
 
         var pathingTask = new PathExecutor(ct)
         {
