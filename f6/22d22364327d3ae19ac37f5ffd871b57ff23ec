@@ -1,0 +1,16 @@
+BetterGenshinImpact/GameTask/Common/Job/ExitAndReloginJob.cs
+  h_af85ab4e4c7fdb 2-5,12,42-56,58-61,63-75,79-85,143-203
+Docs/design/gamepad-adaptation-plan.md
+  h_af85ab4e4c7fdb 533,535-538
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5+huawei.3",
+  "base_commit_sha": "f622d22364327d3ae19ac37f5ffd871b57ff23ec",
+  "prompts": {},
+  "humans": {
+    "h_af85ab4e4c7fdb": {
+      "author": "PunChen <chainhow@outlook.com>"
+    }
+  }
+}
